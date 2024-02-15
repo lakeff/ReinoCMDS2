@@ -1,4 +1,4 @@
-namespace CommunityCommands.Models;
+namespace KindredCommands.Models;
 
 public enum BloodType
 {

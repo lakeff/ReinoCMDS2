@@ -2,11 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using ProjectM;
 
-namespace CommunityCommands.Data;
+namespace KindredCommands.Data;
 internal static class Character
 {
 	public static ReadOnlyDictionary<string, PrefabGUID> Named = new(new Dictionary<string, PrefabGUID>(StringComparer.OrdinalIgnoreCase)

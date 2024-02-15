@@ -1,11 +1,9 @@
 using System.Text.RegularExpressions;
-
-using CommunityCommands;
-using CommunityCommands.Commands.Converters;
+using KindredCommands.Commands.Converters;
 using Unity.Collections;
 using VampireCommandFramework;
 
-namespace CommunityCommands.Commands;
+namespace KindredCommands.Commands;
 
 public static class RenameCommands
 {
@@ -41,9 +39,9 @@ public static class RenameCommands
 
 			return newName;
 		}
-		public bool IsAlphaNumeric(string input)
+		public static bool IsAlphaNumeric(string input)
 		{
-			return Regex.IsMatch(input, @"^[a-zA-Z0-9]+$");
+			return Regex.IsMatch(input, @"^[a-zA-Z0-9\[\]]+$");
 		}
 	}
 }

@@ -1,11 +1,7 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using ProjectM;
 using VampireCommandFramework;
 
-namespace CommunityCommands.Commands;
+namespace KindredCommands.Commands;
 internal class GiveItemCommands
 {
 	public record struct GivenItem(PrefabGUID Value);

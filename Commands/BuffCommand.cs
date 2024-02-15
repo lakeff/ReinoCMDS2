@@ -1,57 +1,68 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using CommunityCommands.Commands.Converters;
+using KindredCommands.Commands.Converters;
+using KindredCommands.Services;
 using ProjectM;
 using ProjectM.Network;
-using ProjectM.Shared;
 using Unity.Entities;
 using VampireCommandFramework;
 
-namespace CommunityCommands.Commands;
+namespace KindredCommands.Commands;
 internal class BuffCommands
-{
-	[Command("buff", adminOnly: true)]
-	public void BuffCommand(ChatCommandContext ctx, int prefabBuff, OnlinePlayer player = null)
+{	public record struct BuffInput(string Name, PrefabGUID Prefab);
+
+	public class BuffConverter : CommandArgumentConverter<BuffInput>
 	{
-
-		if (!player?.Value.IsOnline ?? false)
+		public override BuffInput Parse(ICommandContext ctx, string input)
 		{
-			throw ctx.Error("Player not found or not online.");
+			if (Core.Prefabs.TryGetBuff(input, out PrefabGUID buffPrefab))
+			{
+				return new(buffPrefab.LookupName(), buffPrefab);
+			}
+			// "CHAR_Bandit_Bomber": -1128238456,
+			if (int.TryParse(input, out var id) && Core.Prefabs.CollectionSystem.PrefabGuidToNameDictionary.TryGetValue(new PrefabGUID(id), out var name) &&
+				name.ToLowerInvariant().Contains("buff"))
+			{
+				return new(name, new(id));
+			}
+
+			throw ctx.Error($"Can't find buff {input.Bold()}");
 		}
+	}
 
-		var des = Core.Server.GetExistingSystem<DebugEventsSystem>();
-		var buffEvent = new ApplyBuffDebugEvent()
-		{
-			BuffPrefabGUID = new PrefabGUID(prefabBuff)
-		};
+	[Command("buff", adminOnly: true)]
+	public static void BuffCommand(ChatCommandContext ctx, BuffInput buff, OnlinePlayer player = null)
+	{
+		var userEntity = player?.Value.UserEntity ?? ctx.Event.SenderUserEntity;
+		var charEntity = player?.Value.CharEntity ?? ctx.Event.SenderCharacterEntity;
 
-		var fromCharacter = new FromCharacter()
-		{
-			User = player?.Value.UserEntity ?? ctx.Event.SenderUserEntity,
-			Character = player?.Value.CharEntity ?? ctx.Event.SenderCharacterEntity
-		};
-
-		des.ApplyBuff(fromCharacter, buffEvent);
+		Buffs.AddBuff(userEntity, charEntity, buff.Prefab);
+		ctx.Reply($"Applied the buff {buff.Name} to {userEntity.Read<User>().CharacterName}");
 	}
 
 	[Command("debuff", adminOnly: true)]
-	public void DebuffCommand(ChatCommandContext ctx, int prefabBuff, OnlinePlayer player = null)
+	public static void DebuffCommand(ChatCommandContext ctx, BuffInput buff, OnlinePlayer player = null)
 	{
+		var targetEntity = (Entity)(player?.Value.CharEntity ?? ctx.Event.SenderCharacterEntity);
+		Buffs.RemoveBuff(targetEntity, buff.Prefab);
+		ctx.Reply($"Removed the buff {buff.Name} from {targetEntity.Read<PlayerCharacter>().Name}");
+	}
 
-		if (!player?.Value.IsOnline ?? false)
+	[Command("listbuffs", description: "Lists the buffs a player has", adminOnly: true)]
+	public static void ListBuffsCommand(ChatCommandContext ctx, OnlinePlayer player = null)
+	{
+		var Character = player?.Value.CharEntity ?? ctx.Event.SenderCharacterEntity;
+		var buffEntities = Helper.GetEntitiesByComponentTypes<Buff, PrefabGUID>();
+		foreach (var buffEntity in buffEntities)
 		{
-			throw ctx.Error("Player not found or not online.");
+			if (buffEntity.Read<EntityOwner>().Owner == Character)
+			{
+				ctx.Reply(buffEntity.Read<PrefabGUID>().LookupName());
+			}
 		}
-		var buff = new PrefabGUID(prefabBuff);
-		if (!BuffUtility.TryGetBuff(Core.EntityManager, ctx.Event.SenderCharacterEntity, buff, out var buffData))
-		{
-			throw ctx.Error($"Could not find buff on player to remove.");
-		}
+	}
 
-		DestroyUtility.Destroy(Core.EntityManager, buffData, DestroyDebugReason.TryRemoveBuff);
-		ctx.Reply("Removed buff");
+	internal static void DebuffCommand(Entity character, PrefabGUID buff_InCombat_PvPVampire)
+	{
+		throw new NotImplementedException();
 	}
 }

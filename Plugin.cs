@@ -1,14 +1,13 @@
-using System;
 using BepInEx;
 using BepInEx.Logging;
 using BepInEx.Unity.IL2CPP;
-using Bloodstone;
 using Bloodstone.API;
+using KindredCommands.Models;
 using HarmonyLib;
 using ProjectM;
 using VampireCommandFramework;
 
-namespace CommunityCommands;
+namespace KindredCommands;
 
 [BepInPlugin(MyPluginInfo.PLUGIN_GUID, MyPluginInfo.PLUGIN_NAME, MyPluginInfo.PLUGIN_VERSION)]
 [BepInDependency("gg.deca.Bloodstone")]
@@ -18,12 +17,15 @@ public class Plugin : BasePlugin, IRunOnInitialized
 {
 	internal static Harmony Harmony;
 	internal static ManualLogSource PluginLog;
+	public static ManualLogSource LogInstance { get; private set; }
+
 	public override void Load()
 	{
 		PluginLog = Log;
 		// Plugin startup logic
 		Log.LogInfo($"Plugin {MyPluginInfo.PLUGIN_GUID} version {MyPluginInfo.PLUGIN_VERSION} is loaded!");
-
+		LogInstance = Log;
+		Database.InitConfig();
 		// Harmony patching
 		Harmony = new Harmony(MyPluginInfo.PLUGIN_GUID);
 		Harmony.PatchAll(System.Reflection.Assembly.GetExecutingAssembly());
@@ -43,7 +45,6 @@ public class Plugin : BasePlugin, IRunOnInitialized
 
 	public void OnGameInitialized()
 	{
-
 		if (!HasLoaded())
 		{
 			Log.LogDebug("Attempt to initialize before everything has loaded.");

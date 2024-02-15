@@ -1,12 +1,9 @@
-using System;
 using System.Runtime.CompilerServices;
 using BepInEx.Logging;
-using CommunityCommands.Services;
-using HarmonyLib;
-using ProjectM;
+using KindredCommands.Services;
 using Unity.Entities;
 
-namespace CommunityCommands;
+namespace KindredCommands;
 
 internal static class Core
 {

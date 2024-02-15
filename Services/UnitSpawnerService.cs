@@ -1,8 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using HarmonyLib;
 using ProjectM;
 using Unity.Entities;
@@ -10,32 +7,32 @@ using Unity.Mathematics;
 using Unity.Transforms;
 using UnityEngine;
 
-namespace CommunityCommands.Services;
+namespace KindredCommands.Services;
 internal class UnitSpawnerService
 {
-	private static Entity empty_entity = new Entity();
+	private static Entity empty_entity = new();
 
 	internal const int DEFAULT_MINRANGE = 1;
 	internal const int DEFAULT_MAXRANGE = 1;
 
-	public void Spawn(Entity user, PrefabGUID unit, int count, float2 position, float minRange = 1, float maxRange = 2, float duration = -1)
+	public static void Spawn(Entity user, PrefabGUID unit, int count, float2 position, float minRange = 1, float maxRange = 2, float duration = -1)
 	{
 		var translation = Core.EntityManager.GetComponentData<Translation>(user);
-		var f3pos = new float3(position.x, translation.Value.y, position.y); // TODO: investigate this copypasta
+		var pos = new float3(position.x, translation.Value.y, position.y);
 		var usus = Core.Server.GetExistingSystem<UnitSpawnerUpdateSystem>();
-		usus.SpawnUnit(empty_entity, unit, f3pos, count, minRange, maxRange, duration);
+		usus.SpawnUnit(empty_entity, unit, pos, count, minRange, maxRange, duration);
 	}
 
 	public void SpawnWithCallback(Entity user, PrefabGUID unit, float2 position, float duration, Action<Entity> postActions)
 	{
 		var translation = Core.EntityManager.GetComponentData<Translation>(user);
-		var f3pos = new float3(position.x, translation.Value.y, position.y); // TODO: investigate this copypasta
+		var pos = new float3(position.x, translation.Value.y, position.y);
 		var usus = Core.Server.GetExistingSystem<UnitSpawnerUpdateSystem>();
 
 		UnitSpawnerReactSystem_Patch.Enabled = true;
 
 		var durationKey = NextKey();
-		usus.SpawnUnit(empty_entity, unit, f3pos, 1, DEFAULT_MINRANGE, DEFAULT_MAXRANGE, durationKey);
+		usus.SpawnUnit(empty_entity, unit, pos, 1, DEFAULT_MINRANGE, DEFAULT_MAXRANGE, durationKey);
 		PostActions.Add(durationKey, (duration, postActions));
 	}
 
@@ -56,7 +53,7 @@ internal class UnitSpawnerService
 		return key;
 	}
 
-	internal Dictionary<long, (float actualDuration, Action<Entity> Actions)> PostActions = new();
+	internal Dictionary<long, (float actualDuration, Action<Entity> Actions)> PostActions = [];
 
 	[HarmonyPatch(typeof(UnitSpawnerReactSystem), nameof(UnitSpawnerReactSystem.OnUpdate))]
 	public static class UnitSpawnerReactSystem_Patch

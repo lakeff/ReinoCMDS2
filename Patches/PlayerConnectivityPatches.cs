@@ -1,11 +1,12 @@
 using System;
+using KindredCommands.Data;
 using HarmonyLib;
 using ProjectM;
 using ProjectM.Network;
 using Stunlock.Network;
 using Unity.Collections;
 
-namespace CommunityCommands.Patches;
+namespace KindredCommands.Patches;
 
 
 [HarmonyPatch(typeof(ServerBootstrapSystem), nameof(ServerBootstrapSystem.OnUserConnected))]
@@ -13,6 +14,7 @@ public static class OnUserConnected_Patch
 {
 	public static void Postfix(ServerBootstrapSystem __instance, NetConnectionId netConnectionId)
 	{
+		if (Core.Players == null) Core.InitializeAfterLoaded();
 		try
 		{
 			var em = __instance.EntityManager;
@@ -40,6 +42,7 @@ public static class OnUserDisconnected_Patch
 {
 	private static void Prefix(ServerBootstrapSystem __instance, NetConnectionId netConnectionId, ConnectionStatusChangeReason connectionStatusReason, string extraData)
 	{
+		if (Core.Players == null) Core.InitializeAfterLoaded();
 		try
 		{
 			var userIndex = __instance._NetEndPointToApprovedUserIndex[netConnectionId];
@@ -63,6 +66,7 @@ public class Destroy_TravelBuffSystem_Patch
 {
 	private static void Postfix(Destroy_TravelBuffSystem __instance)
 	{
+		if (Core.Players == null) Core.InitializeAfterLoaded();
 		var entities = __instance.__OnUpdate_LambdaJob0_entityQuery.ToEntityArray(Allocator.Temp);
 		foreach (var entity in entities)
 		{
@@ -70,7 +74,7 @@ public class Destroy_TravelBuffSystem_Patch
 
 			// This buff is involved when exiting the Coffin when creating a new character
 			// previous to that, the connected user doesn't have a Character or name.
-			if (GUID.Equals(Data.Buff.AB_Interact_TombCoffinSpawn_Travel))
+			if (GUID.Equals(Prefabs.AB_Interact_TombCoffinSpawn_Travel))
 			{
 				var owner = __instance.EntityManager.GetComponentData<EntityOwner>(entity).Owner;
 				if (!__instance.EntityManager.HasComponent<PlayerCharacter>(owner)) return;

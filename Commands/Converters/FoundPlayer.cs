@@ -1,7 +1,7 @@
-using CommunityCommands.Models;
+using KindredCommands.Models;
 using VampireCommandFramework;
 
-namespace CommunityCommands.Commands.Converters;
+namespace KindredCommands.Commands.Converters;
 
 /// <summary>
 /// Use this type as a parameter to match a player by steamid first, then by name.

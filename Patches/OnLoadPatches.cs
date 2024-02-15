@@ -1,15 +1,8 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using HarmonyLib;
 using ProjectM;
-using ProjectM.Gameplay.Systems;
-using ProjectM.Shared;
 
 
-namespace CommunityCommands.Patches;
+namespace KindredCommands.Patches;
 
 [HarmonyPatch(typeof(SpawnTeamSystem_OnPersistenceLoad), nameof(SpawnTeamSystem_OnPersistenceLoad.OnUpdate))]
 public static class InitializationPatch
