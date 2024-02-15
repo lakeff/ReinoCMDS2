@@ -88,7 +88,7 @@ This is a successor in the line of ChatCommands by Nopey, RPGMods by Kaltharos, 
   - will teleport you to the boss specified. Must be near boss. If multiple bosses are up, you can specify which one to teleport to. Bosses must have been spawned in at least once on the map to be teleported to.
   - Example: *.boss teleportto TheNameOfTheBoss 1*
   - Shortcut: *.boss tt*
-- - `.reloadstaff`
+- `.reloadstaff`
   - reloads the staff list config file
 - `.setstaff (Player) (Rank)`
   - Adds a player to the staff list, with whatever rank for listing in the online staff command return. This isn't the same as admin, as it allows for non-admin staff to be listed as well.
