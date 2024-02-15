@@ -1,8 +1,8 @@
 ![](logo.png)
 # KindredCommands for V Rising
-KindredCommands is a server modification for V Rising that adds chat commands
-This is a successor in the line of ChatCommands by Nopey, RPGMods by Kaltharos, CommunityCommands by deca, and AdminCommands by willis. Credits to all of them for their work and inspiration. Also, thanks to the V Rising modding community for ideas!
-
+KindredCommands is a server modification for V Rising that adds chat commands for the goal of server administration.
+This is built upon CommunityCommands by deca, and AdminCommands by willis with some fixes/tweaks and new commands added. Credits to all of them for their work and inspiration. 
+Also, thanks to the V Rising modding and server communities for ideas and requests!
 
 ## Staff Commands
 - `.bloodpotion (Bloodtype) (Quality) (Amount)`
