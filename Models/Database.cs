@@ -15,6 +15,7 @@ public readonly struct Database
 	{
 		string json;
 		Dictionary<string, string> dict;
+
 		STAFF.Clear();
 		NOSPAWN.Clear();
 
@@ -25,7 +26,7 @@ public readonly struct Database
 
 			foreach (var kvp in dict)
 			{
-				STAFF.Add(kvp.Key, kvp.Value);
+				STAFF[kvp.Key] = kvp.Value;
 			}
 		}
 		else {
@@ -39,7 +40,7 @@ public readonly struct Database
 
 			foreach (var kvp in dict)
 			{
-				NOSPAWN.Add(kvp.Key, kvp.Value);
+				NOSPAWN[kvp.Key] = kvp.Value;
 			}
 		}
 		else
@@ -54,11 +55,8 @@ public readonly struct Database
 	static void WriteConfig(string path, Dictionary<string, string> dict)
 	{
 		if (!Directory.Exists(CONFIG_PATH)) Directory.CreateDirectory(CONFIG_PATH);
-		if (!File.Exists(path))
-		{
-			var json = JsonSerializer.Serialize(dict, new JsonSerializerOptions { WriteIndented = true });
-			File.WriteAllText(path, json);
-		}
+		var json = JsonSerializer.Serialize(dict, new JsonSerializerOptions { WriteIndented = true });
+		File.WriteAllText(path, json);
 	}
 
 	static public void SaveStaff()
