@@ -4,6 +4,12 @@ KindredCommands is a server modification for V Rising that adds chat commands fo
 This is built upon CommunityCommands by deca, and AdminCommands by willis with some fixes/tweaks and new commands added. Credits to all of them for their work and inspiration. 
 Also, thanks to the V Rising modding and server communities for ideas and requests!
 
+[Territory ID Map](https://i.imgur.com/phmRmP7.jpeg)
+
+Feel free to reach out to me on discord (odjit) if you have any questions or need help with the mod.
+
+[V Rising Modding Discord](https://vrisingmods.com/discord)
+
 ## Staff Commands
 - `.bloodpotion (Bloodtype) (Quality) (Amount)`
   - will give Merlot of specified type and quality. You can also specify an amount
@@ -71,8 +77,11 @@ Also, thanks to the V Rising modding and server communities for ideas and reques
   - Example: *.spawnhorse 10 10 10 false 1*
   - Shortcut: *.sh*
 - `banishhorse`
-  - will teleport all ghost horses to the eastern side of the incomplete zone. Useful for cleaning up ghost horses without killing them (despawn will kill them, making them unsummonable/dead)
+  - will teleport all ghost horses to the edge of the unused map beyond the gates in the nether. Useful for cleaning up ghost horses without killing them (despawn will kill them, making them unsummonable/dead)
   - Shortcut: *.bh*
+- `.teleporthorse (radius)`
+  - will teleport all dominated horses within the radius specified to your location. Useful for cleaning up horses that are stuck in walls or other objects or that are desynced.
+  - Example: *.teleporthorse 10*
 - `.despawnnpc (guid) (range)`
   - will kill any entity matching the ID specified. Use sparingly as this is an expensive call, and could cause minor lag depending. Just for the cases where you can't kill something by hand. 
   - Example: *.despawnnpc CHAR_ChurchOfLight_Lightweaver 10*
@@ -107,8 +116,39 @@ Also, thanks to the V Rising modding and server communities for ideas and reques
 - `.whereami`
   - will tell you your current location in the world
   - Shortcut: *.wai*
-
-
+- `.announce add (Name) (Message) (Time) (OneTime: True/False)`
+  - Adds an announcement to the list of announcements. Time is server time. OneTime true will only do it once, false will repeat the announcement every day at the same time. (Default False)
+  - Example: *.announce add “Spooky” “It is the spooky hour!” 12:00AM false*
+  - Shortcut: *.announce a*
+- `.announce remove (Name)`
+  - Removes an announcement from the list of announcements.
+  - Example: *.announce remove “Spooky”*
+  - Shortcut: *.announce r*
+- `.announce list`
+  - Lists all announcements. Soonest upcoming announcements are at the start of the list.
+  - Shortcut: *.announce l*
+- `.announce change (Name) (Message) (Time) (OneTime: True/False)`
+  - Changes an announcement in the list of announcements. Time is server time. OneTime true will only do it once, false will repeat the announcement every day at the same time. (Default False)
+  - Example: *.announce change “Spooky” “It is the spookiest hour!” 12:00AM false*
+  - Shortcut: *.announce c*
+- `.unbindplayer (Name)`
+  - Unbinds a steamID from a character. Useful for "deleting" a character. Old body, name, territory etc will still exist, but the character will be unplayable. Kicks affected player. When they log back, they will be prompted to create a new character.
+  - Example:: *.unbindplayer Bob*
+- `.swapplayers (Name1) (Name2)`
+  - Swaps steamIDs between two characters. Useful for "changing" a character. You can swap two active players, or swap back into a previously unbound body. Kicks affected players.
+  - Example: *.swapplayers Bob Joe*
+- `.incomingdecay`
+  - will list 6 of the plots that are closest to decay.
+  - Shortcut: *.incd*
+- `.playerinfo (Player)`
+  - will list the player's steamID, online status, clan name, Position, and list all of their castles (with index ID, region, and time remaining on heart).
+  - Example: *.playerinfo Bob*
+- `.idcheck (steamID)`
+  - will see if a steamID is registered to a character, and if so, what character it is.
+  - Example: *.idcheck 1234567890*
+- `.unlock (Player)`
+  - will complete a player's journal, vbloods, abilities and waypoints. Does not unlock DLCs. (Thats naughty)
+  - Example: *.unlock Bob*
 
 ## Player Commands:
 - `.afk`
@@ -125,3 +165,10 @@ Also, thanks to the V Rising modding and server communities for ideas and reques
   - Shows a list and ranking of players within a named clan. Use quotes around a clan name with any spaces.
   - Example: *.clan members “The Best Clan”*
   - Shortcut: *.c m*
+- `.time`
+  - will tell you the current server time
+- `.openplots`
+  - will report how many open or decaying plots there are in each region.
+  - Shortcut: *.op*
+
+

@@ -12,11 +12,15 @@ internal static class Core
 	public static EntityManager EntityManager { get; } = Server.EntityManager;
 
 	public static ManualLogSource Log { get; } = Plugin.PluginLog;
+	public static AnnouncementsService AnnouncementsService { get; internal set; }
+
 	public static PlayerService Players { get; internal set; }
 
 	public static UnitSpawnerService UnitSpawner { get; internal set; }
 
 	public static PrefabService Prefabs { get; internal set; }
+
+	public const int MAX_REPLY_LENGTH = 509;
 
 	public static void LogException(System.Exception e, [CallerMemberName] string caller = null)
 	{
@@ -32,6 +36,7 @@ internal static class Core
 		Players = new();
 		UnitSpawner = new();
 		Prefabs = new();
+		AnnouncementsService = new();
 		_hasInitialized = true;
 		Log.LogInfo($"{nameof(InitializeAfterLoaded)} completed");
 	}

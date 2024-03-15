@@ -118,7 +118,7 @@ internal static class SpawnCommands
 		ctx.Reply($"Banned '{character.Name}' from spawning with reason '{reason}'");
 	}
 
-	readonly static float3 banishLocation = new(-218.4665f, 15, -556.69354f);
+	readonly static float3 banishLocation = new(-1551.8973f, 5, -2728.9856f);
 
     [Command("banishhorse", "bh", description: "Banishes dominated ghost horses on the server out of bounds", adminOnly: true)]
 	public static void BanishGhost(ChatCommandContext ctx)
@@ -143,4 +143,11 @@ internal static class SpawnCommands
 			ctx.Reply($"No valid ghost horses found to banish but {horses.Count()} already banished");
 		}
     }
+	[Command("teleporthorse", description: "teleports horses to you", adminOnly: true)]
+	public static void TeleportHorse(ChatCommandContext ctx, float radius = 5f)
+	{
+		var horses = MobUtility.ClosestMobs(ctx, radius, Prefabs.CHAR_Mount_Horse_Vampire);
+		horses.ForEach(e => Core.EntityManager.SetComponentData(e, new Translation { Value = Core.EntityManager.GetComponentData<LocalToWorld>(ctx.Event.SenderCharacterEntity).Position }));
+		ctx.Reply($"You've teleported {horses.Count} horses to your position.");
+	}
 }

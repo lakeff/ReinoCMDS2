@@ -10,6 +10,8 @@ using Unity.Mathematics;
 using Unity.Transforms;
 using VampireCommandFramework;
 using System.Collections.Generic;
+using ProjectM.Network;
+using ProjectM.Gameplay.Clan;
 
 namespace KindredCommands;
 
@@ -17,6 +19,8 @@ namespace KindredCommands;
 internal static partial class Helper
 {
 	public static AdminAuthSystem adminAuthSystem = VWorld.Server.GetExistingSystem<AdminAuthSystem>();
+	public static ClanSystem_Server clanSystem = VWorld.Server.GetExistingSystem<ClanSystem_Server>();
+	public static EntityCommandBufferSystem entityCommandBufferSystem = VWorld.Server.GetExistingSystem<EntityCommandBufferSystem>();
 
 	public static PrefabGUID GetPrefabGUID(Entity entity)
 	{
@@ -33,6 +37,16 @@ internal static partial class Helper
 		return guid;
 	}
 
+	public static bool TryGetClanEntityFromPlayer(Entity User, out Entity ClanEntity)
+	{
+		if (User.Read<TeamReference>().Value._Value.ReadBuffer<TeamAllies>().Length > 0)
+		{
+			ClanEntity = User.Read<TeamReference>().Value._Value.ReadBuffer<TeamAllies>()[0].Value;
+			return true;
+		}
+		ClanEntity = new Entity();
+		return false;
+	}
 
 	public static Entity AddItemToInventory(Entity recipient, PrefabGUID guid, int amount)
 	{
@@ -212,5 +226,35 @@ internal static partial class Helper
         {
 			Buffs.RemoveBuff(player, Prefabs.EquipBuff_ShroudOfTheForest);
         }
-    }
+	}
+
+	public static void KickPlayer(Entity userEntity)
+	{
+		EntityManager entityManager = Core.Server.EntityManager;
+		User user = userEntity.Read<User>();
+
+		if (!user.IsConnected || user.PlatformId==0) return;
+
+		Entity entity =  entityManager.CreateEntity(new ComponentType[3]
+		{
+			ComponentType.ReadOnly<NetworkEventType>(),
+			ComponentType.ReadOnly<SendEventToUser>(),
+			ComponentType.ReadOnly<KickEvent>()
+		});
+
+		entity.Write(new KickEvent()
+		{
+			PlatformId = user.PlatformId
+		});
+		entity.Write(new SendEventToUser()
+		{
+			UserIndex = user.Index
+		});
+		entity.Write(new NetworkEventType()
+		{
+			EventId = NetworkEvents.EventId_KickEvent,
+			IsAdminEvent = false,
+			IsDebugEvent = false
+		});
+	}
 }
