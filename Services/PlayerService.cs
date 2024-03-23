@@ -75,6 +75,10 @@ internal class PlayerService
 
 		des.RenameUser(fromCharacter, renameEvent);
 		UpdatePlayerCache(userEntity, userData.CharacterName.ToString(), newName.ToString());
+
+		Core.Log.LogInfo($"Player {userData.CharacterName} renamed to {newName}");
+		Core.StealthAdminService.HandleRename(userEntity);
+
 		return true;
 	}
 	public static IEnumerable<Entity> GetUsersOnline()

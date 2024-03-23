@@ -74,7 +74,7 @@ public class StealthAdminService
 
 		var characterNames = stealthUsers.Select(e => e.Read<User>().CharacterName.ToString()).ToList();
 		characterNames.Sort();
-		var json = JsonSerializer.Serialize(characterNames);
+		var json = JsonSerializer.Serialize(characterNames, new JsonSerializerOptions { WriteIndented = true });
 		File.WriteAllText(STEALTH_ADMINS_PATH, json);
 	}
 
@@ -187,4 +187,11 @@ public class StealthAdminService
 		return stealthUsers.Contains(userEntity);
 	}
 
+	public void HandleRename(Entity userEntity)
+	{
+		if (stealthUsers.Contains(userEntity))
+		{
+			SaveStealthAdmins();
+		}
+	}
 }
