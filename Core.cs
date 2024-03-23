@@ -20,6 +20,8 @@ internal static class Core
 
 	public static PrefabService Prefabs { get; internal set; }
 
+	public static StealthAdminService StealthAdminService { get; internal set; }
+
 	public const int MAX_REPLY_LENGTH = 509;
 
 	public static void LogException(System.Exception e, [CallerMemberName] string caller = null)
@@ -37,6 +39,7 @@ internal static class Core
 		UnitSpawner = new();
 		Prefabs = new();
 		AnnouncementsService = new();
+		StealthAdminService = new();
 		_hasInitialized = true;
 		Log.LogInfo($"{nameof(InitializeAfterLoaded)} completed");
 	}
