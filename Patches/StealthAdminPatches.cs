@@ -1,5 +1,7 @@
 
-using System.Collections.Generic;
+using System;
+using System.Reflection;
+using Bloodstone.API;
 using HarmonyLib;
 using KindredCommands;
 using ProjectM;
@@ -7,43 +9,85 @@ using ProjectM.Network;
 using Stunlock.Network;
 using Unity.Collections;
 using Unity.Entities;
+using VampireCommandFramework;
+using VampireCommandFramework.Breadstone;
 
 [HarmonyBefore("gg.deca.VampireCommandFramework")]
 [HarmonyPatch(typeof(ChatMessageSystem), nameof(ChatMessageSystem.OnUpdate))]
 public static class StealthAdminChatPatch
 {
-	static readonly List<Entity> entitiesStealthAdmin = [];
-
 	public static bool Prefix(ChatMessageSystem __instance)
 	{
-		entitiesStealthAdmin.Clear();
 		NativeArray<Entity> entities = __instance.__ChatMessageJob_entityQuery.ToEntityArray(Allocator.Temp);
 		foreach (var entity in entities)
 		{
 			var fromData = entity.Read<FromCharacter>();
-			var chatData = entity.Read<ChatMessageEvent>();
-			if(Core.StealthAdminService.IsStealthAdmin(fromData.User) && chatData.MessageText.ToString().StartsWith("."))
+			var userData = fromData.User.Read<User>();
+			var chatEventData = entity.Read<ChatMessageEvent>();
+
+			var messageText = chatEventData.MessageText.ToString();
+
+			var addedAdmin = false;
+			if (Core.StealthAdminService.IsStealthAdmin(fromData.User) && chatEventData.MessageText.ToString().StartsWith("."))
 			{
-				entitiesStealthAdmin.Add(fromData.User);
-				var userData = fromData.User.Read<User>();
+				addedAdmin = true;
 				userData.IsAdmin = true;
-				Core.Log.LogInfo("Enabled Admin");
+				fromData.User.Write(userData);
+			}
+
+			// Access private VChatEvent constructor
+			VChatEvent ev = (VChatEvent)typeof(VChatEvent).GetConstructor(BindingFlags.NonPublic | BindingFlags.Instance, null,
+				new Type[] { typeof(Entity), typeof(Entity), typeof(string), typeof(ChatMessageType), typeof(User) }, null).
+				Invoke(new object[] { fromData.User, fromData.Character, messageText, chatEventData.MessageType, userData });
+
+			var ctx = new ChatCommandContext(ev);
+
+			CommandResult result;
+			try
+			{
+				result = CommandRegistry.Handle(ctx, messageText);
+			}
+			catch (Exception e)
+			{
+				Core.Log.LogError($"Error while handling chat message {e}");
+				continue;
+			}
+
+			// Legacy .help pass through support
+			if (result == CommandResult.Success && messageText.StartsWith(".help-legacy", System.StringComparison.InvariantCulture))
+			{
+				chatEventData.MessageText = messageText.Replace("-legacy", string.Empty);
+				__instance.EntityManager.SetComponentData(entity, chatEventData);
+			}
+			else if (result != CommandResult.Unmatched)
+			{
+				switch(result)
+				{
+					case CommandResult.Denied:
+						Core.Log.LogInfo($"{ctx.Name} was denied trying to use command: {messageText}");
+						break;
+					case CommandResult.Success:
+						Core.Log.LogInfo($"{ctx.Name} used command: {messageText}");
+						break;
+					case CommandResult.InternalError:
+						Core.Log.LogInfo($"{ctx.Name} had an internal error trying to use command: {messageText}");
+						break;
+					case CommandResult.UsageError:
+						Core.Log.LogInfo($"{ctx.Name} had a usage error trying to use command: {messageText}");
+						break;
+				}
+				//__instance.EntityManager.AddComponent<DestroyTag>(entity);
+				VWorld.Server.EntityManager.DestroyEntity(entity);
+			}
+
+			if (addedAdmin)
+			{
+				userData.IsAdmin = false;
 				fromData.User.Write(userData);
 			}
 		}
 		entities.Dispose();
 		return true;
-	}
-
-	public static void Postfix(ChatMessageSystem __instance)
-	{
-		foreach (var userEntity in entitiesStealthAdmin)
-		{
-			var userData = userEntity.Read<User>();
-			userData.IsAdmin = false;
-			Core.Log.LogInfo("Disabled Admin");
-			userEntity.Write(userData);
-		}
 	}
 }
 
