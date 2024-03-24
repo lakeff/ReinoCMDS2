@@ -62,7 +62,7 @@ public static class PlayerCommands
 
 		user = userEntity.Read<User>();
 		user.PlatformId = 0;
-		userEntity.Write(user);	
+		userEntity.Write(user);
 
 		Core.StealthAdminService.RemoveStealthAdmin(userEntity);
 	}
@@ -90,7 +90,7 @@ public static class PlayerCommands
 		Core.StealthAdminService.RemoveStealthAdmin(userEntity2);
 	}
 
-	[Command("unlock" , description: "Unlocks a player's skills, jouirnal, etc.", adminOnly: true)]
+	[Command("unlock", description: "Unlocks a player's skills, jouirnal, etc.", adminOnly: true)]
 	public static void UnlockPlayer(ChatCommandContext ctx, FoundPlayer player)
 	{
 		var User = player?.Value.UserEntity ?? ctx.Event.SenderUserEntity;
@@ -114,7 +114,6 @@ public static class PlayerCommands
 		}
 	}
 
-	
 	public static DebugEventsSystem debugEventsSystem = VWorld.Server.GetExistingSystem<DebugEventsSystem>();
 
 	public static void UnlockPlayer(FromCharacter fromCharacter)
@@ -124,19 +123,6 @@ public static class PlayerCommands
 		debugEventsSystem.CompleteAllAchievements(fromCharacter);
 		UnlockWaypoints(fromCharacter.User);
 
-	}
-	public static void UnlockAllWaypoints(Entity User)
-	{
-		var buffer = VWorld.Server.EntityManager.AddBuffer<UnlockedWaypointElement>(User);
-		var waypointComponentType = new ComponentType(Il2CppType.Of<ChunkWaypoint>(), ComponentType.AccessMode.ReadWrite);
-		var query = VWorld.Server.EntityManager.CreateEntityQuery(waypointComponentType);
-		var waypoints = query.ToEntityArray(Allocator.Temp);
-		foreach (var waypoint in waypoints)
-		{
-			var unlockedWaypoint = new UnlockedWaypointElement();
-			unlockedWaypoint.Waypoint = waypoint.Read<NetworkId>();
-			buffer.Add(unlockedWaypoint);
-		}
 	}
 
 	public static void UnlockWaypoints(Entity User)
@@ -155,5 +141,26 @@ public static class PlayerCommands
 			{
 				Waypoint = entity.Read<NetworkId>()
 			});
+	}
+
+	[Command("revealmap", description: "Reveal the map for a player.", adminOnly: true)]
+	public static void RevealMap(ChatCommandContext ctx, FoundPlayer player = null)
+	{
+		var userEntity = player?.Value.UserEntity ?? ctx.Event.SenderUserEntity;
+		var mapZoneElements = Core.EntityManager.GetBuffer<UserMapZoneElement>(userEntity);
+		foreach (var mapZone in mapZoneElements)
+		{
+			var userZoneEntity = mapZone.UserZoneEntity.GetEntityOnServer();
+			var revealElements = Core.EntityManager.GetBuffer<UserMapZonePackedRevealElement>(userZoneEntity);
+			revealElements.Clear();
+			var revealElement = new UserMapZonePackedRevealElement
+			{
+				PackedPixel = 255
+			};
+			for (var i = 0; i < 8192; i++)
+			{
+				revealElements.Add(revealElement);
+			}
+		}
 	}
 }
