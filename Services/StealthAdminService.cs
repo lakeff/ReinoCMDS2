@@ -50,7 +50,6 @@ public class StealthAdminService
 				stealthUsers.Add(userEntity);
 				user.IsAdmin = false;
 				userEntity.Write(user);
-				Core.Log.LogInfo("Disabled Admin");
 				if (userEntity.Has<AdminUser>())
 				{
 					userEntity.Remove<AdminUser>();
@@ -83,22 +82,7 @@ public class StealthAdminService
 		if (stealthUsers.Contains(userEntity))
 		{
 			var user = userEntity.Read<User>();
-			ServerChatUtils.SendSystemMessageToClient(Core.EntityManager, user, $"You are currently a stealth admin.");
-
-			userEntity.Add<AdminUser>();
-			userEntity.Write(new AdminUser()
-			{
-				AuthMethod = AdminAuthMethod.Authenticated,
-				Level = AdminLevel.SuperAdmin
-			});
-
-			user.IsAdmin = true;
-			userEntity.Write(user);
-
-			AuthAdmin(userEntity);
-
-			user.IsAdmin = false;
-			userEntity.Write(user);
+			ServerChatUtils.SendSystemMessageToClient(Core.EntityManager, user, $"You are in stealth admin mode.");
 		}
 	}
 

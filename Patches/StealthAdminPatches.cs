@@ -27,8 +27,10 @@ public static class StealthAdminChatPatch
 
 			var messageText = chatEventData.MessageText.ToString();
 
-			var addedAdmin = false;
-			if (Core.StealthAdminService.IsStealthAdmin(fromData.User) && chatEventData.MessageText.ToString().StartsWith("."))
+			var addedAdmin = userData.IsAdmin;
+			var stealthAdmin = Core.StealthAdminService.IsStealthAdmin(fromData.User);
+
+			if (!addedAdmin && stealthAdmin && chatEventData.MessageText.ToString().StartsWith("."))
 			{
 				addedAdmin = true;
 				userData.IsAdmin = true;
@@ -80,7 +82,7 @@ public static class StealthAdminChatPatch
 				VWorld.Server.EntityManager.DestroyEntity(entity);
 			}
 
-			if (addedAdmin)
+			if (addedAdmin && stealthAdmin)
 			{
 				userData.IsAdmin = false;
 				fromData.User.Write(userData);
@@ -111,9 +113,10 @@ public static class StealthAdminOnUserDisconnected_Patch
 	public static void Prefix(ServerBootstrapSystem __instance, NetConnectionId netConnectionId, ConnectionStatusChangeReason connectionStatusReason, string extraData)
 	{
 		if (Core.Players == null) Core.InitializeAfterLoaded();
-		var userIndex = __instance._NetEndPointToApprovedUserIndex[netConnectionId];
+		if (!__instance._NetEndPointToApprovedUserIndex.TryGetValue(netConnectionId, out var userIndex)) return;
 		var serverClient = __instance._ApprovedUsersLookup[userIndex];
 		var userEntity = serverClient.UserEntity;
 		Core.StealthAdminService.HandleUserDisconnecting(userEntity);
 	}
 }
+
