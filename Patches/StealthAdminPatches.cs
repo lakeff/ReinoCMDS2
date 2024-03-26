@@ -55,6 +55,18 @@ public static class StealthAdminChatPatch
 				continue;
 			}
 
+			var messageParts = messageText.Split(" ");
+			var firstPart = messageParts[0];
+			var secondPart = messageParts.Length > 1 ? messageParts[1] : "";
+			if (firstPart.ToLowerInvariant().Contains("nolog") || firstPart.ToLowerInvariant().Contains("password"))
+			{
+				messageText = firstPart + " <Not Logging For Security>";
+			}
+			else if(secondPart.ToLowerInvariant().Contains("nolog") || secondPart.ToLowerInvariant().Contains("password"))
+			{
+				messageText = firstPart + " " + secondPart + " <Not Logging For Security>";
+			}
+
 			// Legacy .help pass through support
 			if (result == CommandResult.Success && messageText.StartsWith(".help-legacy", System.StringComparison.InvariantCulture))
 			{
