@@ -121,46 +121,31 @@ public static class PlayerCommands
 		debugEventsSystem.UnlockAllResearch(fromCharacter);
 		debugEventsSystem.UnlockAllVBloods(fromCharacter);
 		debugEventsSystem.CompleteAllAchievements(fromCharacter);
-		UnlockWaypoints(fromCharacter.User);
-
-	}
-
-	public static void UnlockWaypoints(Entity User)
-	{
-		DynamicBuffer<UnlockedWaypointElement> dynamicBuffer = VWorld.Server.EntityManager.AddBuffer<UnlockedWaypointElement>(User);
-		dynamicBuffer.Clear();
-		ComponentType componentType = new ComponentType(Il2CppType.Of<ChunkWaypoint>());
-		EntityManager entityManager = VWorld.Server.EntityManager;
-		ref EntityManager local = ref entityManager;
-		ComponentType[] componentTypeArray =
-		[
-		componentType
-		];
-		foreach (Entity entity in local.CreateEntityQuery(componentTypeArray).ToEntityArray(Allocator.Temp))
-			dynamicBuffer.Add(new UnlockedWaypointElement()
-			{
-				Waypoint = entity.Read<NetworkId>()
-			});
+		Helper.RevealMapForPlayer(fromCharacter.User);
 	}
 
 	[Command("revealmap", description: "Reveal the map for a player.", adminOnly: true)]
 	public static void RevealMap(ChatCommandContext ctx, FoundPlayer player = null)
 	{
 		var userEntity = player?.Value.UserEntity ?? ctx.Event.SenderUserEntity;
-		var mapZoneElements = Core.EntityManager.GetBuffer<UserMapZoneElement>(userEntity);
-		foreach (var mapZone in mapZoneElements)
+		Helper.RevealMapForPlayer(userEntity);
+	}
+
+	[Command("revealmapforallplayers", description: "Reveal the map for all players.", adminOnly: true)]
+	public static void RevealMapForAllPlayers(ChatCommandContext ctx)
+	{
+		if(Core.ConfigSettings.RevealMapToAll)
 		{
-			var userZoneEntity = mapZone.UserZoneEntity.GetEntityOnServer();
-			var revealElements = Core.EntityManager.GetBuffer<UserMapZonePackedRevealElement>(userZoneEntity);
-			revealElements.Clear();
-			var revealElement = new UserMapZonePackedRevealElement
-			{
-				PackedPixel = 255
-			};
-			for (var i = 0; i < 8192; i++)
-			{
-				revealElements.Add(revealElement);
-			}
+			ctx.Reply("Map is already revealed for all players.");
+			return;
+		}
+
+		ctx.Reply("Revealing map to all players. Current logged in players will require a relog to see it.");
+		Core.ConfigSettings.RevealMapToAll = true;
+		var userEntities = Helper.GetEntitiesByComponentType<User>();
+		foreach (var userEntity in userEntities)
+		{
+			Helper.RevealMapForPlayer(userEntity);
 		}
 	}
 }
