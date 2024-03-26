@@ -121,6 +121,7 @@ public static class PlayerCommands
 		debugEventsSystem.UnlockAllResearch(fromCharacter);
 		debugEventsSystem.UnlockAllVBloods(fromCharacter);
 		debugEventsSystem.CompleteAllAchievements(fromCharacter);
+		Helper.UnlockWaypoints(fromCharacter.User);
 		Helper.RevealMapForPlayer(fromCharacter.User);
 	}
 

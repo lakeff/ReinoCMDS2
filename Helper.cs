@@ -258,7 +258,7 @@ internal static partial class Helper
 		});
 	}
 
-	static void UnlockWaypoints(Entity userEntity)
+	public static void UnlockWaypoints(Entity userEntity)
 	{
 		DynamicBuffer<UnlockedWaypointElement> dynamicBuffer = Core.EntityManager.AddBuffer<UnlockedWaypointElement>(userEntity);
 		dynamicBuffer.Clear();
@@ -271,7 +271,6 @@ internal static partial class Helper
 
 	public static void RevealMapForPlayer(Entity userEntity)
 	{
-		UnlockWaypoints(userEntity);
 		var mapZoneElements = Core.EntityManager.GetBuffer<UserMapZoneElement>(userEntity);
 		foreach (var mapZone in mapZoneElements)
 		{
