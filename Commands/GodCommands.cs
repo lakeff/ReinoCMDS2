@@ -27,8 +27,8 @@ internal class GodCommands
 		PlayerProjectileRanges[charEntity] = 10f;
 		MakePlayerImmaterial(userEntity, charEntity);
 		GodPlayers.Add(charEntity);
-		Buffs.AddBuff(userEntity, charEntity, Prefabs.CustomBuff, true);
-		Buffs.AddBuff(userEntity, charEntity, Prefabs.EquipBuff_ShroudOfTheForest, true);
+		Buffs.AddBuff(userEntity, charEntity, Prefabs.CustomBuff, -1, true);
+		Buffs.AddBuff(userEntity, charEntity, Prefabs.EquipBuff_ShroudOfTheForest, -1, true);
 
 		// Heal back to full
 		Health health = charEntity.Read<Health>();
@@ -62,7 +62,7 @@ internal class GodCommands
 
 	private static void MakePlayerImmaterial(Entity User, Entity Character)
 	{
-		Buffs.AddBuff(User, Character, Prefabs.AB_Blood_BloodRite_Immaterial, true);
+		Buffs.AddBuff(User, Character, Prefabs.AB_Blood_BloodRite_Immaterial, -1, true);
 		if (BuffUtility.TryGetBuff(Core.EntityManager, Character, Prefabs.AB_Blood_BloodRite_Immaterial, out Entity buffEntity))
 		{
 			var modifyMovementSpeedBuff = buffEntity.Read<ModifyMovementSpeedBuff>();

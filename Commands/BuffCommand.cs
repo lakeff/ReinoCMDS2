@@ -30,12 +30,12 @@ internal class BuffCommands
 	}
 
 	[Command("buff", adminOnly: true)]
-	public static void BuffCommand(ChatCommandContext ctx, BuffInput buff, OnlinePlayer player = null)
+	public static void BuffCommand(ChatCommandContext ctx, BuffInput buff,OnlinePlayer player = null, int duration = 0, bool immortal = false)
 	{
 		var userEntity = player?.Value.UserEntity ?? ctx.Event.SenderUserEntity;
 		var charEntity = player?.Value.CharEntity ?? ctx.Event.SenderCharacterEntity;
 
-		Buffs.AddBuff(userEntity, charEntity, buff.Prefab);
+		Buffs.AddBuff(userEntity, charEntity, buff.Prefab, duration, immortal);
 		ctx.Reply($"Applied the buff {buff.Name} to {userEntity.Read<User>().CharacterName}");
 	}
 
