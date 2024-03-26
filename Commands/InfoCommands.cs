@@ -80,11 +80,5 @@ internal class InfoCommands
 		ctx.Reply("No user found with that steamid");
 	}
 
-	/*[Command("playerfirstjoin", "pfj", description: "Displays the first join date of a player.", adminOnly: true)]
-	public static void PlayerFirstJoin(ChatCommandContext ctx, FoundPlayer player)
-	{
-		var user = player.Value.UserEntity.Read<User>();
-		var firstJoin = user.FirstJoin;
-		ctx.Reply($"{user.CharacterName} first joined on {firstJoin}");
-	}*/
+
 }
