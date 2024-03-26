@@ -2,7 +2,7 @@
 # KindredCommands for V Rising
 KindredCommands is a server modification for V Rising that adds chat commands for the goal of server administration.
 This is built upon CommunityCommands by deca, and AdminCommands by willis with some fixes/tweaks and new commands added. Credits to all of them for their work and inspiration. 
-Also, thanks to the V Rising modding and server communities for ideas and requests!
+Also, thanks to the V Rising modding and server communities for ideas and requests! Commands now log to the server log for accountability and tracking.
 
 [Territory ID Map](https://i.imgur.com/phmRmP7.jpeg)
 
@@ -15,8 +15,8 @@ Feel free to reach out to me on discord (odjit) if you have any questions or nee
   - will give Merlot of specified type and quality. You can also specify an amount
   - Example: *.bp creature 100 1*
   - Shortcut: *.bp*
-- `.buff (Buff GUID) (Player)`
-  - Adds a buff to a player named, or the user if no one is named.	Be careful, as some buffs can break things. Always test on a test server first.
+- `.buff (Buff GUID) (Player) (Duration) (Immortal)`
+  - Adds a buff to a player named, or the user if no one is named. Duration 0 for default behavior, -1 for eternal, or whatever number of seconds. Immortal true/false for it to last after death.	Be careful, as some buffs can break things. Always test on a test server first.
   - Example: *.buff 476186894 Bob*
 - `.debuff (Buff GUID) (Player)`
   - Removes a buff from a player named, or the user if no one is named. Will work on offline players.
@@ -147,8 +147,15 @@ Feel free to reach out to me on discord (odjit) if you have any questions or nee
   - will see if a steamID is registered to a character, and if so, what character it is.
   - Example: *.idcheck 1234567890*
 - `.unlock (Player)`
-  - will complete a player's journal, vbloods, abilities and waypoints. Does not unlock DLCs. (Thats naughty)
+  - will complete a player's journal, vbloods, abilities, waypoints and the map. Does not unlock DLCs. (Thats naughty)
   - Example: *.unlock Bob*
+- `.revealmap (Player)`
+  - will reveal the map for a player named, or the user if no one is named.
+  - Example: *.revealmap Bob*
+- `.revealmapforallplayers`
+  - will reveal the map for all players. New players will log in with a revealed map. Currently logged in players will have their map revealed upon relog. There is a config setting to turn this behavior back off.
+- `.stealthadmin`
+  - will toggle stealth mode for the user as admin. This will enable you to still use all chat admin commands, but your name not go green. You cannnot adminauth or you will show as green again. Will persist through relog.
 
 ## Player Commands:
 - `.afk`
