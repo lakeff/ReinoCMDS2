@@ -130,6 +130,8 @@ public static class PlayerCommands
 	{
 		var userEntity = player?.Value.UserEntity ?? ctx.Event.SenderUserEntity;
 		Helper.RevealMapForPlayer(userEntity);
+		if(player != null)
+			ServerChatUtils.SendSystemMessageToClient(Core.EntityManager, userEntity.Read<User>(), "Your map has been revealed, you must relog to see.");
 		ctx.Reply($"Map has been revealed, {player?.Value.CharacterName ?? "you"} must relog to see.");
 	}
 
