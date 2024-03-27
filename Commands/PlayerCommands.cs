@@ -130,6 +130,7 @@ public static class PlayerCommands
 	{
 		var userEntity = player?.Value.UserEntity ?? ctx.Event.SenderUserEntity;
 		Helper.RevealMapForPlayer(userEntity);
+		ctx.Reply($"Map has been revealed, {player?.Value.CharacterName ?? "you"} must relog to see.");
 	}
 
 	[Command("revealmapforallplayers", description: "Reveal the map for all players.", adminOnly: true)]

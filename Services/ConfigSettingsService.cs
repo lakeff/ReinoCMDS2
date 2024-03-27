@@ -1,5 +1,6 @@
 using System.IO;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace KindredCommands.Services;
 internal class ConfigSettingsService
@@ -19,15 +20,15 @@ internal class ConfigSettingsService
 
 	struct Config
 	{
-		public bool RevealMapToAll = false;
-
-		public Config()
-		{
-		}
+		public bool RevealMapToAll { get; set; }
 	}
 
 	Config config;
 
+	public ConfigSettingsService()
+	{
+		LoadConfig();
+	}
 
 	void LoadConfig()
 	{
@@ -46,7 +47,7 @@ internal class ConfigSettingsService
 	{
 		if(!Directory.Exists(CONFIG_PATH))
 			Directory.CreateDirectory(CONFIG_PATH);
-		var json = JsonSerializer.Serialize(config);
+		var json = JsonSerializer.Serialize(config, new JsonSerializerOptions { WriteIndented = true, IncludeFields = true });
 		File.WriteAllText(SETTINGS_PATH, json);
 	}
 }
