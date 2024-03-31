@@ -1,5 +1,9 @@
+using KindredCommands.Models.Discord;
+using KindredCommands.Models;
+using KindredCommands.Services;
 using ProjectM;
 using VampireCommandFramework;
+using System.Collections.Generic;
 
 namespace KindredCommands.Commands;
 internal class GiveItemCommands
@@ -31,6 +35,28 @@ internal class GiveItemCommands
 		Helper.AddItemToInventory(ctx.Event.SenderCharacterEntity, item.Value, quantity);
 		var prefabSys = Core.Server.GetExistingSystem<PrefabCollectionSystem>();
 		prefabSys.PrefabGuidToNameDictionary.TryGetValue(item.Value, out var name); // seems excessive
+
+		List<ContentHelper> content = new()
+		{
+			new ContentHelper
+			{
+					Title = "Comando",
+					Content = "give"
+			},
+			new ContentHelper
+			{
+					Title = "Item",
+					Content = name.ToString()
+			},
+			new ContentHelper
+			{
+					Title = "Quantidade",
+					Content = quantity.ToString()
+			},
+		};
+
+		DiscordService.SendWebhook(ctx.Event.User.CharacterName, content);
+
 		ctx.Reply($"Gave {quantity} {name}");
 	}
 }

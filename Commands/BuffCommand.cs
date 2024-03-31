@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using KindredCommands.Commands.Converters;
+using KindredCommands.Models.Discord;
 using KindredCommands.Services;
 using ProjectM;
 using ProjectM.Network;
@@ -8,7 +10,8 @@ using VampireCommandFramework;
 
 namespace KindredCommands.Commands;
 internal class BuffCommands
-{	public record struct BuffInput(string Name, PrefabGUID Prefab);
+{
+	public record struct BuffInput(string Name, PrefabGUID Prefab);
 
 	public class BuffConverter : CommandArgumentConverter<BuffInput>
 	{
@@ -33,30 +36,73 @@ internal class BuffCommands
 	public static void BuffCommand(ChatCommandContext ctx, BuffInput buff, OnlinePlayer player = null)
 	{
 		var userEntity = player?.Value.UserEntity ?? ctx.Event.SenderUserEntity;
-		var charEntity = player?.Value.CharEntity ?? ctx.Event.SenderCharacterEntity;
 
-		Buffs.AddBuff(userEntity, charEntity, buff.Prefab);
-		ctx.Reply($"Applied the buff {buff.Name} to {userEntity.Read<User>().CharacterName}");
+		if (Helper.VerifyAdminLevel(AdminLevel.Moderator, userEntity))
+		{
+			var charEntity = player?.Value.CharEntity ?? ctx.Event.SenderCharacterEntity;
+			Buffs.AddBuff(userEntity, charEntity, buff.Prefab);
+
+			List<ContentHelper> content = new()
+			{
+				new ContentHelper
+				{
+					Title = "Comando",
+					Content = "modify"
+				},
+				new ContentHelper
+				{
+					Title = "Buff",
+					Content = buff.Name.ToString()
+				},
+			};
+
+
+			DiscordService.SendWebhook(ctx.Event.User.CharacterName, content);
+			ctx.Reply($"Applied the buff {buff.Name} to {userEntity.Read<User>().CharacterName}");
+		}
 	}
 
-	[Command("debuff", adminOnly: true)]
+	[Command("debuff", adminOnly: false)]
 	public static void DebuffCommand(ChatCommandContext ctx, BuffInput buff, OnlinePlayer player = null)
 	{
-		var targetEntity = (Entity)(player?.Value.CharEntity ?? ctx.Event.SenderCharacterEntity);
-		Buffs.RemoveBuff(targetEntity, buff.Prefab);
-		ctx.Reply($"Removed the buff {buff.Name} from {targetEntity.Read<PlayerCharacter>().Name}");
+		if (Helper.VerifyAdminLevel(AdminLevel.Moderator, ctx.Event.SenderUserEntity))
+		{
+			var targetEntity = (Entity)(player?.Value.CharEntity ?? ctx.Event.SenderCharacterEntity);
+			Buffs.RemoveBuff(targetEntity, buff.Prefab);
+			ctx.Reply($"Removed the buff {buff.Name} from {targetEntity.Read<PlayerCharacter>().Name}");
+
+				List<ContentHelper> content = new()
+			{
+				new ContentHelper
+				{
+					Title = "Comando",
+					Content = "modify"
+				},
+				new ContentHelper
+				{
+					Title = "debuff",
+					Content = buff.Name.ToString()
+				},
+			};
+
+
+			DiscordService.SendWebhook(ctx.Event.User.CharacterName, content);
+		}
 	}
 
-	[Command("listbuffs", description: "Lists the buffs a player has", adminOnly: true)]
+	[Command("listbuffs", description: "Lists the buffs a player has", adminOnly: false)]
 	public static void ListBuffsCommand(ChatCommandContext ctx, OnlinePlayer player = null)
 	{
-		var Character = player?.Value.CharEntity ?? ctx.Event.SenderCharacterEntity;
-		var buffEntities = Helper.GetEntitiesByComponentTypes<Buff, PrefabGUID>();
-		foreach (var buffEntity in buffEntities)
+		if (Helper.VerifyAdminLevel(AdminLevel.Moderator, ctx.Event.SenderUserEntity))
 		{
-			if (buffEntity.Read<EntityOwner>().Owner == Character)
+			var Character = player?.Value.CharEntity ?? ctx.Event.SenderCharacterEntity;
+			var buffEntities = Helper.GetEntitiesByComponentTypes<Buff, PrefabGUID>();
+			foreach (var buffEntity in buffEntities)
 			{
-				ctx.Reply(buffEntity.Read<PrefabGUID>().LookupName());
+				if (buffEntity.Read<EntityOwner>().Owner == Character)
+				{
+					ctx.Reply(buffEntity.Read<PrefabGUID>().LookupName());
+				}
 			}
 		}
 	}

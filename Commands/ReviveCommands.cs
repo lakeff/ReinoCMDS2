@@ -1,19 +1,48 @@
+using System.Collections.Generic;
 using KindredCommands.Commands.Converters;
+using KindredCommands.Models.Discord;
+using KindredCommands.Services;
+using ProjectM;
 using ProjectM.Network;
 using VampireCommandFramework;
+using static KindredCommands.Commands.RenameCommands;
 
 namespace KindredCommands.Commands;
 
 internal class ReviveCommands
 {
-	[Command("revive", adminOnly: true)]
+	[Command("revive", adminOnly: false)]
 	public static void ReviveCommand(ChatCommandContext ctx, FoundPlayer player = null)
 	{
-		var character = player?.Value.CharEntity ?? ctx.Event.SenderCharacterEntity;
-		var user = player?.Value.UserEntity ?? ctx.Event.SenderUserEntity;
+		if (Helper.VerifyAdminLevel(AdminLevel.Moderator, ctx.Event.SenderUserEntity))
+		{
+			var character = player?.Value.CharEntity ?? ctx.Event.SenderCharacterEntity;
+			var user = player?.Value.UserEntity ?? ctx.Event.SenderUserEntity;
 
-		Helper.ReviveCharacter(character, user);
+			Helper.ReviveCharacter(character, user);
 
-		ctx.Reply($"Revived {user.Read<User>().CharacterName}");
+			List<ContentHelper> content = new()
+		{
+			new ContentHelper
+			{
+					Title = "Comando",
+					Content = "revive"
+			}
+		};
+
+			if (player != null)
+			{
+				content.Add(new ContentHelper
+				{
+					Title = "Novo nome",
+					Content = player.Value.UserEntity.Read<User>().CharacterName.ToString()
+				});
+			}
+
+
+			DiscordService.SendWebhook(ctx.Event.User.CharacterName, content);
+
+			ctx.Reply($"Revived {user.Read<User>().CharacterName}");
+		}
 	}
 }
