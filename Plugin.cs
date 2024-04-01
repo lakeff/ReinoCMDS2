@@ -6,6 +6,8 @@ using KindredCommands.Models;
 using HarmonyLib;
 using ProjectM;
 using VampireCommandFramework;
+using KindredCommands.Services;
+using System.Linq;
 
 namespace KindredCommands;
 
@@ -32,6 +34,11 @@ public class Plugin : BasePlugin, IRunOnInitialized
 
 		// Register all commands in the assembly with VCF
 		CommandRegistry.RegisterAll();
+
+		// Verify VIPs expire dates
+		var vipList = Database.GetVip();
+		if (vipList.Any())
+			VipService.VerifyVipExpireDate(vipList);
 
 	}
 

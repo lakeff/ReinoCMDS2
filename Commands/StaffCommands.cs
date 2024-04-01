@@ -1,8 +1,12 @@
 using System.Collections.Generic;
 using System.Text;
+using Bloodstone;
 using Bloodstone.API;
+using FMOD.Studio;
 using KindredCommands.Commands.Converters;
 using KindredCommands.Models;
+using KindredCommands.Models.Discord;
+using KindredCommands.Models.Enums;
 using KindredCommands.Services;
 using ProjectM;
 using ProjectM.Network;
@@ -52,12 +56,34 @@ internal class StaffCommands
 	}
 
 	[Command("setstaff", description: "Sets someones staff rank.", adminOnly: true)]
-	public static void AddStaff(ChatCommandContext ctx, FoundPlayer player, string rank)
+	public static void AddStaff(ChatCommandContext ctx, FoundPlayer player, StaffEnum rank)
 	{
+		
 		var userEntity = player.Value.UserEntity;
 		var rankname = "[" + rank + "]";
 
 		Database.SetStaff(userEntity, rankname);
+
+		List<ContentHelper> content = new()
+			{
+				new ContentHelper
+				{
+						Title = "Comando",
+						Content = "setstaff"
+				},
+				new ContentHelper
+				{
+					Title = "Player",
+					Content = player.Value.UserEntity.Read<User>().CharacterName.ToString(),
+				},
+				new ContentHelper
+				{
+					Title = "Rank",
+					Content = rank.ToString(),
+				}
+			};
+
+		DiscordService.SendWebhook(ctx.Event.User.CharacterName, content);
 		ctx.Reply("Staff member set!");
 	}
 
@@ -65,11 +91,34 @@ internal class StaffCommands
 	public static void RemoveStaff(ChatCommandContext ctx, FoundPlayer player)
 	{
 		var userEntity = player.Value.UserEntity;
+		
+
 
 		if (Database.RemoveStaff(userEntity))
+		{
+			List<ContentHelper> content = new()
+			{
+				new ContentHelper
+				{
+						Title = "Comando",
+						Content = "removestaff"
+				},
+				new ContentHelper
+				{
+					Title = "Player",
+					Content = player.Value.UserEntity.Read<User>().CharacterName.ToString(),
+				},
+			};
+
+			DiscordService.SendWebhook(ctx.Event.User.CharacterName, content);
 			ctx.Reply("Staff member removed!");
+
+		}
 		else
+		{
 			ctx.Reply("Staff member not found!");
+
+		}
 	}
 
 	public static AdminAuthSystem adminAuthSystem = VWorld.Server.GetExistingSystem<AdminAuthSystem>();
@@ -78,6 +127,17 @@ internal class StaffCommands
 	{
 		adminAuthSystem._LocalAdminList.Save();
 		adminAuthSystem._LocalAdminList.Refresh();
+		List<ContentHelper> content = new()
+			{
+				new ContentHelper
+				{
+						Title = "Comando",
+						Content = "reloadadmin"
+				}
+			};
+
+		DiscordService.SendWebhook(ctx.Event.User.CharacterName, content);
+
 		ctx.Reply("Admin list reloaded!");
 	}
 
@@ -143,7 +203,23 @@ internal class StaffCommands
 
 			ServerChatUtils.SendSystemMessageToClient(Core.EntityManager, user, "You were added as admin and authed");
 		}
+		List<ContentHelper> content = new()
+			{
+				new ContentHelper
+				{
+						Title = "Comando",
+						Content = "toggleadmin"
+				}
+			};
 
+		if (player != null)
+			content.Add(new ContentHelper
+			{
+				Title = "Player",
+				Content = player.Value.UserEntity.Read<User>().CharacterName.ToString()
+			});
+
+		DiscordService.SendWebhook(ctx.Event.User.CharacterName, content);
 		adminAuthSystem._LocalAdminList.Save();
 	}
 

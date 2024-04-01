@@ -2,8 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using KindredCommands.Commands.Converters;
+using KindredCommands.Models.Discord;
+using KindredCommands.Services;
 using ProjectM;
 using ProjectM.CastleBuilding;
+using ProjectM.Network;
 using Unity.Entities;
 using Unity.Transforms;
 using UnityEngine;
@@ -16,28 +19,53 @@ internal class CastleCommands
 	[Command("claim", description: "Claims the Castle Heart you are standing next to for a specified player", adminOnly: true)]
 	public static void CastleClaim(ChatCommandContext ctx, OnlinePlayer player = null)
 	{
-		Entity newOwnerUser = player?.Value.UserEntity ?? ctx.Event.SenderUserEntity;
-
-		var castleHearts = Helper.GetEntitiesByComponentType<CastleHeart>();
-		var playerPos = ctx.Event.SenderCharacterEntity.Read<LocalToWorld>().Position;
-		foreach (var castleHeart in castleHearts)
+		if (Helper.VerifyAdminLevel(AdminLevel.Moderator, ctx.Event.SenderUserEntity))
 		{
-			var castleHeartPos = castleHeart.Read<LocalToWorld>().Position;
+			Entity newOwnerUser = player?.Value.UserEntity ?? ctx.Event.SenderUserEntity;
 
-			if (Vector3.Distance(playerPos, castleHeartPos) > 5f)
+			var castleHearts = Helper.GetEntitiesByComponentType<CastleHeart>();
+			var playerPos = ctx.Event.SenderCharacterEntity.Read<LocalToWorld>().Position;
+			foreach (var castleHeart in castleHearts)
 			{
-				continue;
+				var castleHeartPos = castleHeart.Read<LocalToWorld>().Position;
+
+				if (Vector3.Distance(playerPos, castleHeartPos) > 5f)
+				{
+					continue;
+				}
+
+				var name = player?.Value.CharacterName.ToString() ?? ctx.Name;
+				List<ContentHelper> content = new()
+			{
+				new ContentHelper
+				{
+					Title = "Comando",
+					Content = "claim"
+				},
+				new ContentHelper
+				{
+					Title = "Player",
+					Content = player.Value.UserEntity.Read<User>().CharacterName.ToString()
+				},
+				new ContentHelper
+				{
+					Title = "Posi��o do Castelo",
+					Content = castleHeartPos.ToString()
+				}
+			};
+
+
+				DiscordService.SendWebhook(ctx.Event.User.CharacterName, content);
+
+				ctx.Reply($"Assigning castle heart to {name}");
+
+				TeamUtility.ClaimCastle(Core.EntityManager, newOwnerUser, castleHeart);
+				return;
 			}
-
-			var name = player?.Value.CharacterName.ToString() ?? ctx.Name;
-
-			ctx.Reply($"Assigning castle heart to {name}");
-
-			TeamUtility.ClaimCastle(Core.EntityManager, newOwnerUser, castleHeart);
-			return;
+			ctx.Reply("Not close enough to a castle heart");
 		}
-		ctx.Reply("Not close enough to a castle heart");
 	}
+
 	//folded this into playerinfo
 	/*[Command("castleinfo", "cinfo", description: "Reports information about a player's territories.", adminOnly: true)]
 	public static void CastleInfo(ChatCommandContext ctx, OnlinePlayer player)
@@ -48,7 +76,7 @@ internal class CastleCommands
 		{
 			var castleTerritory = castleTerritoryEntity.Read<CastleTerritory>();
 			if (castleTerritory.CastleHeart.Equals(Entity.Null)) continue;
-			
+
 			var userOwner = castleTerritory.CastleHeart.Read<UserOwner>();
 			if (!userOwner.Owner.GetEntityOnServer().Equals(player.Value.UserEntity)) continue;
 
@@ -63,37 +91,41 @@ internal class CastleCommands
 		{
 			ctx.Reply("No owned territories found.");
 		}
-	}*/
+
+		}
+	*/
+
 	[Command("incomingdecay", "incd", description: "Reports which territories have the least time remaining", adminOnly: true)]
+
 	public static void PlotsDecayingNext(ChatCommandContext ctx)
 	{
-        // report a list of territories with the least time remaining
-        var castleTerritories = Helper.GetEntitiesByComponentType<CastleTerritory>();
+		// report a list of territories with the least time remaining
+		var castleTerritories = Helper.GetEntitiesByComponentType<CastleTerritory>();
 
-        var castleTerritoryList = new List<CastleTerritory>();
-        foreach (var castleTerritoryEntity in castleTerritories)
-        {
-            var castleTerritory = castleTerritoryEntity.Read<CastleTerritory>();
-            if (castleTerritory.CastleHeart.Equals(Entity.Null)) continue;
-            castleTerritoryList.Add(castleTerritory);
-        }
-        castleTerritoryList.Sort((a, b) => a.CastleHeart.Read<Pylonstation>().MinutesRemaining.CompareTo(b.CastleHeart.Read<Pylonstation>().MinutesRemaining));
-        var sb = new StringBuilder();
-        foreach (var territory in castleTerritoryList)
-        {
-            var minutesRemaining = territory.CastleHeart.Read<Pylonstation>().MinutesRemaining;
-            if (minutesRemaining <= 1) continue;
+		var castleTerritoryList = new List<CastleTerritory>();
+		foreach (var castleTerritoryEntity in castleTerritories)
+		{
+			var castleTerritory = castleTerritoryEntity.Read<CastleTerritory>();
+			if (castleTerritory.CastleHeart.Equals(Entity.Null)) continue;
+			castleTerritoryList.Add(castleTerritory);
+		}
+		castleTerritoryList.Sort((a, b) => a.CastleHeart.Read<Pylonstation>().MinutesRemaining.CompareTo(b.CastleHeart.Read<Pylonstation>().MinutesRemaining));
+		var sb = new StringBuilder();
+		foreach (var territory in castleTerritoryList)
+		{
+			var minutesRemaining = territory.CastleHeart.Read<Pylonstation>().MinutesRemaining;
+			if (minutesRemaining <= 1) continue;
 
-            var time = TimeSpan.FromMinutes(minutesRemaining);
-            sb.AppendLine($"Castle {territory.CastleTerritoryIndex} in {TerritoryRegions(territory)} with {time:%d}d {time:%h}h {time:%m}m remaining.");
+			var time = TimeSpan.FromMinutes(minutesRemaining);
+			sb.AppendLine($"Castle {territory.CastleTerritoryIndex} in {TerritoryRegions(territory)} with {time:%d}d {time:%h}h {time:%m}m remaining.");
 
-            if (sb.ToString().Split('\n').Length >= 7)
-            {
-                break;
-            }
-        }
+			if (sb.ToString().Split('\n').Length >= 7)
+			{
+				break;
+			}
+		}
 
-        ctx.Reply(sb.ToString());
+		ctx.Reply(sb.ToString());
 
 	}
 
@@ -109,9 +141,9 @@ internal class CastleCommands
 			{
 				var pylonstation = castleTerritory.CastleHeart.Read<Pylonstation>();
 				if (pylonstation.MinutesRemaining > 0 || pylonstation.FuelPercentage > 0) continue;
-				
+
 				var region = TerritoryRegions(castleTerritory);
-				if(plotsInDecay.ContainsKey(region))
+				if (plotsInDecay.ContainsKey(region))
 				{
 					plotsInDecay[region]++;
 				}
@@ -124,7 +156,7 @@ internal class CastleCommands
 			else
 			{
 				var region = TerritoryRegions(castleTerritory);
-				if(openPlots.ContainsKey(region))
+				if (openPlots.ContainsKey(region))
 				{
 					openPlots[region]++;
 				}
@@ -132,13 +164,13 @@ internal class CastleCommands
 				{
 					openPlots[region] = 1;
 				}
-			}	
+			}
 		}
 		var stringList = new List<string>();
 
-		foreach(var plot in openPlots)
+		foreach (var plot in openPlots)
 		{
-			if(plotsInDecay.ContainsKey(plot.Key))
+			if (plotsInDecay.ContainsKey(plot.Key))
 			{
 				stringList.Add($"{plot.Key} has {plot.Value} open plots and {plotsInDecay[plot.Key]} plots in decay");
 			}
@@ -147,9 +179,9 @@ internal class CastleCommands
 				stringList.Add($"{plot.Key} has {plot.Value} open plots");
 			}
 		}
-		foreach(var plot in plotsInDecay)
+		foreach (var plot in plotsInDecay)
 		{
-			if(!openPlots.ContainsKey(plot.Key))
+			if (!openPlots.ContainsKey(plot.Key))
 			{
 				stringList.Add($"{plot.Key} has {plot.Value} plots in decay");
 			}
@@ -173,7 +205,7 @@ internal class CastleCommands
 		ctx.Reply(sb.ToString());
 	}
 
-public static string TerritoryRegions(CastleTerritory castleTerritory)
+	public static string TerritoryRegions(CastleTerritory castleTerritory)
 	{
 		if (castleTerritory.CastleTerritoryIndex == 71 || castleTerritory.CastleTerritoryIndex == 72 || castleTerritory.CastleTerritoryIndex == 73 || castleTerritory.CastleTerritoryIndex == 85 || castleTerritory.CastleTerritoryIndex == 86)
 		{
@@ -212,6 +244,8 @@ public static string TerritoryRegions(CastleTerritory castleTerritory)
 			return "Unknown";
 		}
 	}
-		
-		
+
+
 }
+
+

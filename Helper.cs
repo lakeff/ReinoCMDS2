@@ -10,7 +10,11 @@ using Unity.Mathematics;
 using Unity.Transforms;
 using VampireCommandFramework;
 using System.Collections.Generic;
+using KindredCommands.Models;
+using System.Linq;
 using ProjectM.Network;
+using KindredCommands.Services;
+using KindredCommands.Models.Enums;
 using ProjectM.Gameplay.Clan;
 
 namespace KindredCommands;
@@ -37,15 +41,11 @@ internal static partial class Helper
 		return guid;
 	}
 
-	public static bool TryGetClanEntityFromPlayer(Entity User, out Entity ClanEntity)
+	public static System.DateTime GetVipDate()
 	{
-		if (User.Read<TeamReference>().Value._Value.ReadBuffer<TeamAllies>().Length > 0)
-		{
-			ClanEntity = User.Read<TeamReference>().Value._Value.ReadBuffer<TeamAllies>()[0].Value;
-			return true;
-		}
-		ClanEntity = new Entity();
-		return false;
+		System.DateTime dateTime = System.DateTime.UtcNow;
+		dateTime.AddHours(3);
+		return dateTime;
 	}
 
 	public static Entity AddItemToInventory(Entity recipient, PrefabGUID guid, int amount)
@@ -188,58 +188,101 @@ internal static partial class Helper
 				customSpawnLocation: spawnLoc,
 				previousCharacter: Character);
 		}
-    }
+	}
+	public static VipEnum GetVipEnum(string vip)
+	{
+		if(string.IsNullOrEmpty(vip) || string.IsNullOrWhiteSpace(vip))
+		{
+			return VipEnum.None;
+		} 
 
-    public static void ClearExtraBuffs(Entity player)
-    {
-        var buffs = Core.EntityManager.GetBuffer<BuffBuffer>(player);
-        var stringsToIgnore = new List<string>
-        {
-            "BloodBuff",
-            "SetBonus",
-            "EquipBuff",
-            "Combat",
-            "VBlood_Ability_Replace",
-            "Shapeshift",
-            "Interact",
-            "AB_Consumable",
-        };
-
-        foreach (var buff in buffs)
-        {
-            bool shouldRemove = true;
-            foreach (string word in stringsToIgnore)
-            {
-                if (buff.PrefabGuid.LookupName().Contains(word))
-                {
-                    shouldRemove = false;
-                    break;
-                }
-            }
-            if (shouldRemove)
-            {
-                DestroyUtility.Destroy(Core.EntityManager, buff.Entity, DestroyDebugReason.TryRemoveBuff);
-            }
-        }
-        var equipment = player.Read<Equipment>();
-        if (!equipment.IsEquipped(Prefabs.Item_Cloak_Main_ShroudOfTheForest, out var _) && BuffUtility.HasBuff(Core.EntityManager, player, Prefabs.EquipBuff_ShroudOfTheForest))
-        {
-			Buffs.RemoveBuff(player, Prefabs.EquipBuff_ShroudOfTheForest);
-        }
+		if(System.Enum.TryParse(vip, out VipEnum result))
+		{
+			return result;
+		} else
+		{
+			return VipEnum.None;
+		}
 	}
 
+	public static AdminLevel GetStaffEnum(Player player)
+	{
+		Dictionary<string, string> dict = Database.GetStaff() ?? new Dictionary<string, string>();
+		var pStaff = dict.FirstOrDefault(x => x.Key == player.SteamID.ToString());
+		string rank = pStaff.Value.Replace("[", "").Replace("]", "");
+
+		if (System.Enum.TryParse(rank, out AdminLevel result))
+		{
+			return result;
+		}
+		else
+		{
+			return AdminLevel.None;
+		}
+	}
+
+	public static bool VerifyAdminLevel(AdminLevel requiredLevel, Entity entity)
+	{
+		Player player = new(entity);
+		AdminLevel level = GetStaffEnum(player);
+		return level.Equals(requiredLevel) || level.Equals(AdminLevel.SuperAdmin) || level.Equals(AdminLevel.Admin) ? true : false;
+	}
+	public static void ClearExtraBuffs(Entity player)
+	{
+		var buffs = Core.EntityManager.GetBuffer<BuffBuffer>(player);
+		var stringsToIgnore = new List<string>
+		{
+			"BloodBuff",
+			"SetBonus",
+			"EquipBuff",
+			"Combat",
+			"VBlood_Ability_Replace",
+			"Shapeshift",
+			"Interact",
+			"AB_Consumable",
+		};
+
+		foreach (var buff in buffs)
+		{
+			bool shouldRemove = true;
+			foreach (string word in stringsToIgnore)
+			{
+				if (buff.PrefabGuid.LookupName().Contains(word))
+				{
+					shouldRemove = false;
+					break;
+				}
+			}
+			if (shouldRemove)
+			{
+				DestroyUtility.Destroy(Core.EntityManager, buff.Entity, DestroyDebugReason.TryRemoveBuff);
+			}
+		}
+		var equipment = player.Read<Equipment>();
+		if (!equipment.IsEquipped(Prefabs.Item_Cloak_Main_ShroudOfTheForest, out var _) && BuffUtility.HasBuff(Core.EntityManager, player, Prefabs.EquipBuff_ShroudOfTheForest))
+		{
+			Buffs.RemoveBuff(player, Prefabs.EquipBuff_ShroudOfTheForest);
+		}
+	}
+
+	public static float3 GetPlayerPosition(Entity player)
+	{
+		var pos = Core.EntityManager.GetComponentData<LocalToWorld>(player).Position;
+		
+		return pos;
+	}
 	public static void KickPlayer(Entity userEntity)
 	{
 		EntityManager entityManager = Core.Server.EntityManager;
 		User user = userEntity.Read<User>();
 
-		if (!user.IsConnected || user.PlatformId==0) return;
+		if (!user.IsConnected || user.PlatformId == 0) return;
 
-		Entity entity =  entityManager.CreateEntity(new ComponentType[3]
+		Entity entity = entityManager.CreateEntity(new ComponentType[3]
 		{
-			ComponentType.ReadOnly<NetworkEventType>(),
-			ComponentType.ReadOnly<SendEventToUser>(),
-			ComponentType.ReadOnly<KickEvent>()
+		ComponentType.ReadOnly<NetworkEventType>(),
+		ComponentType.ReadOnly<SendEventToUser>(),
+		ComponentType.ReadOnly<KickEvent>()
 		});
 
 		entity.Write(new KickEvent()
@@ -268,7 +311,6 @@ internal static partial class Helper
 				Waypoint = waypoint.Read<NetworkId>()
 			});
 	}
-
 	public static void RevealMapForPlayer(Entity userEntity)
 	{
 		var mapZoneElements = Core.EntityManager.GetBuffer<UserMapZoneElement>(userEntity);

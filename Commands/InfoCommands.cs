@@ -1,84 +1,103 @@
-using System;
-using KindredCommands.Commands.Converters;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Linq;
+using KindredCommands.Models;
+using KindredCommands.Models.Discord;
+using KindredCommands.Services;
 using ProjectM;
-using ProjectM.CastleBuilding;
-using ProjectM.Network;
-using Unity.Entities;
 using Unity.Transforms;
 using VampireCommandFramework;
-using System.Text;
+using static RootMotion.FinalIK.Grounding;
 
 namespace KindredCommands.Commands;
 internal class InfoCommands
 {
-	[Command("whereami", "wai", description: "Gives your current position", adminOnly: true)]
+	[Command("whereami", "wai", description: "Gives your current position", adminOnly: false)]
 	public static void WhereAmI(ChatCommandContext ctx)
 	{
-		var pos = ctx.Event.SenderCharacterEntity.Read<LocalToWorld>().Position;
-		ctx.Reply($"You are at {pos.x}, {pos.y}, {pos.z}");
+		if (Helper.VerifyAdminLevel(AdminLevel.Moderator, ctx.Event.SenderUserEntity))
+		{
+			var pos = ctx.Event.SenderCharacterEntity.Read<LocalToWorld>().Position;
+
+			List<ContentHelper> content = new()
+				{
+					new ContentHelper
+					{
+							Title = "Comando",
+							Content = "whereami"
+					},
+				};
+
+			DiscordService.SendWebhook(ctx.Event.User.CharacterName, content);
+
+			ctx.Reply($"You are at {pos.x}, {pos.y}, {pos.z}");
+		}
 	}
 
-	[Command("playerinfo", "pinfo", description: "Displays information about a player.", adminOnly: true)]
-	public static void PlayerInfo(ChatCommandContext ctx, FoundPlayer player)
+	[Command("discord", "disc", description: "Envia o link do discord no chat", adminOnly: false)]
+
+	public static void DiscordInvite(ChatCommandContext ctx)
 	{
-		var user = player.Value.UserEntity.Read<User>();
-		var steamID = user.PlatformId;
-		var name = user.CharacterName;
-		var online = user.IsConnected;
-        var clanName = "Clan: No clan found\n";
-        var clanEntity = user.ClanEntity.GetEntityOnServer();
-
-		if (clanEntity != Entity.Null && clanEntity.Has<ClanTeam>())
+		string discord = Database.GetDiscord() ?? string.Empty;
+		if (!string.IsNullOrEmpty(discord))
 		{
-			var clanTeam = clanEntity.Read<ClanTeam>();
-			clanName = $"Clan: {clanTeam.Name}\n";
+			string splitString = discord.Split('/')[3];
+			ctx.Reply($"{discord} | {splitString}");
 		}
-		
-		var pos = Core.EntityManager.GetComponentData<LocalToWorld>(player.Value.CharEntity).Position;
-		var posStr = $"{pos.x}, {pos.y}, {pos.z}";
-
-
-		var castleFound = true;
-		var castleInfo = new StringBuilder();
-		foreach (var castleTerritoryEntity in Helper.GetEntitiesByComponentType<CastleTerritory>())
+		else
 		{
-			var castleTerritory = castleTerritoryEntity.Read<CastleTerritory>();
-			if (castleTerritory.CastleHeart.Equals(Entity.Null)) continue;
-
-			var userOwner = castleTerritory.CastleHeart.Read<UserOwner>();
-			if (!userOwner.Owner.GetEntityOnServer().Equals(player.Value.UserEntity)) continue;
-
-			var region = CastleCommands.TerritoryRegions(castleTerritory);
-			var pylonstation = castleTerritory.CastleHeart.Read<Pylonstation>();
-			var time = TimeSpan.FromMinutes(pylonstation.MinutesRemaining);
-			castleInfo.AppendLine($"Castle {castleTerritory.CastleTerritoryIndex} in {region} with {time:%d}d {time:%h}h {time:%m}m remaining.");
+			ctx.Reply($"Informação não encontrada, contate a administração");
 		}
-		if(!castleFound)
-			castleInfo.AppendLine("No castle found");
-
-		ctx.Reply($"Player Info for {name}\n" +
-				  $"SteamID: {steamID}\n" +
-				  $"Online: {online}\n" +
-				  clanName +
-				  $"Position: {posStr}\n"+
-				  castleInfo.ToString());
 	}
 
-	[Command("idcheck", description: "searches for a player by steamid", adminOnly: true)]
-	public static void SteamIdCheck(ChatCommandContext ctx, ulong steamid)
+	[Command("informacoes", "info", description: "Descreve as informações do servidor.", adminOnly: false)]
+	public static void GetInfo(ChatCommandContext ctx)
 	{
-		foreach(var userEntity in Helper.GetEntitiesByComponentType<ProjectM.Network.User>())
+		Dictionary<string, string> infos = Database.GetInfo();
+
+		if (infos.Any())
 		{
-			var user = userEntity.Read<User>();
-			if(user.PlatformId == steamid)
+			foreach (var info in infos)
 			{
-				ctx.Reply($"User found: {user.CharacterName}");
-				return;
+				ctx.Reply($"{info.Key}: {info.Value}");
 			}
 		}
-		
-		ctx.Reply("No user found with that steamid");
+		else
+		{
+			ctx.Reply($"Informação não encontrada, contate a administração");
+		}
 	}
 
+	[Command("setinfo", "sti", "<Nome da Informãção> [Valor da informação]", description: "Descreve as informações do servidor.", adminOnly: true)]
+	public static void SetInfo(ChatCommandContext ctx, string name, string value)
+	{
 
+		if (string.IsNullOrEmpty(name) || string.IsNullOrEmpty(value))
+		{
+			ctx.Reply($"Digite o nome e o valor da informação");
+
+		}
+		else
+		{
+			Database.SetInfo(name, value);
+			ctx.Reply($"Informação adicionada {name}: {value}");
+
+		}
+	}
+
+	[Command("removeinfo", "rmvi", "<Nome da Informãção>", description: "Descreve as informações do servidor.", adminOnly: true)]
+	public static void RemoveInfo(ChatCommandContext ctx, string name)
+	{
+		if (string.IsNullOrEmpty(name))
+		{
+			ctx.Reply($"Informação não encontrada.");
+
+		}
+		else
+		{
+			Database.RemoveInfo(name);
+			ctx.Reply($"Informação {name} removida!");
+
+		}
+	}
 }
