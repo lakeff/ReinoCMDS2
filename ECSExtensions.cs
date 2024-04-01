@@ -56,7 +56,10 @@ public static class ECSExtensions
 
 		return componentData;
 	}
-
+	public static DynamicBuffer<T> ReadBuffer<T>(this Entity entity) where T : struct
+	{
+		return VWorld.Server.EntityManager.GetBuffer<T>(entity);
+	}
 	public static bool Has<T>(this Entity entity)
 	{
 		var ct = new ComponentType(Il2CppType.Of<T>());

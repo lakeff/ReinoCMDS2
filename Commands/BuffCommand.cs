@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using KindredCommands.Commands.Converters;
+using KindredCommands.Models;
 using KindredCommands.Models.Discord;
 using KindredCommands.Services;
 using ProjectM;
@@ -33,11 +34,12 @@ internal class BuffCommands
 	}
 
 	[Command("buff", adminOnly: true)]
-	public static void BuffCommand(ChatCommandContext ctx, BuffInput buff, OnlinePlayer player = null)
+	public static void BuffCommand(ChatCommandContext ctx, BuffInput buff,OnlinePlayer player = null, int duration = 0, bool immortal = false)
 	{
 		var userEntity = player?.Value.UserEntity ?? ctx.Event.SenderUserEntity;
 
-		if (Helper.VerifyAdminLevel(AdminLevel.Moderator, userEntity))
+	
+		if(Helper.VerifyAdminLevel(AdminLevel.Moderator, userEntity))
 		{
 			var charEntity = player?.Value.CharEntity ?? ctx.Event.SenderCharacterEntity;
 			Buffs.AddBuff(userEntity, charEntity, buff.Prefab);

@@ -15,6 +15,7 @@ using System.Linq;
 using ProjectM.Network;
 using KindredCommands.Services;
 using KindredCommands.Models.Enums;
+using ProjectM.Gameplay.Clan;
 
 namespace KindredCommands;
 
@@ -22,6 +23,8 @@ namespace KindredCommands;
 internal static partial class Helper
 {
 	public static AdminAuthSystem adminAuthSystem = VWorld.Server.GetExistingSystem<AdminAuthSystem>();
+	public static ClanSystem_Server clanSystem = VWorld.Server.GetExistingSystem<ClanSystem_Server>();
+	public static EntityCommandBufferSystem entityCommandBufferSystem = VWorld.Server.GetExistingSystem<EntityCommandBufferSystem>();
 
 	public static PrefabGUID GetPrefabGUID(Entity entity)
 	{
@@ -267,5 +270,63 @@ internal static partial class Helper
 		var pos = Core.EntityManager.GetComponentData<LocalToWorld>(player).Position;
 		
 		return pos;
+	}
+	public static void KickPlayer(Entity userEntity)
+	{
+		EntityManager entityManager = Core.Server.EntityManager;
+		User user = userEntity.Read<User>();
+
+		if (!user.IsConnected || user.PlatformId == 0) return;
+
+		Entity entity = entityManager.CreateEntity(new ComponentType[3]
+		{
+		ComponentType.ReadOnly<NetworkEventType>(),
+		ComponentType.ReadOnly<SendEventToUser>(),
+		ComponentType.ReadOnly<KickEvent>()
+		});
+
+		entity.Write(new KickEvent()
+		{
+			PlatformId = user.PlatformId
+		});
+		entity.Write(new SendEventToUser()
+		{
+			UserIndex = user.Index
+		});
+		entity.Write(new NetworkEventType()
+		{
+			EventId = NetworkEvents.EventId_KickEvent,
+			IsAdminEvent = false,
+			IsDebugEvent = false
+		});
+	}
+
+	public static void UnlockWaypoints(Entity userEntity)
+	{
+		DynamicBuffer<UnlockedWaypointElement> dynamicBuffer = Core.EntityManager.AddBuffer<UnlockedWaypointElement>(userEntity);
+		dynamicBuffer.Clear();
+		foreach (Entity waypoint in Helper.GetEntitiesByComponentType<ChunkWaypoint>())
+			dynamicBuffer.Add(new UnlockedWaypointElement()
+			{
+				Waypoint = waypoint.Read<NetworkId>()
+			});
+	}
+	public static void RevealMapForPlayer(Entity userEntity)
+	{
+		var mapZoneElements = Core.EntityManager.GetBuffer<UserMapZoneElement>(userEntity);
+		foreach (var mapZone in mapZoneElements)
+		{
+			var userZoneEntity = mapZone.UserZoneEntity.GetEntityOnServer();
+			var revealElements = Core.EntityManager.GetBuffer<UserMapZonePackedRevealElement>(userZoneEntity);
+			revealElements.Clear();
+			var revealElement = new UserMapZonePackedRevealElement
+			{
+				PackedPixel = 255
+			};
+			for (var i = 0; i < 8192; i++)
+			{
+				revealElements.Add(revealElement);
+			}
+		}
 	}
 }

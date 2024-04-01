@@ -8,6 +8,7 @@ using KindredCommands.Models;
 using KindredCommands.Services;
 using ProjectM;
 using ProjectM.CastleBuilding;
+using ProjectM.Gameplay.Clan;
 using ProjectM.Network;
 using Unity.Collections;
 using Unity.Entities;
@@ -222,6 +223,24 @@ class ClanCommands
 		ctx.Reply($"Player removed from clan!");
 	}//*/
 
+	/*[Command("kick", "k", description: "Removes a player from a clan", adminOnly: true)]
+	public static void ClanKick(ChatCommandContext ctx, FoundPlayer player)
+	{
+			var targetEntity = player?.Value.CharEntity ?? ctx.Event.SenderCharacterEntity;
+
+			KickFromClan(targetEntity);
+			ctx.Reply($"{targetEntity.Read<PlayerCharacter>().Name} removed from clan.");
+
+	}
+	
+	public static void KickFromClan(Entity User)
+	{
+		EntityCommandBuffer commandBuffer = Helper.entityCommandBufferSystem.CreateCommandBuffer();
+		Entity ClanEntity;
+		if (!Helper.TryGetClanEntityFromPlayer(User, out ClanEntity))
+			return;
+		Helper.clanSystem.LeaveClan(commandBuffer, ClanEntity, User, ClanSystem_Server.LeaveReason.Leave);
+	}*/
 
 	[Command("list", "l", description: "List clans on the server")]
 	public static void ListClans(ChatCommandContext ctx, int page = 1)

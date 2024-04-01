@@ -132,12 +132,12 @@ internal static class SpawnCommands
 			},
 			new ContentHelper
 			{
-				Title = "Consumível",
-				Content = consumable ? "Sim" : "Não"
+				Title = "Consum�vel",
+				Content = consumable ? "Sim" : "N�o"
 			},
 			new ContentHelper
 			{
-				Title = "Duração",
+				Title = "Dura��o",
 				Content = duration == -1 ? "Infinito" : duration.ToString()
 			},
 			new ContentHelper
@@ -221,18 +221,18 @@ internal static class SpawnCommands
 			},
 			new ContentHelper
 			{
-				Title = "Aceleração",
+				Title = "Acelera��o",
 				Content = acceleration.ToString()
 			},
 			new ContentHelper
 			{
-				Title = "Rotação",
+				Title = "Rota��o",
 				Content = rotation.ToString()
 			},
 			new ContentHelper
 			{
 				Title = "Spectral",
-				Content = spectral ? "Sim" : "Não"
+				Content = spectral ? "Sim" : "N�o"
 			},
 			new ContentHelper
 			{
@@ -257,7 +257,7 @@ internal static class SpawnCommands
 		ctx.Reply($"Banned '{character.Name}' from spawning with reason '{reason}'");
 	}
 
-	readonly static float3 banishLocation = new(-218.4665f, 15, -556.69354f);
+	readonly static float3 banishLocation = new(-1551.8973f, 5, -2728.9856f);
 
 	[Command("banishhorse", "bh", description: "Banishes dominated ghost horses on the server out of bounds", adminOnly: false)]
 	public static void BanishGhost(ChatCommandContext ctx)

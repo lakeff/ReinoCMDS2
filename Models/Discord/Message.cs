@@ -17,7 +17,7 @@ public class Message
 	[JsonProperty("embeds")]
 	public List<Embed> embeds { get; set; }
 
-	public Message(string _username, List<ContentHelper>? _content)
+	public Message(string _username, List<ContentHelper> _content)
 	{
 		username = _username;
 		embeds = new List<Embed>
@@ -63,7 +63,7 @@ public class Message
 		};
 	}
 
-	public List<Field> generateField(List<ContentHelper>? content)
+	public List<Field> generateField(List<ContentHelper> content)
 	{
 		if (!content.Any())
 			return new List<Field>();

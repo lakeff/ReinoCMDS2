@@ -5,7 +5,6 @@ using KindredCommands.Services;
 using ProjectM;
 using ProjectM.Network;
 using VampireCommandFramework;
-using static KindredCommands.Commands.RenameCommands;
 
 namespace KindredCommands.Commands;
 

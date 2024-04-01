@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.Xml.Schema;
 using KindredCommands.Commands.Converters;
 using KindredCommands.Data;
 using KindredCommands.Models.Discord;
@@ -21,7 +23,7 @@ internal class GodCommands
 
 
 	[Command("god", adminOnly: true)]
-	public static void GodCommand(ChatCommandContext ctx, OnlinePlayer player = null, int invisible = 0)
+	public static void GodCommand(ChatCommandContext ctx, OnlinePlayer player = null)
 	{
 		var userEntity = player?.Value.UserEntity ?? ctx.Event.SenderUserEntity;
 		if (Helper.VerifyAdminLevel(AdminLevel.Moderator, ctx.Event.SenderUserEntity))
@@ -33,11 +35,9 @@ internal class GodCommands
 			PlayerProjectileRanges[charEntity] = 10f;
 			MakePlayerImmaterial(userEntity, charEntity);
 			GodPlayers.Add(charEntity);
-			Buffs.AddBuff(userEntity, charEntity, Prefabs.CustomBuff, true);
-			Buffs.AddBuff(userEntity, charEntity, Prefabs.EquipBuff_ShroudOfTheForest, true);
+			Buffs.AddBuff(userEntity, charEntity, Prefabs.CustomBuff, -1, true);
+			Buffs.AddBuff(userEntity, charEntity, Prefabs.EquipBuff_ShroudOfTheForest, -1, true);
 
-			if(invisible >=  1)
-				Buffs.AddBuff(userEntity, charEntity, Prefabs.Admin_Observe_Invisible_Buff, true);
 
 			// Heal back to full
 			Health health = charEntity.Read<Health>();
@@ -105,17 +105,44 @@ internal class GodCommands
 		}
 	}
 
-	[Command("heal", adminOnly: false)]
+	[Command("invisible","inv", description: "Torna o jogador alvo. invisível", adminOnly: false)]
+
+	public static void TurnInvisible(ChatCommandContext ctx, OnlinePlayer player = null)
+	{
+		if(Helper.VerifyAdminLevel(AdminLevel.Moderator, ctx.Event.SenderUserEntity))
+		{
+			var charEntity = player?.Value.CharEntity ?? ctx.Event.SenderCharacterEntity;
+			var userEntity = player?.Value.UserEntity ?? ctx.Event.SenderUserEntity;
+			var name = player?.Value.UserEntity.Read<User>().CharacterName ?? ctx.Event.User.CharacterName;
+
+			if (!BuffUtility.HasBuff(Core.EntityManager, charEntity, Prefabs.Admin_Observe_Invisible_Buff))
+			{
+				Buffs.AddBuff(userEntity, charEntity, Prefabs.Admin_Observe_Invisible_Buff, -1, true);
+				ctx.Reply($"{name} ficou invisível");
+
+			} else
+			{
+				Buffs.RemoveBuff(charEntity, Prefabs.Admin_Observe_Invisible_Buff);
+				ctx.Reply($"{name} não está mais invisível");
+			}
+
+		} else
+		{
+			ctx.Reply($"Você não tem acesso à esse comando");
+		}
+	}
+
+	[Command("heal", description: "Cura a si mesmo ou um player alvo", adminOnly: false)]
 	public static void HealPlayer(ChatCommandContext ctx, OnlinePlayer player = null)
 	{
 		if (Helper.VerifyAdminLevel(AdminLevel.Moderator, ctx.Event.SenderUserEntity))
 		{
 			var charEntity = player?.Value.CharEntity ?? ctx.Event.SenderCharacterEntity;
-			if (!GodPlayers.Contains(charEntity) && !BuffUtility.HasBuff(Core.EntityManager, charEntity, Prefabs.CustomBuff)) return;
 
 			Health health = charEntity.Read<Health>();
 			health.Value = health.MaxHealth;
 			health.MaxRecoveryHealth = health.MaxHealth;
+			charEntity.Write(health);
 
 			var name = player?.Value.UserEntity.Read<User>().CharacterName ?? ctx.Event.User.CharacterName;
 
@@ -128,11 +155,8 @@ internal class GodCommands
 				},
 			};
 
-			var reply = $"Jogador curado!";
-
 			if (player != null)
 			{
-				reply = $"Jogador {name} curado!";
 				content.Add(new ContentHelper
 				{
 					Title = "Player",
@@ -141,20 +165,17 @@ internal class GodCommands
 			}
 
 			DiscordService.SendWebhook(ctx.Event.User.CharacterName, content);
-			ctx.Reply(reply);
+			ctx.Reply($"Jogador {name} curado!");
 		}
 		else
 		{
-			ctx.Reply($"Você não tem permissão para usar esse comando!");
+			ctx.Reply($"Você não tem permiss�o para usar esse comando!");
 		}
 	}
 
-
-
-
 	private static void MakePlayerImmaterial(Entity User, Entity Character)
 	{
-		Buffs.AddBuff(User, Character, Prefabs.AB_Blood_BloodRite_Immaterial, true);
+		Buffs.AddBuff(User, Character, Prefabs.AB_Blood_BloodRite_Immaterial, -1, true);
 		if (BuffUtility.TryGetBuff(Core.EntityManager, Character, Prefabs.AB_Blood_BloodRite_Immaterial, out Entity buffEntity))
 		{
 			var modifyMovementSpeedBuff = buffEntity.Read<ModifyMovementSpeedBuff>();

@@ -21,7 +21,7 @@ public class Plugin : BasePlugin, IRunOnInitialized
 	internal static ManualLogSource PluginLog;
 	public static ManualLogSource LogInstance { get; private set; }
 
-	public override async void Load()
+	public override void Load()
 	{
 		PluginLog = Log;
 		// Plugin startup logic

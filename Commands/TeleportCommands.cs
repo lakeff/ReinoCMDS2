@@ -15,7 +15,7 @@ using VampireCommandFramework;
 namespace KindredCommands.Commands;
 internal class TeleportCommands
 {
-	private readonly TeleportToPlayerLocationSystem _teleportToPlayerLocationSystem;
+	
 	[Command("tptp", "ttp", description: "Teleporta quem executou o comando para a posição do player.", adminOnly: false)]
 	public static void TeleportToPlayer(ChatCommandContext ctx, FoundPlayer player)
 	{

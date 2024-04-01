@@ -28,6 +28,7 @@ public static class OnUserConnected_Patch
 			{
 				var playerName = userData.CharacterName.ToString();
 				Core.Players.UpdatePlayerCache(userEntity, playerName, playerName);
+				Core.Log.LogInfo($"Player {playerName} connected");
 			}
 		}
 		catch (Exception e)
@@ -54,7 +55,8 @@ public static class OnUserDisconnected_Patch
 			{
 				var playerName = userData.CharacterName.ToString();
 				Core.Players.UpdatePlayerCache(serverClient.UserEntity, playerName, playerName, true);
-				Core.Log.LogDebug($"Player {playerName} disconnected");
+
+				Core.Log.LogInfo($"Player {playerName} disconnected");
 			}
 		}
 		catch { };
@@ -83,6 +85,8 @@ public class Destroy_TravelBuffSystem_Patch
 				var playerName = __instance.EntityManager.GetComponentData<User>(userEntity).CharacterName.ToString();
 
 				Core.Players.UpdatePlayerCache(userEntity, playerName, playerName);
+
+				Core.Log.LogInfo($"Player {playerName} created");
 			}
 		}
 
