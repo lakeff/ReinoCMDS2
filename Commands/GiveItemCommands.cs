@@ -1,27 +1,105 @@
+using Epic.OnlineServices;
 using ProjectM;
+using System;
+using System.Collections.Generic;
+using System.Text;
+using UnityEngine.UIElements.UIR;
 using VampireCommandFramework;
 
 namespace KindredCommands.Commands;
 internal class GiveItemCommands
 {
-	public record struct GivenItem(PrefabGUID Value);
+	public record class GivenItem(PrefabGUID Value);
 
 	internal class GiveItemConverter : CommandArgumentConverter<GivenItem>
 	{
 		public override GivenItem Parse(ICommandContext ctx, string input)
 		{
+
 			if (int.TryParse(input, out var integral))
 			{
 				return new GivenItem(new(integral));
 			}
 
+			if (TryGet(input, out var result)) return result;
 
-			if (Core.Prefabs.TryGetItem(input, out var prefab))
+			var inputIngredientAdded = "Item_Ingredient_" + input;
+			if (TryGet(inputIngredientAdded, out result)) return result;
+
+			// Standard postfix
+			var standardPostfix = inputIngredientAdded + "_Standard";
+			if (TryGet(standardPostfix, out result)) return result;
+
+			List<(string Name, PrefabGUID Prefab)> searchResults = [];
+			foreach (var kvp in Core.Prefabs.SpawnableNameToGuid)
 			{
-				return new GivenItem(prefab);
+				if (kvp.Value.Name.StartsWith("Item_") && kvp.Key.Contains(input, StringComparison.OrdinalIgnoreCase))
+				{
+					searchResults.Add((kvp.Value.Name["Item_".Length..], kvp.Value.Prefab));
+				}
+			}
+
+			if (searchResults.Count == 1)
+			{
+				return new GivenItem(searchResults[0].Prefab);
+			}
+
+			if (searchResults.Count > 1)
+			{
+				var sb = new StringBuilder();
+				sb.AppendLine("Multiple results be more specific");
+				foreach (var kvp in searchResults)
+				{
+					sb.AppendLine(kvp.Name);
+				}
+				throw ctx.Error(sb.ToString());
+			}
+
+			// Try a double search splitting the input
+			for(var i = 3; i<input.Length;  ++i)
+			{
+				var inputOne = input[..i];
+				var inputTwo = input[i..];
+				foreach (var kvp in Core.Prefabs.SpawnableNameToGuid)
+				{
+					if (kvp.Value.Name.StartsWith("Item_") &&
+						kvp.Key.Contains(inputOne, StringComparison.OrdinalIgnoreCase) &&
+						kvp.Key.Contains(inputTwo, StringComparison.OrdinalIgnoreCase))
+					{
+						searchResults.Add((kvp.Value.Name["Item_".Length..], kvp.Value.Prefab));
+					}
+				}
+
+				if (searchResults.Count == 1)
+				{
+					return new GivenItem(searchResults[0].Prefab);
+				}
+
+				if (searchResults.Count > 1)
+				{
+					var sb = new StringBuilder();
+					sb.AppendLine("Multiple results be more specific");
+					foreach (var kvp in searchResults)
+					{
+						sb.AppendLine(kvp.Name);
+					}
+					throw ctx.Error(sb.ToString());
+				}
 			}
 
 			throw ctx.Error($"Invalid item id: {input}");
+		}
+
+		private static bool TryGet(string input, out GivenItem item)
+		{
+			if (Core.Prefabs.TryGetItem(input, out var prefab))
+			{
+				item = new GivenItem(prefab);
+				return true;
+			}
+
+			item = new GivenItem(new(0));
+			return false;
 		}
 	}
 
