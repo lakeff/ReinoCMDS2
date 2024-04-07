@@ -3,17 +3,13 @@ using KindredCommands.Commands.Converters;
 using KindredCommands.Data;
 using ProjectM;
 using ProjectM.Network;
-using Unity.Entities;
+using Unity.Transforms;
+using UnityEngine;
 using VampireCommandFramework;
 
 namespace KindredCommands.Commands;
 internal class GodCommands
 {
-	public static Dictionary<Entity, float> PlayerSpeeds = [];
-	public static Dictionary<Entity, int> PlayerHps = [];
-	public static Dictionary<Entity, float> PlayerProjectileSpeeds = [];
-	public static Dictionary<Entity, float> PlayerProjectileRanges = [];
-	public static HashSet<Entity> GodPlayers = [];
 	const int DEFAULT_FAST_SPEED = 15;
 
 	[Command("god", adminOnly: true)]
@@ -22,22 +18,21 @@ internal class GodCommands
 		var userEntity = player?.Value.UserEntity ?? ctx.Event.SenderUserEntity;
 		var charEntity = player?.Value.CharEntity ?? ctx.Event.SenderCharacterEntity;
 
-		PlayerSpeeds[charEntity] = DEFAULT_FAST_SPEED;
-		PlayerProjectileSpeeds[charEntity] = 10f;
-		PlayerProjectileRanges[charEntity] = 10f;
-		MakePlayerImmaterial(userEntity, charEntity);
-		GodPlayers.Add(charEntity);
-		Buffs.AddBuff(userEntity, charEntity, Prefabs.CustomBuff, -1, true);
-		Buffs.AddBuff(userEntity, charEntity, Prefabs.EquipBuff_ShroudOfTheForest, -1, true);
-
-		// Heal back to full
-		Health health = charEntity.Read<Health>();
-		health.Value = health.MaxHealth;
-		health.MaxRecoveryHealth = health.MaxHealth;
-		charEntity.Write(health);
-
-		// Remove PVP Buff
-		Buffs.RemoveBuff(charEntity, Prefabs.Buff_InCombat_PvPVampire);
+		Core.BoostedPlayerService.SetAttackSpeedMultiplier(charEntity, 10f);
+		Core.BoostedPlayerService.SetDamageBoost(charEntity, 1000f);
+		Core.BoostedPlayerService.SetHealthBoost(charEntity, 100000);
+		Core.BoostedPlayerService.SetProjectileSpeedMultiplier(charEntity, 10f);
+		Core.BoostedPlayerService.SetProjectileRangeMultiplier(charEntity, 10f);
+		Core.BoostedPlayerService.SetSpeedBoost(charEntity, DEFAULT_FAST_SPEED);
+		Core.BoostedPlayerService.SetYieldMultiplier(charEntity, 10f);
+		Core.BoostedPlayerService.AddNoAggro(charEntity);
+		Core.BoostedPlayerService.AddNoBlooddrain(charEntity);
+		Core.BoostedPlayerService.AddNoCooldown(charEntity);
+		Core.BoostedPlayerService.AddNoDurability(charEntity);
+		Core.BoostedPlayerService.AddPlayerImmaterial(charEntity);
+		Core.BoostedPlayerService.AddPlayerInvincible(charEntity);
+		Core.BoostedPlayerService.AddPlayerShrouded(charEntity);
+		Core.BoostedPlayerService.UpdateBoostedPlayer(charEntity);
 
 		var name = player?.Value.UserEntity.Read<User>().CharacterName ?? ctx.Event.User.CharacterName;
 		ctx.Reply($"God mode added to {name}");
@@ -48,26 +43,202 @@ internal class GodCommands
 	{
 		var charEntity = (player?.Value.CharEntity ?? ctx.Event.SenderCharacterEntity);
 
-		if (!GodPlayers.Contains(charEntity) && !BuffUtility.HasBuff(Core.EntityManager, charEntity, Prefabs.CustomBuff)) return;
-		
-		PlayerSpeeds.Remove(charEntity);
-		PlayerProjectileSpeeds.Remove(charEntity);
-		PlayerProjectileRanges.Remove(charEntity);
-		GodPlayers.Remove(charEntity);
-		Helper.ClearExtraBuffs(charEntity);
+		if (!Core.BoostedPlayerService.IsBoostedPlayer(charEntity) && !BuffUtility.HasBuff(Core.EntityManager, charEntity, Prefabs.CustomBuff)) return;
 
-        var name = player?.Value.UserEntity.Read<User>().CharacterName ?? ctx.Event.User.CharacterName;
+		Core.BoostedPlayerService.RemoveBoostedPlayer(charEntity);
+
+		var name = player?.Value.UserEntity.Read<User>().CharacterName ?? ctx.Event.User.CharacterName;
 		ctx.Reply($"God mode removed from {name}");
 	}
 
-	private static void MakePlayerImmaterial(Entity User, Entity Character)
+	static Dictionary<string, Vector3> positionBeforeSpectate = [];
+
+	[Command("spectate", adminOnly: true, description:"Toggles spectate on the target player")]
+	public static void SpectateCommand(ChatCommandContext ctx, OnlinePlayer player = null, bool returnToStart=true)
 	{
-		Buffs.AddBuff(User, Character, Prefabs.AB_Blood_BloodRite_Immaterial, -1, true);
-		if (BuffUtility.TryGetBuff(Core.EntityManager, Character, Prefabs.AB_Blood_BloodRite_Immaterial, out Entity buffEntity))
+		var charEntity = player?.Value.CharEntity ?? ctx.Event.SenderCharacterEntity;
+		var userEntity = player?.Value.UserEntity ?? ctx.Event.SenderUserEntity;
+		var name = userEntity.Read<User>().CharacterName;
+
+		if (BuffUtility.HasBuff(Core.EntityManager, charEntity, Prefabs.Admin_Observe_Invisible_Buff))
 		{
-			var modifyMovementSpeedBuff = buffEntity.Read<ModifyMovementSpeedBuff>();
-			modifyMovementSpeedBuff.MoveSpeed = 1; //bloodrite makes you accelerate forever, disable this
-			buffEntity.Write(modifyMovementSpeedBuff);
+			if (returnToStart)
+			{
+				if (!positionBeforeSpectate.TryGetValue(name.ToString(), out var returnPos))
+					returnPos = ctx.Event.SenderCharacterEntity.Read<Translation>().Value;
+				charEntity.Write<Translation>(new Translation { Value = returnPos });
+				charEntity.Write<LastTranslation>(new LastTranslation { Value = returnPos });
+			}
+			positionBeforeSpectate.Remove(name.ToString());
+			Buffs.RemoveBuff(charEntity, Prefabs.Admin_Observe_Invisible_Buff);
+			ctx.Reply($"Spectate removed from {name}");
+		}
+		else
+		{
+
+			Buffs.AddBuff(userEntity, charEntity, Prefabs.Admin_Observe_Invisible_Buff, -1);
+			positionBeforeSpectate.Add(name.ToString(), charEntity.Read<Translation>().Value);
+			ctx.Reply($"Spectate added to {name}");
+		}
+	}
+
+
+	[CommandGroup("boost", "bst")]
+	internal class BoostedCommands
+	{
+
+		[Command("attackspeed", "as", adminOnly: true)]
+		public static void AttackSpeed(ChatCommandContext ctx, float speed = 10, OnlinePlayer player = null)
+		{
+			var name = player?.Value.UserEntity.Read<User>().CharacterName ?? ctx.Event.User.CharacterName;
+			var charEntity = player?.Value.CharEntity ?? ctx.Event.SenderCharacterEntity;
+
+			Core.BoostedPlayerService.SetAttackSpeedMultiplier(charEntity, speed);
+			Core.BoostedPlayerService.UpdateBoostedPlayer(charEntity);
+			ctx.Reply($"Attack speed on {name} set to {speed}");
+		}
+
+		[Command("damage", "d", adminOnly: true)]
+		public static void Damage(ChatCommandContext ctx, float damage = 1000, OnlinePlayer player = null)
+		{
+			var name = player?.Value.UserEntity.Read<User>().CharacterName ?? ctx.Event.User.CharacterName;
+			var charEntity = player?.Value.CharEntity ?? ctx.Event.SenderCharacterEntity;
+
+			Core.BoostedPlayerService.SetDamageBoost(charEntity, damage);
+			Core.BoostedPlayerService.UpdateBoostedPlayer(charEntity);
+			ctx.Reply($"Damage boost on {name} set to {damage}");
+		}
+
+		[Command("health", "h", adminOnly: true)]
+		public static void Health(ChatCommandContext ctx, int health = 100000, OnlinePlayer player = null)
+		{
+			var name = player?.Value.UserEntity.Read<User>().CharacterName ?? ctx.Event.User.CharacterName;
+			var charEntity = player?.Value.CharEntity ?? ctx.Event.SenderCharacterEntity;
+
+			Core.BoostedPlayerService.SetHealthBoost(charEntity, health);
+			Core.BoostedPlayerService.UpdateBoostedPlayer(charEntity);
+			ctx.Reply($"Health boost on {name} set to {health}");
+		}
+
+		[Command("projectilespeed", "ps", adminOnly: true)]
+		public static void ProjectileSpeed(ChatCommandContext ctx, float speed = 10, OnlinePlayer player = null)
+		{
+			var name = player?.Value.UserEntity.Read<User>().CharacterName ?? ctx.Event.User.CharacterName;
+			var charEntity = player?.Value.CharEntity ?? ctx.Event.SenderCharacterEntity;
+
+			Core.BoostedPlayerService.SetProjectileSpeedMultiplier(charEntity, speed);
+			Core.BoostedPlayerService.UpdateBoostedPlayer(charEntity);
+			ctx.Reply($"Projectile speed on {name} set to {speed}");
+		}
+
+		[Command("projectilerange", "pr", adminOnly: true)]
+		public static void ProjectileRange(ChatCommandContext ctx, float range = 10, OnlinePlayer player = null)
+		{
+			var name = player?.Value.UserEntity.Read<User>().CharacterName ?? ctx.Event.User.CharacterName;
+			var charEntity = player?.Value.CharEntity ?? ctx.Event.SenderCharacterEntity;
+
+			Core.BoostedPlayerService.SetProjectileRangeMultiplier(charEntity, range);
+			Core.BoostedPlayerService.UpdateBoostedPlayer(charEntity);
+			ctx.Reply($"Projectile range on {name} set to {range}");
+		}
+
+		[Command("speed", "s", adminOnly: true)]
+		public static void Speed(ChatCommandContext ctx, int speed = DEFAULT_FAST_SPEED, OnlinePlayer player = null)
+		{
+			var name = player?.Value.UserEntity.Read<User>().CharacterName ?? ctx.Event.User.CharacterName;
+			var charEntity = player?.Value.CharEntity ?? ctx.Event.SenderCharacterEntity;
+
+			Core.BoostedPlayerService.SetSpeedBoost(charEntity, speed);
+			Core.BoostedPlayerService.UpdateBoostedPlayer(charEntity);
+			ctx.Reply($"Speed on {name} set to {speed}");
+		}
+
+		[Command("yield", "y", adminOnly: true)]
+		public static void Yield(ChatCommandContext ctx, float yield = 10, OnlinePlayer player = null)
+		{
+			var name = player?.Value.UserEntity.Read<User>().CharacterName ?? ctx.Event.User.CharacterName;
+			var charEntity = player?.Value.CharEntity ?? ctx.Event.SenderCharacterEntity;
+
+			Core.BoostedPlayerService.SetYieldMultiplier(charEntity, yield);
+			Core.BoostedPlayerService.UpdateBoostedPlayer(charEntity);
+			ctx.Reply($"Yield on {name} set to {yield}");
+		}
+
+		[Command("noaggro", "na", adminOnly: true)]
+		public static void NoAggro(ChatCommandContext ctx, OnlinePlayer player = null)
+		{
+			var name = player?.Value.UserEntity.Read<User>().CharacterName ?? ctx.Event.User.CharacterName;
+			var charEntity = player?.Value.CharEntity ?? ctx.Event.SenderCharacterEntity;
+
+			Core.BoostedPlayerService.AddNoAggro(charEntity);
+			Core.BoostedPlayerService.UpdateBoostedPlayer(charEntity);
+			ctx.Reply($"No aggro added to {name}");
+		}
+
+		[Command("noblooddrain", "nb", adminOnly: true)]
+		public static void NoBlooddrain(ChatCommandContext ctx, OnlinePlayer player = null)
+		{
+			var name = player?.Value.UserEntity.Read<User>().CharacterName ?? ctx.Event.User.CharacterName;
+			var charEntity = player?.Value.CharEntity ?? ctx.Event.SenderCharacterEntity;
+
+			Core.BoostedPlayerService.AddNoBlooddrain(charEntity);
+			Core.BoostedPlayerService.UpdateBoostedPlayer(charEntity);
+			ctx.Reply($"No blooddrain added to {name}");
+		}
+
+		[Command("nocooldown", "nc", adminOnly: true)]
+		public static void NoCooldown(ChatCommandContext ctx, OnlinePlayer player = null)
+		{
+			var name = player?.Value.UserEntity.Read<User>().CharacterName ?? ctx.Event.User.CharacterName;
+			var charEntity = player?.Value.CharEntity ?? ctx.Event.SenderCharacterEntity;
+
+			Core.BoostedPlayerService.AddNoCooldown(charEntity);
+			Core.BoostedPlayerService.UpdateBoostedPlayer(charEntity);
+			ctx.Reply($"No cooldown added to {name}");
+		}
+
+		[Command("nodurability", "nd", adminOnly: true)]
+		public static void NoDurability(ChatCommandContext ctx, OnlinePlayer player = null)
+		{
+			var name = player?.Value.UserEntity.Read<User>().CharacterName ?? ctx.Event.User.CharacterName;
+			var charEntity = player?.Value.CharEntity ?? ctx.Event.SenderCharacterEntity;
+
+			Core.BoostedPlayerService.AddNoDurability(charEntity);
+			Core.BoostedPlayerService.UpdateBoostedPlayer(charEntity);
+			ctx.Reply($"No durability loss added to {name}");
+		}
+
+		[Command("immaterial", "i", adminOnly: true)]
+		public static void Immaterial(ChatCommandContext ctx, OnlinePlayer player = null)
+		{
+			var name = player?.Value.UserEntity.Read<User>().CharacterName ?? ctx.Event.User.CharacterName;
+			var charEntity = player?.Value.CharEntity ?? ctx.Event.SenderCharacterEntity;
+
+			Core.BoostedPlayerService.AddPlayerImmaterial(charEntity);
+			Core.BoostedPlayerService.UpdateBoostedPlayer(charEntity);
+			ctx.Reply($"Immaterial added to {name}");
+		}
+
+		[Command("invincible", "inv", adminOnly: true)]
+		public static void Invincible(ChatCommandContext ctx, OnlinePlayer player = null)
+		{
+			var name = player?.Value.UserEntity.Read<User>().CharacterName ?? ctx.Event.User.CharacterName;
+			var charEntity = player?.Value.CharEntity ?? ctx.Event.SenderCharacterEntity;
+
+			Core.BoostedPlayerService.AddPlayerInvincible(charEntity);
+			Core.BoostedPlayerService.UpdateBoostedPlayer(charEntity);
+			ctx.Reply($"Invincibility added to {name}");
+		}
+
+		[Command("shrouded", "sh", adminOnly: true)]
+		public static void Shrouded(ChatCommandContext ctx, OnlinePlayer player = null)
+		{
+			var name = player?.Value.UserEntity.Read<User>().CharacterName ?? ctx.Event.User.CharacterName;
+			var charEntity = player?.Value.CharEntity ?? ctx.Event.SenderCharacterEntity;
+
+			Core.BoostedPlayerService.AddPlayerShrouded(charEntity);
+			Core.BoostedPlayerService.UpdateBoostedPlayer(charEntity);
+			ctx.Reply($"Shrouded added to {name}");
 		}
 	}
 }

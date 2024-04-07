@@ -13,16 +13,12 @@ internal static class Core
 
 	public static ManualLogSource Log { get; } = Plugin.PluginLog;
 	public static AnnouncementsService AnnouncementsService { get; internal set; }
-
-	public static PlayerService Players { get; internal set; }
-
-	public static UnitSpawnerService UnitSpawner { get; internal set; }
-
-	public static PrefabService Prefabs { get; internal set; }
-
-	public static StealthAdminService StealthAdminService { get; internal set; }
-
+	public static BoostedPlayerService BoostedPlayerService { get; internal set; }
 	public static ConfigSettingsService ConfigSettings { get; internal set; }
+	public static PlayerService Players { get; internal set; }
+	public static PrefabService Prefabs { get; internal set; }
+	public static StealthAdminService StealthAdminService { get; internal set; }
+	public static UnitSpawnerService UnitSpawner { get; internal set; }
 
 	public const int MAX_REPLY_LENGTH = 509;
 
@@ -36,12 +32,13 @@ internal static class Core
 	{
 		if (_hasInitialized) return;
 
-		Players = new();
-		UnitSpawner = new();
-		Prefabs = new();
 		AnnouncementsService = new();
-		StealthAdminService = new();
+		BoostedPlayerService = new();
 		ConfigSettings = new();
+		Players = new();
+		Prefabs = new();
+		StealthAdminService = new();
+		UnitSpawner = new();
 		_hasInitialized = true;
 		Log.LogInfo($"{nameof(InitializeAfterLoaded)} completed");
 	}

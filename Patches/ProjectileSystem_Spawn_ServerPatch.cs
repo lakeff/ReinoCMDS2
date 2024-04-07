@@ -1,4 +1,3 @@
-using KindredCommands.Commands;
 using HarmonyLib;
 using ProjectM;
 using Unity.Collections;
@@ -19,19 +18,19 @@ public static class ProjectileSystem_Spawn_ServerPatch
 			foreach (var entity in entities)
 			{
 				PrefabGUID GUID = entity.Read<PrefabGUID>();
-				Entity Character = entity.Read<EntityOwner>().Owner;
-				if (!Character.Has<PlayerCharacter>()) continue;
+				Entity charEntity = entity.Read<EntityOwner>().Owner;
+				if (!charEntity.Has<PlayerCharacter>()) continue;
 
-				if (GodCommands.PlayerProjectileSpeeds.ContainsKey(Character) && GodCommands.PlayerProjectileSpeeds[Character] != 1f)
+				if (Core.BoostedPlayerService.GetProjectileSpeedMultiplier(charEntity, out var speed))
 				{
 					var projectile = entity.Read<Projectile>();
-					projectile.Speed *= GodCommands.PlayerProjectileSpeeds[Character];
+					projectile.Speed *= speed;
 					entity.Write(projectile);
 				}
-				if (GodCommands.PlayerProjectileRanges.ContainsKey(Character) && GodCommands.PlayerProjectileRanges[Character] != 1f)
+				if (Core.BoostedPlayerService.GetProjectileRangeMultiplier(charEntity, out var range))
 				{
 					var projectile = entity.Read<Projectile>();
-					projectile.Range *= GodCommands.PlayerProjectileRanges[Character];
+					projectile.Range *= range;
 					entity.Write(projectile);
 				}
 			}

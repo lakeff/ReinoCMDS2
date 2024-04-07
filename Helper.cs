@@ -190,44 +190,6 @@ internal static partial class Helper
 		}
     }
 
-    public static void ClearExtraBuffs(Entity player)
-    {
-        var buffs = Core.EntityManager.GetBuffer<BuffBuffer>(player);
-        var stringsToIgnore = new List<string>
-        {
-            "BloodBuff",
-            "SetBonus",
-            "EquipBuff",
-            "Combat",
-            "VBlood_Ability_Replace",
-            "Shapeshift",
-            "Interact",
-            "AB_Consumable",
-        };
-
-        foreach (var buff in buffs)
-        {
-            bool shouldRemove = true;
-            foreach (string word in stringsToIgnore)
-            {
-                if (buff.PrefabGuid.LookupName().Contains(word))
-                {
-                    shouldRemove = false;
-                    break;
-                }
-            }
-            if (shouldRemove)
-            {
-                DestroyUtility.Destroy(Core.EntityManager, buff.Entity, DestroyDebugReason.TryRemoveBuff);
-            }
-        }
-        var equipment = player.Read<Equipment>();
-        if (!equipment.IsEquipped(Prefabs.Item_Cloak_Main_ShroudOfTheForest, out var _) && BuffUtility.HasBuff(Core.EntityManager, player, Prefabs.EquipBuff_ShroudOfTheForest))
-        {
-			Buffs.RemoveBuff(player, Prefabs.EquipBuff_ShroudOfTheForest);
-        }
-	}
-
 	public static void KickPlayer(Entity userEntity)
 	{
 		EntityManager entityManager = Core.Server.EntityManager;
