@@ -56,9 +56,33 @@ internal class GiveItemCommands
 			}
 
 			// Try a double search splitting the input
-			for(var i = 3; i<input.Length;  ++i)
+			for (var i = 3; i < input.Length; ++i)
 			{
 				var inputOne = input[..i];
+				var inputTwo = input[i..];
+				foreach (var kvp in Core.Prefabs.SpawnableNameToGuid)
+				{
+					if (kvp.Value.Name.StartsWith("Item_") &&
+						kvp.Key.Contains(inputOne, StringComparison.OrdinalIgnoreCase) &&
+						kvp.Key.Contains(inputTwo, StringComparison.OrdinalIgnoreCase))
+					{
+						searchResults.Add((kvp.Value.Name["Item_".Length..], kvp.Value.Prefab));
+					}
+				}
+
+				if (searchResults.Count == 1)
+				{
+					return new GivenItem(searchResults[0].Prefab);
+				}
+			}
+
+			var resultsFromFirstSplit = searchResults;
+			searchResults = [];
+
+			// Try a double search splitting the input with _ prepended
+			for (var i = 3; i < input.Length; ++i)
+			{
+				var inputOne = "_" + input[..i];
 				var inputTwo = input[i..];
 				foreach (var kvp in Core.Prefabs.SpawnableNameToGuid)
 				{
@@ -85,6 +109,17 @@ internal class GiveItemCommands
 					}
 					throw ctx.Error(sb.ToString());
 				}
+			}
+
+			if (resultsFromFirstSplit.Count > 1)
+			{
+				var sb = new StringBuilder();
+				sb.AppendLine("Multiple results be more specific");
+				foreach (var kvp in resultsFromFirstSplit)
+				{
+					sb.AppendLine(kvp.Name);
+				}
+				throw ctx.Error(sb.ToString());
 			}
 
 			throw ctx.Error($"Invalid item id: {input}");
