@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using KindredCommands.Commands.Converters;
 using ProjectM;
 using ProjectM.CastleBuilding;
+using ProjectM.Network;
 using Unity.Entities;
 using Unity.Transforms;
 using UnityEngine;
@@ -212,6 +214,37 @@ public static string TerritoryRegions(CastleTerritory castleTerritory)
 			return "Unknown";
 		}
 	}
-		
-		
+
+	[Command("plotsowned", "po", description: "Reports the number of plots owned by each player", adminOnly: true)]
+	public static void PlotsOwned(ChatCommandContext ctx)
+	{
+		var castleTerritories = Helper.GetEntitiesByComponentType<CastleTerritory>();
+		var playerPlots = new Dictionary<Entity, int>();
+		foreach (var castleTerritoryEntity in castleTerritories)
+		{
+			var castleTerritory = castleTerritoryEntity.Read<CastleTerritory>();
+			if (castleTerritory.CastleHeart.Equals(Entity.Null)) continue;
+
+			var userOwner = castleTerritory.CastleHeart.Read<UserOwner>();
+			if (playerPlots.ContainsKey(userOwner.Owner.GetEntityOnServer()))
+			{
+				playerPlots[userOwner.Owner.GetEntityOnServer()]++;
+			}
+			else
+			{
+				playerPlots[userOwner.Owner.GetEntityOnServer()] = 1;
+			}
+		}
+
+		var sb = new StringBuilder();
+		// print a list of the top 10 players with the most plots
+		var topPlayers = playerPlots.OrderByDescending(x => x.Value).Take(10);
+		sb.AppendLine("Top 10 Players by Plots Owned");
+		foreach (var playerPlot in topPlayers)
+		{
+			var user = playerPlot.Key.Read<User>();
+			sb.AppendLine($"{user.CharacterName} owns {playerPlot.Value} plots");
+		}
+		ctx.Reply(sb.ToString());
+	}
 }
