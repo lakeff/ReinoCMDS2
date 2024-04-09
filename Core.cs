@@ -17,6 +17,7 @@ internal static class Core
 	public static ConfigSettingsService ConfigSettings { get; internal set; }
 	public static PlayerService Players { get; internal set; }
 	public static PrefabService Prefabs { get; internal set; }
+	public static RegionService Regions { get; internal set; }
 	public static StealthAdminService StealthAdminService { get; internal set; }
 	public static UnitSpawnerService UnitSpawner { get; internal set; }
 
@@ -37,6 +38,7 @@ internal static class Core
 		ConfigSettings = new();
 		Players = new();
 		Prefabs = new();
+		Regions = new();
 		StealthAdminService = new();
 		UnitSpawner = new();
 		_hasInitialized = true;
