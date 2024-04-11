@@ -85,12 +85,21 @@ internal class PlayerService
 	{
 
 		NativeArray<Entity> _userEntities = Core.EntityManager.CreateEntityQuery(ComponentType.ReadOnly<User>()).ToEntityArray(Allocator.Temp);
-		int len = _userEntities.Length;
-		for (int i = 0; i < len; ++i)
+		foreach(var entity in _userEntities)
 		{
-			if (_userEntities[i].Read<User>().IsConnected)
-				yield return _userEntities[i];
+			if (Core.EntityManager.Exists(entity) && entity.Read<User>().IsConnected)
+				yield return entity;
 		}
+	}
 
+
+	public IEnumerable<Entity> GetCachedUsersOnline()
+	{
+		foreach (var pd in namePlayerCache.Values.ToArray())
+		{
+			var entity = pd.UserEntity;
+			if (Core.EntityManager.Exists(entity) && entity.Read<User>().IsConnected)
+				yield return entity;
+		}
 	}
 }
