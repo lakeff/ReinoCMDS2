@@ -1,16 +1,14 @@
-using KindredCommands.Commands.Converters;
+using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text.Json;
-using ProjectM;
-using System.Text.Json.Serialization;
-using ProjectM.Terrain;
-using System;
 using System.Linq;
-using Unity.Transforms;
-using ProjectM.Shared;
-using ProjectM.Gameplay.Scripting;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using KindredCommands.Commands.Converters;
 using KindredCommands.Data;
+using ProjectM;
+using ProjectM.Gameplay.Scripting;
+using ProjectM.Shared;
 
 namespace KindredCommands.Services;
 internal class BossService
@@ -121,6 +119,11 @@ internal class BossService
 			return true;
 		}
 		return false;
+	}
+
+	public bool IsBossLocked(PrefabGUID boss)
+	{
+		return lockedBosses.Any(x => x.Value.Equals(boss));
 	}
 }
 

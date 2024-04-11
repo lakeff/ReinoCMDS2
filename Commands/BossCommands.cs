@@ -1,14 +1,13 @@
+using System.Collections.Generic;
+using System.Linq;
+using KindredCommands.Commands.Converters;
 using ProjectM;
+using ProjectM.Network;
 using Unity.Entities;
+using Unity.Mathematics;
 using Unity.Transforms;
 using UnityEngine;
 using VampireCommandFramework;
-using System.Collections.Generic;
-using System.Linq;
-using ProjectM.Network;
-using Unity.Mathematics;
-using KindredCommands.Commands.Converters;
-using Unity.Collections;
 
 namespace KindredCommands.Commands;
 [CommandGroup("boss")]
