@@ -14,6 +14,7 @@ internal static class Core
 	public static ManualLogSource Log { get; } = Plugin.PluginLog;
 	public static AnnouncementsService AnnouncementsService { get; internal set; }
 	public static BoostedPlayerService BoostedPlayerService { get; internal set; }
+	public static BossService Boss { get; internal set; }
 	public static ConfigSettingsService ConfigSettings { get; internal set; }
 	public static PlayerService Players { get; internal set; }
 	public static PrefabService Prefabs { get; internal set; }
@@ -33,11 +34,13 @@ internal static class Core
 	{
 		if (_hasInitialized) return;
 
-		AnnouncementsService = new();
-		BoostedPlayerService = new();
-		ConfigSettings = new();
 		Players = new();
 		Prefabs = new();
+		ConfigSettings = new();
+
+		AnnouncementsService = new();
+		BoostedPlayerService = new();
+		Boss = new();
 		Regions = new();
 		StealthAdminService = new();
 		UnitSpawner = new();

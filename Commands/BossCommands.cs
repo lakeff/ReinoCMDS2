@@ -8,6 +8,7 @@ using System.Linq;
 using ProjectM.Network;
 using Unity.Mathematics;
 using KindredCommands.Commands.Converters;
+using Unity.Collections;
 
 namespace KindredCommands.Commands;
 [CommandGroup("boss")]
@@ -94,4 +95,22 @@ internal class BossCommands
 			ctx.Reply($"Teleporting to {boss.Name} at {pos}");
 		}
     }
+
+	[Command("lock", "l", description: "Locks the specified boss from spawning.", adminOnly: true)]
+	public static void LockBossCommand(ChatCommandContext ctx, FoundVBlood boss)
+	{
+		if (Core.Boss.LockBoss(boss))
+			ctx.Reply($"Locked {boss.Name}");
+		else
+			ctx.Reply($"{boss.Name} is already locked");
+	}
+
+	[Command("unlock", "u", description: "Unlocks the specified boss allowing it to spawn.", adminOnly: true)]
+	public static void UnlockBossCommand(ChatCommandContext ctx, FoundVBlood boss)
+	{
+		if(Core.Boss.UnlockBoss(boss))
+			ctx.Reply($"Unlocked {boss.Name}");
+		else
+			ctx.Reply($"{boss.Name} is already unlocked");
+	}
 }

@@ -70,24 +70,46 @@ public class FoundVBloodConverter : CommandArgumentConverter<FoundVBlood>
 	public override FoundVBlood Parse(ICommandContext ctx, string input)
 	{
 		// First check if the string is a boss PrefabGUID
-		if(Core.Prefabs.TryGetItem(input, out var prefab) && VBloodPrefabToName.TryGetValue(prefab, out var name))
+		if (Core.Prefabs.TryGetItem(input, out var prefab) && VBloodPrefabToName.TryGetValue(prefab, out var name))
 		{
 			return new FoundVBlood(prefab, name);
 		}
 
 		var matches = NameToVBloodPrefab.Where(kvp => kvp.Key.ToLower().Replace(" ", "").Contains(input.Replace(" ", "").ToLower()));
 
-		if(matches.Count() == 1)
+		if (matches.Count() == 1)
 		{
 			var theMatch = matches.First();
 			return new FoundVBlood(theMatch.Value, theMatch.Key);
 		}
 
-		if(matches.Count() > 1)
+		if (matches.Count() > 1)
 		{
-			throw ctx.Error($"Multiple bosses found matching {input}. Please be more specific.\n"+string.Join("\n", matches.Select(x => x.Key)));
+			throw ctx.Error($"Multiple bosses found matching {input}. Please be more specific.\n" + string.Join("\n", matches.Select(x => x.Key)));
 		}
 
 		throw ctx.Error("Could not find boss");
+	}
+
+	static public bool Parse(string input, out FoundVBlood foundVBlood)
+	{
+		// First check if the string is a boss PrefabGUID
+		if (Core.Prefabs.TryGetItem(input, out var prefab) && VBloodPrefabToName.TryGetValue(prefab, out var name))
+		{
+			foundVBlood = new FoundVBlood(prefab, name);
+			return true;
+		}
+
+		var matches = NameToVBloodPrefab.Where(kvp => kvp.Key.ToLower().Replace(" ", "").Contains(input.Replace(" ", "").ToLower()));
+
+		if (matches.Count() == 1)
+		{
+			var theMatch = matches.First();
+			foundVBlood = new FoundVBlood(theMatch.Value, theMatch.Key);
+			return true;
+		}
+
+		foundVBlood = new FoundVBlood();
+		return false;
 	}
 }
