@@ -9,6 +9,7 @@ using ProjectM.Network;
 using Unity.Entities;
 using Unity.Transforms;
 using UnityEngine;
+using UnityEngine.UIElements.UIR;
 using VampireCommandFramework;
 
 namespace KindredCommands.Commands;
@@ -216,35 +217,45 @@ public static string TerritoryRegions(CastleTerritory castleTerritory)
 	}
 
 	[Command("plotsowned", "po", description: "Reports the number of plots owned by each player", adminOnly: true)]
-	public static void PlotsOwned(ChatCommandContext ctx)
-	{
-		var castleTerritories = Helper.GetEntitiesByComponentType<CastleTerritory>();
-		var playerPlots = new Dictionary<Entity, int>();
-		foreach (var castleTerritoryEntity in castleTerritories)
-		{
-			var castleTerritory = castleTerritoryEntity.Read<CastleTerritory>();
-			if (castleTerritory.CastleHeart.Equals(Entity.Null)) continue;
+    public static void PlotsOwned(ChatCommandContext ctx, int? page = null)
+    {
+        var castleTerritories = Helper.GetEntitiesByComponentType<CastleTerritory>();
+        var playerPlots = new Dictionary<Entity, int>();
+        foreach (var castleTerritoryEntity in castleTerritories)
+        {
+            var castleTerritory = castleTerritoryEntity.Read<CastleTerritory>();
+            if (castleTerritory.CastleHeart.Equals(Entity.Null)) continue;
 
-			var userOwner = castleTerritory.CastleHeart.Read<UserOwner>();
-			if (playerPlots.ContainsKey(userOwner.Owner.GetEntityOnServer()))
-			{
-				playerPlots[userOwner.Owner.GetEntityOnServer()]++;
-			}
-			else
-			{
-				playerPlots[userOwner.Owner.GetEntityOnServer()] = 1;
-			}
-		}
+            var userOwner = castleTerritory.CastleHeart.Read<UserOwner>();
+            if (playerPlots.ContainsKey(userOwner.Owner.GetEntityOnServer()))
+            {
+                playerPlots[userOwner.Owner.GetEntityOnServer()]++;
+            }
+            else
+            {
+                playerPlots[userOwner.Owner.GetEntityOnServer()] = 1;
+            }
+        }
 
-		var sb = new StringBuilder();
-		// print a list of the top 10 players with the most plots
-		var topPlayers = playerPlots.OrderByDescending(x => x.Value).Take(10);
-		sb.AppendLine("Top 10 Players by Plots Owned");
-		foreach (var playerPlot in topPlayers)
-		{
-			var user = playerPlot.Key.Read<User>();
-			sb.AppendLine($"{user.CharacterName} owns {playerPlot.Value} plots");
-		}
-		ctx.Reply(sb.ToString());
-	}
+        var sb = new StringBuilder();
+        sb.AppendLine("Players by Plots Owned");
+        int count = 0;
+        int startIndex = (page ?? 1) == 1 ? 0 : ((page ?? 1) - 1) * 8;
+        foreach (var playerPlot in playerPlots.OrderByDescending(x => x.Value).Skip(startIndex).Take(8))
+        {
+            var user = playerPlot.Key.Read<User>();
+            sb.AppendLine($"{user.CharacterName} owns {playerPlot.Value} plots");
+            count++;
+            if (count % 8 == 0)
+            {
+                ctx.Reply(sb.ToString());
+                sb.Clear();
+            }
+        }
+
+        if (sb.Length > 0)
+        {
+            ctx.Reply(sb.ToString());
+        }
+    }
 }
