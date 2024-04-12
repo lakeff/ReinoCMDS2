@@ -9,6 +9,8 @@ using KindredCommands.Data;
 using ProjectM;
 using ProjectM.Gameplay.Scripting;
 using ProjectM.Shared;
+using Unity.Collections;
+using Unity.Entities;
 
 namespace KindredCommands.Services;
 internal class BossService
@@ -18,6 +20,8 @@ internal class BossService
 	
 	List<FoundVBlood> lockedBosses = [];
 	public IEnumerable<PrefabGUID> LockedBosses => lockedBosses.Select(x => x.Value);
+
+	public IEnumerable<string> LockedBossNames => lockedBosses.Select(boss => boss.Name);
 
 	struct BossFile
 	{
@@ -125,6 +129,7 @@ internal class BossService
 	{
 		return lockedBosses.Any(x => x.Value.Equals(boss));
 	}
+ 
 }
 
 internal class FoundVBloodJsonConverter : JsonConverter<FoundVBlood>
