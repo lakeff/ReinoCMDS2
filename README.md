@@ -34,6 +34,13 @@ Feel free to reach out to me on discord (odjit) if you have any questions or nee
 - `.mortal (player)`
   - will toggle godmode off a player named, or the user if no one is named.																								
   - Example: *.mortal Bob*
+- `.boost (Type) (Amount) (Player)`
+  - will boost a player's stats to the amount specified. Types with amounts are the following: attackspeed, damage, health, projectilespeed, projectilerange, speed, and yield. Types with no ammount and just add the player name: noaggro, noblooddrain, nocooldown, nodurability, immaterial, invincible, shrouded.
+  - Example: *.boost damage 100 Bob*
+  - Example: *.boost immaterial Bob*
+- `.spectate (Player)`
+  - will set the player into spectate mode, where they are invisible and cannot interact with anything. Use again to remove it and teleport them to their prior position.
+  - Example: *.spectate Bob*
 - `.give (Item prefab name) (amount)`			
   - Example: *.give Headgear_arcmageCrown 1*
   - Shortcut: *.g*
@@ -64,6 +71,8 @@ Feel free to reach out to me on discord (odjit) if you have any questions or nee
   - will add or remove a player from the admin list, authing and deauthing
 - `.reloadadmin `
   - will reload the admin list
+- `.stealthadmin`
+  - will toggle stealth mode for the user as admin. This will enable you to still use all chat admin commands, but your name not go green. You cannnot adminauth or you will show as green again. Will persist through relog. You will get kicked, don't freak.
 - `.spawnnpc (guid) (amount)`
   - Spawns an npc specified at your location in the amount specified
   - Example: *.spawnnpc CHAR_ChurchOfLight_Lightweaver 1*
@@ -72,6 +81,13 @@ Feel free to reach out to me on discord (odjit) if you have any questions or nee
   - Spawns an npc with specific blood type, quality, whether or not you can 'eat' it, how long it will be up, and at what level.
   - Example: *.customspawn CHAR_ChurchOfLight_Lightweaver scholar 100 true -1 100*
   - Shortcut: *.cspwn*
+- `.despawnnpc (guid) (range)`
+  - will kill any entity matching the ID specified. Use sparingly as this is an expensive call, and could cause minor lag depending. Just for the cases where you can't kill something by hand. 
+  - Example: *.despawnnpc CHAR_ChurchOfLight_Lightweaver 10*
+  - Shortcut: *.dspwn*
+- `.spawnban (Prefab GUID name) (reason)`
+  - saves a GUID to the banned list, preventing customspawn or spawnnpc from creating it. Helps prevent server crashes and corruption. To remove from the ban list, delete the line from the nospawn.json in the Config folder.
+  - Example: *.spawnban CHAR_ChurchOfLight_Lightweaver "This NPC is too cute"*
 - `.spawnhorse (speed) (acceleration) (rotation) (Spectral: true/false) (amount)`
   - Spawns a horse at your location with the specified stats and amount..
   - Example: *.spawnhorse 10 10 10 false 1*
@@ -82,21 +98,6 @@ Feel free to reach out to me on discord (odjit) if you have any questions or nee
 - `.teleporthorse (radius)`
   - will teleport all dominated horses within the radius specified to your location. Useful for cleaning up horses that are stuck in walls or other objects or that are desynced.
   - Example: *.teleporthorse 10*
-- `.despawnnpc (guid) (range)`
-  - will kill any entity matching the ID specified. Use sparingly as this is an expensive call, and could cause minor lag depending. Just for the cases where you can't kill something by hand. 
-  - Example: *.despawnnpc CHAR_ChurchOfLight_Lightweaver 10*
-  - Shortcut: *.dspwn*
-- `.spawnban (Prefab GUID name) (reason)`
-  - saves a GUID to the banned list, preventing customspawn or spawnnpc from creating it. Helps prevent server crashes and corruption. To remove from the ban list, delete the line from the nospawn.json in the Config folder.
-  - Example: *.spawnban CHAR_ChurchOfLight_Lightweaver "This NPC is too cute"*
-- `.boss modify (bossname) (level)`
-  - will change the level of the boss to the level specified. Upon respawn, they will be their original level. You can still modify the level of the boss while its in its 'blood walk', and it will spawn with that level. Must be near boss.
-  - Example: *.boss modify solarus 100*
-  - Shortcut: *.boss m*
-- `.boss teleportto (name) (WhichOne)`
-  - will teleport you to the boss specified. Must be near boss. If multiple bosses are up, you can specify which one to teleport to. Bosses must have been spawned in at least once on the map to be teleported to.
-  - Example: *.boss teleportto TheNameOfTheBoss 1*
-  - Shortcut: *.boss tt*
 - `.reloadstaff`
   - reloads the staff list config file
 - `.setstaff (Player) (Rank)`
@@ -140,6 +141,10 @@ Feel free to reach out to me on discord (odjit) if you have any questions or nee
 - `.incomingdecay`
   - will list 6 of the plots that are closest to decay.
   - Shortcut: *.incd*
+- `.plotsowned (page)`
+  - will list how many plots are owned per player, in descending order.
+  - Example: *.plotsowned*
+  - Shortcut: *.po 2*
 - `.playerinfo (Player)`
   - will list the player's steamID, online status, clan name, Position, and list all of their castles (with index ID, region, and time remaining on heart).
   - Example: *.playerinfo Bob*
@@ -154,8 +159,44 @@ Feel free to reach out to me on discord (odjit) if you have any questions or nee
   - Example: *.revealmap Bob*
 - `.revealmapforallplayers`
   - will reveal the map for all players. New players will log in with a revealed map. Currently logged in players will have their map revealed upon relog. There is a config setting to turn this behavior back off.
-- `.stealthadmin`
-  - will toggle stealth mode for the user as admin. This will enable you to still use all chat admin commands, but your name not go green. You cannnot adminauth or you will show as green again. Will persist through relog.
+- `.region lock (Region)`
+  - will lock a region, preventing new players from entering it. Players already in the region will not be kicked but cannot reenter if they leave.
+  - Example: *.region lock silverlighthills*
+- `.region unlock (Region)`
+  - will unlock a region, allowing new players to enter it.
+  - Example: *.region unlock silverlighthills*
+- `.region list`
+  - will list all regions and their current lock or gated status.
+- `.region gate (Region) (level)`
+  - will gate a region, preventing new players below the level threshold from entering it. Players already in the region will not be kicked but cannot reenter if they leave. It will keep track of the highest level a player has reached, providing accomodation for gear removal or "prestiging"
+  - Example: *.region gate silverlighthills 60*
+- `.region ungate (Region)`
+  - will ungate a region, allowing all players of all levels to enter it.
+  - Example: *.region ungate silverlighthills*
+- `.region allow (Player)`
+  - will allow a player to enter a locked or gated region.
+  - Example: *.region allow Bob*
+- `.region remove (Player)`
+  - will remove a player from the allowed list for a locked or gated region.
+  - Example: *.region remove Bob*
+- `.region listplayers`
+  - will list all players who are on the allow list to bypass a locked or gated region.
+- `.boss modify (bossname) (level)`
+  - will change the level of the boss to the level specified. Upon respawn, they will be their original level. You can still modify the level of the boss while its in its 'blood walk', and it will spawn with that level. Must be near boss.
+  - Example: *.boss modify solarus 100*
+  - Shortcut: *.boss m*
+- `.boss teleportto (name) (WhichOne)`
+  - will teleport you to the boss specified. Must be near boss. If multiple bosses are up, you can specify which one to teleport to. Bosses must have been spawned in at least once on the map to be teleported to.
+  - Example: *.boss teleportto TheNameOfTheBoss 1*
+  - Shortcut: *.boss tt*
+- `.boss lock (boss)`
+  - will stop a boss from spawning. When attempting to track said boss, it will say it is locked.
+  - Example: *.boss lock solarus*
+- `.boss unlock (boss)`
+  - will allow a boss to spawn normally.
+  - Example: *.boss unlock solarus*
+- `.boss list`
+  - will list all locked bosses
 
 ## Player Commands:
 - `.afk`
