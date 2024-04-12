@@ -150,9 +150,17 @@ internal class RegionService
 		{
 			foreach(var userEntity in Core.Players.GetCachedUsersOnline())
 			{
+				if(!userEntity.Has<User>() || !userEntity.Has<CurrentWorldRegion>()) continue;
+
 				var charName = userEntity.Read<User>().CharacterName.ToString();
+
+				if(String.IsNullOrEmpty(charName)) continue;
+
+				var charEntity = userEntity.Read<User>().LocalCharacter.GetEntityOnServer();
+				if(!charEntity.Has<Equipment>()) continue;
+
 				var currentWorldRegion = userEntity.Read<CurrentWorldRegion>();
-				var equipment = userEntity.Read<User>().LocalCharacter.GetEntityOnServer().Read<Equipment>();
+				var equipment = charEntity.Read<Equipment>();
 				var maxLevel = Mathf.Max(equipment.ArmorLevel+equipment.SpellLevel+equipment.WeaponLevel,
 										 maxPlayerLevels.TryGetValue(charName, out var cachedLevel) ? cachedLevel : 0);
 				maxPlayerLevels[charName] = maxLevel;
@@ -164,7 +172,6 @@ internal class RegionService
 				}
 				else
 				{
-					var charEntity = userEntity.Read<User>().LocalCharacter.GetEntityOnServer();
 					lastValidPos[userEntity] = (currentWorldRegion.CurrentRegion, charEntity.Read<Translation>().Value);
 				}
 				yield return null;
