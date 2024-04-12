@@ -1,9 +1,7 @@
-using Epic.OnlineServices;
-using ProjectM;
 using System;
 using System.Collections.Generic;
 using System.Text;
-using UnityEngine.UIElements.UIR;
+using ProjectM;
 using VampireCommandFramework;
 
 namespace KindredCommands.Commands;
@@ -143,7 +141,7 @@ internal class GiveItemCommands
 	{
 		Helper.AddItemToInventory(ctx.Event.SenderCharacterEntity, item.Value, quantity);
 		var prefabSys = Core.Server.GetExistingSystem<PrefabCollectionSystem>();
-		prefabSys.PrefabGuidToNameDictionary.TryGetValue(item.Value, out var name); // seems excessive
+		prefabSys.PrefabGuidToNameDictionary.TryGetValue(item.Value, out var name);
 		ctx.Reply($"Gave {quantity} {name}");
 	}
 }
