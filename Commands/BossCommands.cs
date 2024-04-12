@@ -112,4 +112,18 @@ internal class BossCommands
 		else
 			ctx.Reply($"{boss.Name} is already unlocked");
 	}
+
+	[Command("list", "ls", description: "Lists all locked bosses.", adminOnly: true)]
+    public static void ListLockedBossesCommand(ChatCommandContext ctx)
+    {
+        var lockedBosses = Core.Boss.LockedBossNames;
+        if (lockedBosses.Any())
+        {
+            ctx.Reply($"Locked bosses: {string.Join(", ", lockedBosses)}");
+        }
+        else
+        {
+            ctx.Reply("No bosses are currently locked.");
+        }
+    }
 }
