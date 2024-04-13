@@ -1,7 +1,7 @@
 ![](logo.png)
 # KindredCommands for V Rising
 KindredCommands is a server modification for V Rising that adds chat commands for the goal of server administration.
-This is built upon CommunityCommands by deca, and AdminCommands by willis with some fixes/tweaks and new commands added. Credits to all of them for their work and inspiration. 
+This is built upon CommunityCommands by deca, and AdminCommands by willis with some fixes/tweaks and new commands added. Consultations by zfolmt. Credits to all of them for their work and inspiration. 
 Also, thanks to the V Rising modding and server communities for ideas and requests! Commands now log to the server log for accountability and tracking.
 
 [Territory ID Map](https://i.imgur.com/phmRmP7.jpeg)
@@ -29,10 +29,10 @@ Feel free to reach out to me on discord (odjit) if you have any questions or nee
   - Example: *.resetcooldown Bob*
   - Shortcut: *.cd*
 - `.god (Player)`
-  - will toggle godmode on a player named, or the user if no one is named. Super speed, spells, damage, etc.																								
+  - will toggle godmode on a player named, or the user if no one is named. Super speed, spells, damage, etc: Everything from boosts.																								
   - Example: *.god Bob*
 - `.mortal (player)`
-  - will toggle godmode off a player named, or the user if no one is named.																								
+  - will toggle godmode off a player named, or the user if no one is named.	Also removes boosts.																							
   - Example: *.mortal Bob*
 - `.boost (Type) (Amount) (Player)`
   - will boost a player's stats to the amount specified. Types with amounts are the following: attackspeed, damage, health, projectilespeed, projectilerange, speed, and yield. Types with no ammount and just add the player name: noaggro, noblooddrain, nocooldown, nodurability, immaterial, invincible, shrouded.
@@ -65,6 +65,10 @@ Feel free to reach out to me on discord (odjit) if you have any questions or nee
   - will repair or break gear on a player (or self if no player specified)
   - Example: *.gear repair Joe* or *.gear break Joe*
   - Shortcut: *.gear r* or *.gear b*
+- `.gear headgear`
+  - will toggle Headgear being bloodbound or not on the server. (Wether or not it drops on death). Saves out to config file to persist through restarts.
+  - Example: *.gear headgear*
+  - Shortcut: *.gear hg*
 - `.claim (Player) `
   - will change a castle heart owner to whomever is named. This will only work if you're on top of a heart, making it very apparent which heart you'll be changing.
 - `.toggleadmin (player)`
