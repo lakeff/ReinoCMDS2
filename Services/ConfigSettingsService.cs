@@ -1,6 +1,5 @@
 using System.IO;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 
 namespace KindredCommands.Services;
 internal class ConfigSettingsService
@@ -11,6 +10,7 @@ internal class ConfigSettingsService
 	public bool RevealMapToAll {
 		get {
 			return config.RevealMapToAll;
+
 		}
 		set { 
 			config.RevealMapToAll = value; 
@@ -18,9 +18,22 @@ internal class ConfigSettingsService
 		}
 	}
 
+	public bool HeadgearBloodbound
+	{
+		get
+		{
+			return config.HeadgearBloodbound;
+		}
+		set
+		{
+			config.HeadgearBloodbound = value;
+			SaveConfig();
+		}
+	}
 	struct Config
 	{
 		public bool RevealMapToAll { get; set; }
+		public bool HeadgearBloodbound { get; set; }
 	}
 
 	Config config;

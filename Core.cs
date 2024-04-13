@@ -1,6 +1,7 @@
 using System.Runtime.CompilerServices;
 using BepInEx.Logging;
 using KindredCommands.Services;
+using ProjectM;
 using ProjectM.Scripting;
 using Unity.Entities;
 
@@ -11,6 +12,7 @@ internal static class Core
 	public static World Server { get; } = GetWorld("Server") ?? throw new System.Exception("There is no Server world (yet). Did you install a server mod on the client?");
 
 	public static EntityManager EntityManager { get; } = Server.EntityManager;
+	public static GameDataSystem GameDataSystem { get; } = Server.GetExistingSystem<GameDataSystem>();
 	public static ServerGameManager ServerGameManager { get; internal set; }
 
 	public static ManualLogSource Log { get; } = Plugin.PluginLog;
@@ -18,6 +20,7 @@ internal static class Core
 	public static BoostedPlayerService BoostedPlayerService { get; internal set; }
 	public static BossService Boss { get; internal set; }
 	public static ConfigSettingsService ConfigSettings { get; internal set; }
+	public static GearService GearService { get; internal set; }
 	public static PlayerService Players { get; internal set; }
 	public static PrefabService Prefabs { get; internal set; }
 	public static RegionService Regions { get; internal set; }
@@ -45,6 +48,7 @@ internal static class Core
 		AnnouncementsService = new();
 		BoostedPlayerService = new();
 		Boss = new();
+		GearService = new();
 		Regions = new();
 		StealthAdminService = new();
 		UnitSpawner = new();
