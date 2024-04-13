@@ -43,7 +43,7 @@ internal class GodCommands
 	{
 		var charEntity = (player?.Value.CharEntity ?? ctx.Event.SenderCharacterEntity);
 
-		if (!Core.BoostedPlayerService.IsBoostedPlayer(charEntity) && !BuffUtility.HasBuff(Core.EntityManager, charEntity, Prefabs.CustomBuff)) return;
+		if (!Core.BoostedPlayerService.IsBoostedPlayer(charEntity) && !BuffUtility.HasBuff(Core.EntityManager, charEntity, Prefabs.BoostedBuff1)) return;
 
 		Core.BoostedPlayerService.RemoveBoostedPlayer(charEntity);
 

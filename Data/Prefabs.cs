@@ -16375,7 +16375,8 @@ public static class Prefabs
 	public static readonly PrefabGUID LightningLightIntensityCurve = new PrefabGUID(1039030447);
 
 	// Special
-	public static readonly PrefabGUID CustomBuff = Buff_Monster_GloomrotMilitary_Cooldown;
+	public static readonly PrefabGUID BoostedBuff1 = Buff_Monster_GloomrotMilitary_Cooldown;
+	public static readonly PrefabGUID BoostedBuff2 = Buff_General_Build_Spawn_Buff_WeakStructure;
 }
 
 #pragma warning restore IDE0090 // Use 'new(...)'

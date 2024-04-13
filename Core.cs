@@ -1,6 +1,7 @@
 using System.Runtime.CompilerServices;
 using BepInEx.Logging;
 using KindredCommands.Services;
+using ProjectM.Scripting;
 using Unity.Entities;
 
 namespace KindredCommands;
@@ -10,6 +11,7 @@ internal static class Core
 	public static World Server { get; } = GetWorld("Server") ?? throw new System.Exception("There is no Server world (yet). Did you install a server mod on the client?");
 
 	public static EntityManager EntityManager { get; } = Server.EntityManager;
+	public static ServerGameManager ServerGameManager { get; internal set; }
 
 	public static ManualLogSource Log { get; } = Plugin.PluginLog;
 	public static AnnouncementsService AnnouncementsService { get; internal set; }
@@ -33,6 +35,8 @@ internal static class Core
 	internal static void InitializeAfterLoaded()
 	{
 		if (_hasInitialized) return;
+
+		ServerGameManager = Server.GetExistingSystem<ServerScriptMapper>().GetServerGameManager();
 
 		Players = new();
 		Prefabs = new();

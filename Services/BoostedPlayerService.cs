@@ -3,9 +3,7 @@ using System.Collections.Generic;
 using BepInEx.Unity.IL2CPP.Utils.Collections;
 using KindredCommands.Data;
 using ProjectM;
-using ProjectM.Network;
 using ProjectM.Physics;
-using ProjectM.Shared;
 using Unity.Entities;
 using UnityEngine;
 
@@ -16,7 +14,7 @@ namespace KindredCommands.Services
 		readonly HashSet<Entity> boostedPlayers = [];
 		readonly Dictionary<Entity, float> playerAttackSpeed = [];
 		readonly Dictionary<Entity, float> playerDamage = [];
-		readonly Dictionary<Entity, int>   playerHps = [];
+		readonly Dictionary<Entity, int> playerHps = [];
 		readonly Dictionary<Entity, float> playerProjectileSpeeds = [];
 		readonly Dictionary<Entity, float> playerProjectileRanges = [];
 		readonly Dictionary<Entity, float> playerSpeeds = [];
@@ -39,16 +37,16 @@ namespace KindredCommands.Services
 		}
 
 		public bool IsBoostedPlayer(Entity charEntity)
-        {
-            return boostedPlayers.Contains(charEntity);
-        }
+		{
+			return boostedPlayers.Contains(charEntity);
+		}
 
 		public void UpdateBoostedPlayer(Entity charEntity)
 		{
 			boostedPlayers.Add(charEntity);
 			var userEntity = charEntity.Read<PlayerCharacter>().UserEntity;
 
-			if(invinciblePlayers.Contains(charEntity))
+			if (invinciblePlayers.Contains(charEntity))
 			{
 				// Heal back to full
 				Health health = charEntity.Read<Health>();
@@ -60,7 +58,7 @@ namespace KindredCommands.Services
 				Buffs.RemoveBuff(charEntity, Prefabs.Buff_InCombat_PvPVampire);
 			}
 
-			if(immaterialPlayers.Contains(charEntity))
+			if (immaterialPlayers.Contains(charEntity))
 			{
 				Buffs.AddBuff(userEntity, charEntity, Prefabs.AB_Blood_BloodRite_Immaterial, -1, true);
 				if (BuffUtility.TryGetBuff(Core.EntityManager, charEntity, Prefabs.AB_Blood_BloodRite_Immaterial, out Entity immaterialBuffEntity))
@@ -71,7 +69,7 @@ namespace KindredCommands.Services
 				}
 			}
 
-			if(shroudedPlayers.Contains(charEntity))
+			if (shroudedPlayers.Contains(charEntity))
 			{
 				Buffs.AddBuff(userEntity, charEntity, Prefabs.EquipBuff_ShroudOfTheForest, -1, true);
 			}
@@ -81,11 +79,15 @@ namespace KindredCommands.Services
 
 		IEnumerator RemoveAndAddCustomBuff(Entity userEntity, Entity charEntity)
 		{
-			Buffs.RemoveBuff(charEntity, Prefabs.CustomBuff);
-			while(BuffUtility.HasBuff(Core.EntityManager, charEntity, Prefabs.CustomBuff))
+			Buffs.RemoveBuff(charEntity, Prefabs.BoostedBuff1);
+			Buffs.RemoveBuff(charEntity, Prefabs.BoostedBuff2);
+			while (BuffUtility.HasBuff(Core.EntityManager, charEntity, Prefabs.BoostedBuff1))
+				yield return null;
+			while (BuffUtility.HasBuff(Core.EntityManager, charEntity, Prefabs.BoostedBuff2))
 				yield return null;
 
-			Buffs.AddBuff(userEntity, charEntity, Prefabs.CustomBuff, -1, true);
+			Buffs.AddBuff(userEntity, charEntity, Prefabs.BoostedBuff1, -1, true);
+			Buffs.AddBuff(userEntity, charEntity, Prefabs.BoostedBuff2, -1, true);
 		}
 
 		public void RemoveBoostedPlayer(Entity charEntity)
@@ -197,7 +199,7 @@ namespace KindredCommands.Services
 			shroudedPlayers.Add(charEntity);
 		}
 
-		public void UpdateCustomBuff(Entity buffEntity)
+		public void UpdateBoostedBuff1(Entity buffEntity)
 		{
 			var charEntity = buffEntity.Read<EntityOwner>().Owner;
 			var modifyStatBuffer = Core.EntityManager.AddBuffer<ModifyUnitStatBuff_DOTS>(buffEntity);
@@ -241,6 +243,23 @@ namespace KindredCommands.Services
 				modifyStatBuffer.Add(modifiedBuff);
 			}
 
+			if (noCooldownPlayers.Contains(charEntity))
+			{
+				modifyStatBuffer.Add(Cooldown);
+			}
+
+			if (noDurabilityPlayers.Contains(charEntity))
+			{
+				modifyStatBuffer.Add(DurabilityLoss);
+			}
+		}
+
+		public void UpdateBoostedBuff2(Entity buffEntity)
+		{
+			var charEntity = buffEntity.Read<EntityOwner>().Owner;
+			var modifyStatBuffer = Core.EntityManager.AddBuffer<ModifyUnitStatBuff_DOTS>(buffEntity);
+			modifyStatBuffer.Clear();
+
 			if (noAggroPlayers.Contains(charEntity))
 			{
 				buffEntity.Add<DisableAggroBuff>();
@@ -275,16 +294,6 @@ namespace KindredCommands.Services
 				buffEntity.Write(modifyBloodDrainBuff);
 			}
 
-			if (noCooldownPlayers.Contains(charEntity))
-			{
-				modifyStatBuffer.Add(Cooldown);
-			}
-
-			if (noDurabilityPlayers.Contains(charEntity))
-			{
-				modifyStatBuffer.Add(DurabilityLoss);
-			}
-
 			long buffModificationFlags = 0;
 			if (immaterialPlayers.Contains(charEntity))
 			{
@@ -315,38 +324,14 @@ namespace KindredCommands.Services
 
 		void ClearExtraBuffs(Entity charEntity)
 		{
-			var buffs = Core.EntityManager.GetBuffer<BuffBuffer>(charEntity);
-			var stringsToIgnore = new List<string>
-			{
-				"BloodBuff",
-				"SetBonus",
-				"EquipBuff",
-				"Combat",
-				"VBlood_Ability_Replace",
-				"Shapeshift",
-				"Interact",
-				"AB_Consumable",
-			};
+			Buffs.RemoveBuff(charEntity, Prefabs.BoostedBuff1);
+			Buffs.RemoveBuff(charEntity, Prefabs.BoostedBuff2);
+			Buffs.RemoveBuff(charEntity, Prefabs.AB_Blood_BloodRite_Immaterial);
 
-			foreach (var buff in buffs)
-			{
-				bool shouldRemove = true;
-				foreach (string word in stringsToIgnore)
-				{
-					if (buff.PrefabGuid.LookupName().Contains(word))
-					{
-						shouldRemove = false;
-						break;
-					}
-				}
-				if (shouldRemove)
-				{
-					DestroyUtility.Destroy(Core.EntityManager, buff.Entity, DestroyDebugReason.TryRemoveBuff);
-				}
-			}
 			var equipment = charEntity.Read<Equipment>();
 			if (!equipment.IsEquipped(Prefabs.Item_Cloak_Main_ShroudOfTheForest, out var _) && BuffUtility.HasBuff(Core.EntityManager, charEntity, Prefabs.EquipBuff_ShroudOfTheForest))
 			{
+				Core.Log.LogWarning($"Removing Shroud of the Forest");
 				Buffs.RemoveBuff(charEntity, Prefabs.EquipBuff_ShroudOfTheForest);
 			}
 		}
