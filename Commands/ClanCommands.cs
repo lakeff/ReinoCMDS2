@@ -1,11 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Bloodstone.API;
 using KindredCommands.Commands.Converters;
 using ProjectM;
 using ProjectM.CastleBuilding;
-using ProjectM.Gameplay.Clan;
 using ProjectM.Network;
 using Unity.Collections;
 using Unity.Entities;
@@ -55,6 +53,165 @@ class ClanCommands
 
         ctx.Reply($"{playerToAdd.Value.CharacterName} added to clan {clanEntity.Read<ClanTeam>().Name}");
     }
+
+	[Command("findinvalid", "fi", description: "Finds people not in a clan but are shown in those clans", adminOnly: true)]
+	public static void FindInvalidClanMembers(ChatCommandContext ctx)
+	{
+		var found = false;
+		foreach (var userEntity in Helper.GetEntitiesByComponentType<User>())
+		{
+			var user = userEntity.Read<User>();
+			if (!user.ClanEntity.Equals(NetworkedEntity.Empty)) continue;
+
+			var teamReference = userEntity.Read<TeamReference>();
+			if (teamReference.Value.Equals(Entity.Null)) continue;
+
+			var teamAllies = Core.EntityManager.GetBuffer<TeamAllies>(teamReference.Value);
+			var removing = new List<int>();
+			for (var i = 0; i < teamAllies.Length; ++i)
+			{
+				var allyEntity = teamAllies[i].Value;
+				if (allyEntity.Equals(Entity.Null)) continue;
+
+				var prefabGuid = allyEntity.Read<PrefabGUID>();
+				if (prefabGuid != Data.Prefabs.ClanTeam) continue;
+
+				found = true;
+				ctx.Reply($"{user.CharacterName} is in and not in \"{allyEntity.Read<ClanTeam>().Name}\"");
+			}
+		}
+
+		if(!found)
+			ctx.Reply("No invalid clan members found");
+	}
+
+	[Command("fix", "f", description: "Fixes person not in clan but shows in those clans", adminOnly: true)]
+	public static void Fix(ChatCommandContext ctx, OnlinePlayer playerToFix)
+	{
+		var userEntity = ctx.Event.SenderUserEntity;
+		var user = userEntity.Read<User>();
+		if (!user.ClanEntity.Equals(NetworkedEntity.Empty))
+		{
+			ctx.Reply($"Player is already in a clan");
+			return;
+		}
+
+		var teamReference = userEntity.Read<TeamReference>();
+		if (teamReference.Value.Equals(Entity.Null))
+		{
+			ctx.Reply($"Player is not in a team");
+			return;
+		}
+
+		var teamEntity = teamReference.Value;
+
+		var teamAllies = Core.EntityManager.GetBuffer<TeamAllies>(teamEntity);
+		var removing = new List<int>();
+		for(var i=0; i<teamAllies.Length; ++i)
+		{
+			var allyEntity = teamAllies[i].Value;
+			var prefabGuid = allyEntity.Read<PrefabGUID>();
+			if (prefabGuid != Data.Prefabs.ClanTeam) continue;
+			
+			ctx.Reply($"Removing from clan \"{allyEntity.Read<ClanTeam>().Name}\"");
+			removing.Add(i);
+
+			var members = Core.EntityManager.GetBuffer<ClanMemberStatus>(allyEntity);
+			var snapshotMembers = Core.EntityManager.GetBuffer<Snapshot_ClanMemberStatus>(allyEntity);
+			var userBuffer = Core.EntityManager.GetBuffer<OnlySyncToUserBuffer>(allyEntity);
+			var clanTeamAllies = Core.EntityManager.GetBuffer<TeamAllies>(allyEntity);
+			for (var j = 0; j < members.Length; ++j)
+			{
+				var userBufferEntry = userBuffer[j];
+				if (userBufferEntry.UserEntity.Equals(userEntity))
+				{
+					members.RemoveAt(j);
+					snapshotMembers.RemoveAt(j);
+					userBuffer.RemoveAt(j);
+					clanTeamAllies.RemoveAt(j);
+					break;
+				}
+			}
+
+			var users = userBuffer.AsNativeArray().ToArray().Select(x => x.UserEntity).ToArray();
+			foreach (var castle in Helper.GetEntitiesByComponentType<CastleHeart>())
+			{
+				var owner = castle.Read<UserOwner>().Owner.GetEntityOnServer();
+				if (users.Contains(owner))
+				{
+					// Remove the kicked person from the other clan member's castles
+					var castleMemberNames = Core.EntityManager.GetBuffer<CastleMemberNames>(castle);
+					var snapshotCastleMemberNames = Core.EntityManager.GetBuffer<Snapshot_CastleMemberNames>(castle);
+					for (var j = 0; i < castleMemberNames.Length; ++j)
+					{
+						if (castleMemberNames[j].Name.Equals(user.CharacterName))
+						{
+							Debug.Log($"Removing {user.CharacterName} from {owner.Read<User>().CharacterName}'s castle");
+							castleMemberNames.RemoveAt(j);
+							snapshotCastleMemberNames.RemoveAt(j);
+							break;
+						}
+					}
+				}
+			}
+		}
+
+		removing.Reverse();
+		foreach (var i in removing)
+		{
+			teamAllies.RemoveAt(i);
+		}
+
+		// Need to change team of char entity
+		var newTeamValue = Helper.GetEntitiesByComponentType<TeamData>().ToArray().Select(x => x.Read<TeamData>().TeamValue).Aggregate((x, y) => x > y ? x : y) + 1;
+
+		var team = userEntity.Read<Team>();
+		var oldTeamValue = team.Value;
+		team.Value = newTeamValue;
+		userEntity.Write<Team>(team);
+
+		var userTeam = (Entity)userEntity.Read<TeamReference>().Value;
+		var td = userTeam.Read<TeamData>();
+		td.TeamValue = newTeamValue;
+		userTeam.Write<TeamData>(td);
+		var userTeamAllies = Core.EntityManager.GetBuffer<TeamAllies>(userTeam);
+		for (var i = userTeamAllies.Length - 1; i > 0; --i)
+		{
+			if (userTeamAllies[i].Value.Has<CastleTeamData>())
+			{
+				td = userTeamAllies[i].Value.Read<TeamData>();
+				td.TeamValue = newTeamValue;
+				userTeamAllies[i].Value.Write<TeamData>(td);
+
+				var castleHeart = userTeamAllies[i].Value.Read<CastleTeamData>().CastleHeart;
+				if (castleHeart.Has<TeamData>())
+				{
+					var ctd = castleHeart.Read<TeamData>();
+					ctd.TeamValue = newTeamValue;
+					castleHeart.Write<TeamData>(ctd);
+				}
+				if (castleHeart.Has<Team>())
+				{
+					var ctd = castleHeart.Read<Team>();
+					ctd.Value = newTeamValue;
+					castleHeart.Write<Team>(ctd);
+				}
+			}
+		}
+
+		foreach (var userOwned in Helper.GetEntitiesByComponentType<UserOwner>(true))
+		{
+			if (userOwned.Read<UserOwner>().Owner.Equals(userEntity) && userOwned.Has<Team>())
+			{
+				var t = userOwned.Read<Team>();
+				t.Value = newTeamValue;
+				userOwned.Write<Team>(t);
+			}
+		}
+
+		// Remove the player from the castle hearts
+		ctx.Reply($"Fixed {playerToFix.Value.CharacterName}");
+	}
 
 	/*[Command("kick", "k", description: "Removes a player from a clan", adminOnly: true)] // in progress
 	public static void RemoveFromClan(ChatCommandContext ctx, OnlinePlayer player)

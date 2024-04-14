@@ -96,6 +96,7 @@ public static class StealthAdminChatPatch
 
 			if (addedAdmin && stealthAdmin)
 			{
+				userData = fromData.User.Read<User>();
 				userData.IsAdmin = false;
 				fromData.User.Write(userData);
 			}
