@@ -19,6 +19,7 @@ namespace KindredCommands.Services
 		readonly Dictionary<Entity, float> playerProjectileRanges = [];
 		readonly Dictionary<Entity, float> playerSpeeds = [];
 		readonly Dictionary<Entity, float> playerYield = [];
+		readonly HashSet<Entity> flyingPlayers = [];
 		readonly HashSet<Entity> noAggroPlayers = [];
 		readonly HashSet<Entity> noBlooddrainPlayers = [];
 		readonly HashSet<Entity> noDurabilityPlayers = [];
@@ -100,6 +101,7 @@ namespace KindredCommands.Services
 			playerProjectileRanges.Remove(charEntity);
 			playerSpeeds.Remove(charEntity);
 			playerYield.Remove(charEntity);
+			flyingPlayers.Remove(charEntity);
 			noAggroPlayers.Remove(charEntity);
 			noBlooddrainPlayers.Remove(charEntity);
 			noCooldownPlayers.Remove(charEntity);
@@ -157,6 +159,17 @@ namespace KindredCommands.Services
 		public void SetYieldMultiplier(Entity charEntity, float yield)
 		{
 			playerYield[charEntity] = yield;
+		}
+
+		public bool ToggleFlying(Entity charEntity)
+		{
+			if (flyingPlayers.Contains(charEntity))
+			{
+				flyingPlayers.Remove(charEntity);
+				return false;
+			}
+			flyingPlayers.Add(charEntity);
+			return true;
 		}
 
 		public void AddNoAggro(Entity charEntity)
@@ -295,6 +308,11 @@ namespace KindredCommands.Services
 			}
 
 			long buffModificationFlags = 0;
+			if (flyingPlayers.Contains(charEntity))
+			{
+				buffModificationFlags |= (long)(BuffModificationTypes.DisableDynamicCollision | BuffModificationTypes.FlyOnlyMapCollision | BuffModificationTypes.IsFlying);
+			}
+
 			if (immaterialPlayers.Contains(charEntity))
 			{
 				buffModificationFlags |= (long)(BuffModificationTypes.DisableDynamicCollision | BuffModificationTypes.DisableMapCollision | BuffModificationTypes.IsVbloodGhost);

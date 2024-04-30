@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text.Json;
 using ProjectM.Network;
 using Unity.Entities;
@@ -10,6 +11,7 @@ public readonly struct Database
 	private static readonly string CONFIG_PATH = Path.Combine(BepInEx.Paths.ConfigPath, "KindredCommands");
 	private static readonly string STAFF_PATH = Path.Combine(CONFIG_PATH, "staff.json");
 	private static readonly string NOSPAWN_PATH = Path.Combine(CONFIG_PATH, "nospawn.json");
+	private static readonly string CANWIPE_PATH = Path.Combine(CONFIG_PATH, "canwipe.txt");
 
 	public static void InitConfig()
 	{
@@ -18,6 +20,7 @@ public readonly struct Database
 
 		STAFF.Clear();
 		NOSPAWN.Clear();
+		CANWIPE.Clear();
 
 		if (File.Exists(STAFF_PATH))
 		{
@@ -50,6 +53,15 @@ public readonly struct Database
 			NOSPAWN["CHAR_Mount_Horse_Vampire"] = "it causes an instant server crash.";
 			SaveNoSpawn();
 		}
+
+		if (File.Exists(CANWIPE_PATH))
+		{
+			CANWIPE.AddRange(File.ReadAllText(CANWIPE_PATH).Split("\n").Select(x => x.Trim()));
+		}
+		else
+		{
+			SaveCanWipe();
+		}
 	}
 
 	static void WriteConfig(string path, Dictionary<string, string> dict)
@@ -67,6 +79,12 @@ public readonly struct Database
 	static public void SaveNoSpawn()
 	{
 		WriteConfig(NOSPAWN_PATH, NOSPAWN);
+	}
+
+	static public void SaveCanWipe()
+	{
+		if (!Directory.Exists(CONFIG_PATH)) Directory.CreateDirectory(CONFIG_PATH);
+		File.WriteAllText(CANWIPE_PATH, string.Join("\n\r", CANWIPE));
 	}
 
 	static public void SetStaff(Entity userEntity, string rank)
@@ -118,5 +136,12 @@ public readonly struct Database
 			Core.Log.LogInfo($"User {userEntity.Read<User>().CharacterName} attempted to be removed from staff config but wasn't there.");
 		}
 		return removed;
+	}
+
+	private static List<string> CANWIPE = new();
+
+	public static bool CanWipe(Entity userEntity)
+	{
+		return CANWIPE.Contains(userEntity.Read<User>().PlatformId.ToString());
 	}
 }

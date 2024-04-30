@@ -13,12 +13,14 @@ internal static class Core
 
 	public static EntityManager EntityManager { get; } = Server.EntityManager;
 	public static GameDataSystem GameDataSystem { get; } = Server.GetExistingSystem<GameDataSystem>();
+	public static CastleBuffsTickSystem CastleBuffsTickSystem { get; } = Server.GetExistingSystem<CastleBuffsTickSystem>();
 	public static ServerGameManager ServerGameManager { get; internal set; }
 
 	public static ManualLogSource Log { get; } = Plugin.PluginLog;
 	public static AnnouncementsService AnnouncementsService { get; internal set; }
 	public static BoostedPlayerService BoostedPlayerService { get; internal set; }
 	public static BossService Boss { get; internal set; }
+	public static CastleTerritoryService CastleTerritory { get; private set; }
 	public static ConfigSettingsService ConfigSettings { get; internal set; }
 	public static GearService GearService { get; internal set; }
 	public static PlayerService Players { get; internal set; }
@@ -48,6 +50,7 @@ internal static class Core
 		AnnouncementsService = new();
 		BoostedPlayerService = new();
 		Boss = new();
+		CastleTerritory = new();
 		GearService = new();
 		Regions = new();
 		StealthAdminService = new();

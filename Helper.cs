@@ -12,6 +12,7 @@ using VampireCommandFramework;
 using System.Collections.Generic;
 using ProjectM.Network;
 using ProjectM.Gameplay.Clan;
+using System.Numerics;
 
 namespace KindredCommands;
 
@@ -105,6 +106,21 @@ internal static partial class Helper
 
 		var entities = query.ToEntityArray(Allocator.Temp);
 		return entities;
+	}
+
+	public static IEnumerable<Entity> GetAllEntitiesInRadius<T>(float2 center, float radius)
+	{
+		var entities = GetEntitiesByComponentType<T>(includeSpawn: true, includeDisabled: true);
+		foreach (var entity in entities)
+		{
+			if (!entity.Has<Translation>()) continue;
+			var pos = entity.Read<Translation>().Value;
+			if (math.distance(center, pos.xz) <= radius)
+			{
+				yield return entity;
+			}
+		}
+		entities.Dispose();
 	}
 
 	public static void RepairGear(Entity Character, bool repair = true)

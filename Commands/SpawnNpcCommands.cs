@@ -150,4 +150,17 @@ internal static class SpawnCommands
 		horses.ForEach(e => Core.EntityManager.SetComponentData(e, new Translation { Value = Core.EntityManager.GetComponentData<LocalToWorld>(ctx.Event.SenderCharacterEntity).Position }));
 		ctx.Reply($"You've teleported {horses.Count} horses to your position.");
 	}
+
+	/*
+	[Command("deletehorses", description: "Deletes all horses including player horses", adminOnly: true)]
+	public static void DeleteHorses(ChatCommandContext ctx)
+	{
+		var horses = Helper.GetEntitiesByComponentType<Mountable>(true).ToArray()
+			.Where(x => x.Read<PrefabGUID>().GuidHash == Prefabs.CHAR_Mount_Horse.GuidHash || x.Read<PrefabGUID>().GuidHash == Prefabs.CHAR_Mount_Horse_Vampire.GuidHash);
+		foreach (var horse in horses)
+		{
+			StatChangeUtility.KillEntity(Core.EntityManager, horse, ctx.Event.SenderCharacterEntity, Time.time, true);
+		}
+		ctx.Reply($"You've killed {horses.Count()} horses.");
+	}*/
 }

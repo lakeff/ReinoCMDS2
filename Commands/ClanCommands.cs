@@ -54,7 +54,8 @@ class ClanCommands
         ctx.Reply($"{playerToAdd.Value.CharacterName} added to clan {clanEntity.Read<ClanTeam>().Name}");
     }
 
-	[Command("findinvalid", "fi", description: "Finds people not in a clan but are shown in those clans", adminOnly: true)]
+/*	//this was a fix for a brief issue that got patched out. Keeping it here for reference
+ *	[Command("findinvalid", "fi", description: "Finds people not in a clan but are shown in those clans", adminOnly: true)]
 	public static void FindInvalidClanMembers(ChatCommandContext ctx)
 	{
 		var found = false;
@@ -211,8 +212,8 @@ class ClanCommands
 
 		// Remove the player from the castle hearts
 		ctx.Reply($"Fixed {playerToFix.Value.CharacterName}");
-	}
-
+	}*/
+//This was a WIP command that was never finished. Keeping it here for reference
 	/*[Command("kick", "k", description: "Removes a player from a clan", adminOnly: true)] // in progress
 	public static void RemoveFromClan(ChatCommandContext ctx, OnlinePlayer player)
 	{
@@ -353,24 +354,6 @@ class ClanCommands
 		ctx.Reply($"Player removed from clan!");
 	}//*/
 
-	/*[Command("kick", "k", description: "Removes a player from a clan", adminOnly: true)]
-	public static void ClanKick(ChatCommandContext ctx, FoundPlayer player)
-	{
-			var targetEntity = player?.Value.CharEntity ?? ctx.Event.SenderCharacterEntity;
-
-			KickFromClan(targetEntity);
-			ctx.Reply($"{targetEntity.Read<PlayerCharacter>().Name} removed from clan.");
-
-	}
-	
-	public static void KickFromClan(Entity User)
-	{
-		EntityCommandBuffer commandBuffer = Helper.entityCommandBufferSystem.CreateCommandBuffer();
-		Entity ClanEntity;
-		if (!Helper.TryGetClanEntityFromPlayer(User, out ClanEntity))
-			return;
-		Helper.clanSystem.LeaveClan(commandBuffer, ClanEntity, User, ClanSystem_Server.LeaveReason.Leave);
-	}*/
 
 	[Command("list", "l", description: "List clans on the server")]
     public static void ListClans(ChatCommandContext ctx, int page = 1)

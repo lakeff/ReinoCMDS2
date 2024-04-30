@@ -15,7 +15,7 @@ internal class InfoCommands
 	public static void WhereAmI(ChatCommandContext ctx)
 	{
 		var pos = ctx.Event.SenderCharacterEntity.Read<LocalToWorld>().Position;
-		ctx.Reply($"You are at {pos.x}, {pos.y}, {pos.z}");
+		ctx.Reply($"You are at {pos.x}, {pos.y}, {pos.z} on Territory Index {Core.CastleTerritory.GetTerritoryIndex(pos)}");
 	}
 
 	[Command("playerinfo", "pinfo", description: "Displays information about a player.", adminOnly: true)]

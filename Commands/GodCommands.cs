@@ -164,6 +164,24 @@ internal class GodCommands
 			ctx.Reply($"Yield on {name} set to {yield}");
 		}
 
+		[Command("fly", "f", adminOnly: true)]
+		public static void Fly(ChatCommandContext ctx, OnlinePlayer player = null)
+		{
+			var charEntity = player?.Value.CharEntity ?? ctx.Event.SenderCharacterEntity;
+			var name = player?.Value.UserEntity.Read<User>().CharacterName ?? ctx.Event.User.CharacterName;
+
+			if(Core.BoostedPlayerService.ToggleFlying(charEntity))
+			{
+				ctx.Reply($"Flying added to {name}");
+			}
+			else
+			{
+				ctx.Reply($"Flying removed from {name}");
+			}
+
+			Core.BoostedPlayerService.UpdateBoostedPlayer(charEntity);
+		}
+
 		[Command("noaggro", "na", adminOnly: true)]
 		public static void NoAggro(ChatCommandContext ctx, OnlinePlayer player = null)
 		{
