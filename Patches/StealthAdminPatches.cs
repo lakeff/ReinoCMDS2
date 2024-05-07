@@ -1,7 +1,6 @@
 
 using System;
 using System.Reflection;
-using Bloodstone.API;
 using HarmonyLib;
 using KindredCommands;
 using ProjectM;
@@ -18,7 +17,7 @@ public static class StealthAdminChatPatch
 {
 	public static bool Prefix(ChatMessageSystem __instance)
 	{
-		NativeArray<Entity> entities = __instance.__ChatMessageJob_entityQuery.ToEntityArray(Allocator.Temp);
+		NativeArray<Entity> entities = __instance.__query_661171423_0.ToEntityArray(Allocator.Temp);
 		foreach (var entity in entities)
 		{
 			var fromData = entity.Read<FromCharacter>();
@@ -91,7 +90,7 @@ public static class StealthAdminChatPatch
 						break;
 				}
 				//__instance.EntityManager.AddComponent<DestroyTag>(entity);
-				VWorld.Server.EntityManager.DestroyEntity(entity);
+				Core.Server.EntityManager.DestroyEntity(entity);
 			}
 
 			if (addedAdmin && stealthAdmin)

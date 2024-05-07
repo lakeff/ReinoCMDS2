@@ -2,13 +2,17 @@ namespace KindredCommands.Models;
 
 public enum BloodType
 {
-	Frailed = -899826404,
-	Creature = -77658840,
-	Warrior = -1094467405,
-	Rogue = 793735874,
-	Brute = 581377887,
-	Scholar = -586506765,
-	Worker = -540707191,
-	Mutant = -2017994753,
+	Frailed = 447918373,
+	Creature = 524822543,
+	Warrior = -516976528,
+	Rogue = -1620185637,
+	Brute = 804798592,
+	Scholar = 1476452791,
+	Worker = -1776904174,
+	Mutant = 1821108694,
+	Dracula = 2010023718,
+	Draculin = 1328126535,
+	GateBoss = 910644396,
+	VBlood = -338774148
 }
 

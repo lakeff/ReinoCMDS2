@@ -3,6 +3,7 @@ using System.Linq;
 using KindredCommands.Commands.Converters;
 using ProjectM;
 using ProjectM.Network;
+using Stunlock.Core;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
@@ -42,7 +43,7 @@ internal class BossCommands
 		
 		var unitLevel = closestVBlood.Read<UnitLevel>();
 		var previousLevel = unitLevel.Level;
-		unitLevel.Level = level;
+		unitLevel.Level._Value = level;
         closestVBlood.Write<UnitLevel>(unitLevel);
 
 		ctx.Reply($"Changed the nearest {boss.Name} to level {level} from level {previousLevel}");
@@ -113,7 +114,7 @@ internal class BossCommands
 			ctx.Reply($"{boss.Name} is already unlocked");
 	}
 
-	[Command("list", "ls", description: "Lists all locked bosses.", adminOnly: true)]
+	[Command("list", "ls", description: "Lists all locked bosses.", adminOnly: false)]
     public static void ListLockedBossesCommand(ChatCommandContext ctx)
     {
         var lockedBosses = Core.Boss.LockedBossNames;

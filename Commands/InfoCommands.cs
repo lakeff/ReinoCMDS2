@@ -7,6 +7,7 @@ using Unity.Entities;
 using Unity.Transforms;
 using VampireCommandFramework;
 using System.Text;
+using ProjectM.Terrain;
 
 namespace KindredCommands.Commands;
 internal class InfoCommands
@@ -48,10 +49,9 @@ internal class InfoCommands
 			var userOwner = castleTerritory.CastleHeart.Read<UserOwner>();
 			if (!userOwner.Owner.GetEntityOnServer().Equals(player.Value.UserEntity)) continue;
 
-			var region = CastleCommands.TerritoryRegions(castleTerritory);
-			var pylonstation = castleTerritory.CastleHeart.Read<Pylonstation>();
-			var time = TimeSpan.FromMinutes(pylonstation.MinutesRemaining);
-			castleInfo.AppendLine($"Castle {castleTerritory.CastleTerritoryIndex} in {region} with {time:%d}d {time:%h}h {time:%m}m remaining.");
+			var region = castleTerritoryEntity.Read<TerritoryWorldRegion>().Region;
+			var time = TimeSpan.FromSeconds(CastleCommands.GetFuelTimeRemaining(castleTerritory.CastleHeart));
+			castleInfo.AppendLine($"Castle {castleTerritory.CastleTerritoryIndex} in {CastleCommands.RegionName(region)} with {time:%d}d {time:%h}h {time:%m}m remaining.");
 		}
 		if(!castleFound)
 			castleInfo.AppendLine("No castle found");

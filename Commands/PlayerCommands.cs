@@ -1,20 +1,12 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
-using Bloodstone.API;
-using Il2CppInterop.Runtime;
 using KindredCommands.Commands.Converters;
-using KindredCommands.Models;
+using KindredCommands.Data;
 using ProjectM;
-using ProjectM.CastleBuilding;
-using ProjectM.Gameplay.Systems;
 using ProjectM.Network;
-using ProjectM.Shared;
 using Unity.Collections;
 using Unity.Entities;
-using Unity.Mathematics;
-using Unity.Transforms;
 using VampireCommandFramework;
 using static KindredCommands.Commands.PlayerCommands;
 
@@ -36,7 +28,7 @@ public static class PlayerCommands
 		ctx.Reply($"Your name has been updated to: {Format.B(newName.Name.ToString())}");
 	}
 
-	public record struct NewName(FixedString64 Name);
+	public record struct NewName(FixedString64Bytes Name);
 
 	public class NewNameConverter : CommandArgumentConverter<NewName>
 	{
@@ -99,7 +91,7 @@ public static class PlayerCommands
 		Core.StealthAdminService.RemoveStealthAdmin(userEntity2);
 	}
 
-	[Command("unlock", description: "Unlocks a player's skills, jouirnal, etc.", adminOnly: true)]
+	[Command("unlock", description: "Unlocks a player's skills, journal, etc.", adminOnly: true)]
 	public static void UnlockPlayer(ChatCommandContext ctx, FoundPlayer player)
 	{
 		var User = player?.Value.UserEntity ?? ctx.Event.SenderUserEntity;
@@ -107,7 +99,7 @@ public static class PlayerCommands
 
 		try
 		{
-			var debugEventsSystem = VWorld.Server.GetExistingSystem<DebugEventsSystem>();
+			var debugEventsSystem = Core.Server.GetExistingSystem<DebugEventsSystem>();
 			var fromCharacter = new FromCharacter()
 			{
 				User = User,
@@ -123,7 +115,7 @@ public static class PlayerCommands
 		}
 	}
 
-	public static DebugEventsSystem debugEventsSystem = VWorld.Server.GetExistingSystem<DebugEventsSystem>();
+	public static DebugEventsSystem debugEventsSystem = Core.Server.GetExistingSystemManaged<DebugEventsSystem>();
 
 	public static void UnlockPlayer(FromCharacter fromCharacter)
 	{
@@ -132,6 +124,81 @@ public static class PlayerCommands
 		debugEventsSystem.CompleteAllAchievements(fromCharacter);
 		Helper.UnlockWaypoints(fromCharacter.User);
 		Helper.RevealMapForPlayer(fromCharacter.User);
+
+		var progressionEntity = fromCharacter.User.Read<ProgressionMapper>().ProgressionEntity.GetEntityOnServer();
+		//UnlockAllSpellSchoolPassives(fromCharacter.User, fromCharacter.Character);
+		//UnlockMusic(progressionEntity);
+	}
+
+	[Command("unlockpassives", description: "Unlocks all spell school passives for a player.", adminOnly: true)]
+	public static void UnlockPassives(ChatCommandContext ctx, FoundPlayer player=null)
+	{
+		var userEntity = player?.Value.UserEntity ?? ctx.Event.SenderUserEntity;
+		var charEntity = player?.Value.CharEntity ?? ctx.Event.SenderCharacterEntity;
+		var progressionEntity = userEntity.Read<ProgressionMapper>().ProgressionEntity.GetEntityOnServer();
+		UnlockAllSpellSchoolPassives(userEntity, charEntity);
+	}
+
+	static void UnlockAllSpellSchoolPassives(Entity userEntity, Entity charEntity)
+	{
+		//var passiveBuffer = Core.EntityManager.GetBuffer<PassiveBuffer>(charEntity);
+		var progressionEntity = userEntity.Read<ProgressionMapper>().ProgressionEntity.GetEntityOnServer();
+		var progressionBuffer = Core.EntityManager.GetBuffer<UnlockedProgressionElement>(progressionEntity);
+		var progressionArray = progressionBuffer.ToNativeArray(Allocator.Temp).ToArray();
+		foreach (var item in Core.PrefabCollectionSystem.PrefabGuidToNameDictionary)
+		{
+			if (!item.value.StartsWith("SpellPassive_"))
+				continue;
+
+			// Verify it's not already unlocked
+			if (progressionArray.Where(x => x.UnlockedPrefab == item.Key).Any())
+				continue;
+
+			progressionBuffer.Add(new UnlockedProgressionElement()
+			{
+				UnlockedPrefab = item.Key
+			});
+
+			Buffs.AddBuff(userEntity, charEntity, item.Key);
+			/*if (!BuffUtility.TryGetBuff(Core.Server.EntityManager, charEntity, item.Key, out Entity buffEntity))
+			{
+				passiveBuffer.Add(new PassiveBuffer()
+				{
+					Entity = buffEntity,
+					PrefabGuid = item.Key
+				});
+			}*/
+		}
+	}
+
+	[Command("unlockmusic", description: "Unlocks all music tracks for a player.", adminOnly: true)]
+	public static void UnlockMusic(ChatCommandContext ctx, FoundPlayer player=null)
+	{
+		var userEntity = player?.Value.UserEntity ?? ctx.Event.SenderUserEntity;
+		var progressionEntity = userEntity.Read<ProgressionMapper>().ProgressionEntity.GetEntityOnServer();
+		UnlockMusic(progressionEntity);
+	}
+
+	static void UnlockMusic(Entity progressionEntity)
+	{
+		var progressionBuffer = Core.EntityManager.GetBuffer<UnlockedProgressionElement>(progressionEntity);
+		var progressionArray = progressionBuffer.ToNativeArray(Allocator.Temp).ToArray();
+		foreach (var item in Core.PrefabCollectionSystem.PrefabGuidToNameDictionary)
+		{
+			if (!item.value.StartsWith("MusicPlayerStationTrack_"))
+				continue;
+			if (item.Key == Data.Prefabs.MusicPlayerStationTrack_Base)
+				continue;
+
+			// Verify it's not already unlocked
+			if (progressionArray.Where(x => x.UnlockedPrefab == item.Key).Any())
+				continue;
+
+			progressionBuffer.Add(new UnlockedProgressionElement()
+			{
+				UnlockedPrefab = item.Key
+			});
+		}
 	}
 
 	[Command("revealmap", description: "Reveal the map for a player.", adminOnly: true)]
@@ -184,10 +251,10 @@ public static class PlayerCommands
     {
         var charEntity = player?.Value.CharEntity ?? ctx.Event.SenderCharacterEntity;
         var canFly = charEntity.Read<CanFly>();
-        var currentHeight = canFly.FlyingHeight.Value;
+        var currentHeight = canFly.FlyingHeight._Value;
         var newHeight = currentHeight + 5;
-        canFly.FlyingHeight.Value = newHeight;
-		canFly.HeightAboveObstacle.Value = 0;
+        canFly.FlyingHeight._Value = newHeight;
+		canFly.HeightAboveObstacle._Value = 0;
 		charEntity.Write(canFly);
 
         var floorLevel = newHeight / 5;
@@ -201,10 +268,10 @@ public static class PlayerCommands
 	{
 		var charEntity = player?.Value.CharEntity ?? ctx.Event.SenderCharacterEntity;
 		var canFly = charEntity.Read<CanFly>();
-		var currentHeight = canFly.FlyingHeight.Value;
+		var currentHeight = canFly.FlyingHeight._Value;
 		var newHeight = currentHeight - 5;
-		canFly.FlyingHeight.Value = newHeight;
-		canFly.HeightAboveObstacle.Value = 0;
+		canFly.FlyingHeight._Value = newHeight;
+		canFly.HeightAboveObstacle._Value = 0;
 		charEntity.Write(canFly);
 
 		var floorLevel = newHeight / 5;
@@ -219,8 +286,8 @@ public static class PlayerCommands
 		var charEntity = player?.Value.CharEntity ?? ctx.Event.SenderCharacterEntity;
 		var canFly = charEntity.Read<CanFly>();
 		var newHeight = floor * 5;
-		canFly.FlyingHeight.Value = newHeight;
-		canFly.HeightAboveObstacle.Value = 0;
+		canFly.FlyingHeight._Value = newHeight;
+		canFly.HeightAboveObstacle._Value = 0;
 		charEntity.Write(canFly);
 
 		var name = player?.Value.UserEntity.Read<User>().CharacterName ?? ctx.Event.User.CharacterName;
@@ -233,7 +300,7 @@ public static class PlayerCommands
 	{
 		var charEntity = ctx.Event.SenderCharacterEntity;
 		var canFly = charEntity.Read<CanFly>();
-		canFly.FlyingHeight.Value = height;
+		canFly.FlyingHeight._Value = height;
 		charEntity.Write(canFly);
 		ctx.Reply($"Set fly height to {height}");
 	}
@@ -243,198 +310,218 @@ public static class PlayerCommands
 	{
 		var charEntity = ctx.Event.SenderCharacterEntity;
 		var canFly = charEntity.Read<CanFly>();
-		canFly.HeightAboveObstacle.Value = height;
+		canFly.HeightAboveObstacle._Value = height;
 		charEntity.Write(canFly);
 		ctx.Reply($"Set fly obstacle height to {height}");
 	}
-	/* // This was made for a specific server who wanted to wipe players and castles but keep certain ones to clone the map.
-	static Entity UserDoingWipe;
-	static Entity[] castleHeartsToNotWipe;
-	static Entity[] usersToNotWipe;
 
-	[Command("wipe", description: "Wipe's a server except excluded territoryIds and their owners.", adminOnly: true)]
-	public static void WipeServer(ChatCommandContext ctx, IntArray territoryIds=null)
+	[Command("walk", "w", description: "Toggle between walking and running.", adminOnly: false)]
+	public static void ToggleWalk(ChatCommandContext ctx)
 	{
-		// Check if they are allowed to wipe
-		if (!Database.CanWipe(ctx.Event.SenderUserEntity))
+		var charEntity = ctx.Event.SenderCharacterEntity;
+		var isWalking = Core.BoostedPlayerService.IsBoostedPlayer(charEntity) || BuffUtility.HasBuff(Core.EntityManager, charEntity, Prefabs.BoostedBuff1);
+
+		if (isWalking)
 		{
-			ctx.Reply("You are not allowed to wipe the server.");
-			return;
+			Core.BoostedPlayerService.RemoveBoostedPlayer(charEntity);
+			ctx.Reply("You have resumed your normal pace.");
 		}
-
-		if(UserDoingWipe != Entity.Null)
+		else
 		{
-			ctx.Reply($"A wipe is already in progress by {UserDoingWipe.Read<User>().CharacterName}");
-			return;
+			Core.BoostedPlayerService.SetSpeedBoost(charEntity, 1);
+			Core.BoostedPlayerService.UpdateBoostedPlayer(charEntity);
+			ctx.Reply("You have slowed your pace and are now walking.");
 		}
-
-		var castleHeartList = new List<Entity>();
-		var userList = new List<Entity>();
-		var castleHearts = Helper.GetEntitiesByComponentType<CastleHeart>();
-		foreach (var heartEntity in castleHearts)
-		{
-			var castleHeart = heartEntity.Read<CastleHeart>();
-			if (castleHeart.CastleTerritoryEntity.Equals(Entity.Null))
-				continue;
-
-			var castleTerritoryIndex = castleHeart.CastleTerritoryEntity.Read<CastleTerritory>().CastleTerritoryIndex;
-			if (territoryIds!=null && territoryIds.Value.Contains(castleTerritoryIndex))
-			{
-				castleHeartList.Add(heartEntity);
-
-				var userOwner = heartEntity.Read<UserOwner>();
-				var userEntity = userOwner.Owner.GetEntityOnServer();
-				userList.Add(userEntity);
-				ctx.Reply($"{userEntity.Read<User>().CharacterName} is excluded from the wipe via territoryId {castleTerritoryIndex}");
-			}
-		}
-		castleHearts.Dispose();
-
-		UserDoingWipe = ctx.Event.SenderUserEntity;
-		castleHeartsToNotWipe = castleHeartList.ToArray();
-		usersToNotWipe = userList.ToArray();
-		ctx.Reply("Use the command .commencewipe to actually perform the wipe if you wish to continue or .cancelwipe to disengage the wipe.");
-		ServerChatUtils.SendSystemMessageToAllClients(Core.EntityManager, $"{ctx.User.CharacterName} has started to initiate a wipe");
 	}
 
-	[Command("commencewipe", description: "Actually performs the wipe", adminOnly: true)]
-	public static void CommenceWipe(ChatCommandContext ctx)
-	{
-		if(ctx.Event.SenderUserEntity != UserDoingWipe)
+		/* // This was made for a specific server who wanted to wipe players and castles but keep certain ones to clone the map.
+		static Entity UserDoingWipe;
+		static Entity[] castleHeartsToNotWipe;
+		static Entity[] usersToNotWipe;
+
+		[Command("wipe", description: "Wipe's a server except excluded territoryIds and their owners.", adminOnly: true)]
+		public static void WipeServer(ChatCommandContext ctx, IntArray territoryIds=null)
 		{
-			if(UserDoingWipe == Entity.Null)
+			// Check if they are allowed to wipe
+			if (!Database.CanWipe(ctx.Event.SenderUserEntity))
+			{
+				ctx.Reply("You are not allowed to wipe the server.");
+				return;
+			}
+
+			if(UserDoingWipe != Entity.Null)
+			{
+				ctx.Reply($"A wipe is already in progress by {UserDoingWipe.Read<User>().CharacterName}");
+				return;
+			}
+
+			var castleHeartList = new List<Entity>();
+			var userList = new List<Entity>();
+			var castleHearts = Helper.GetEntitiesByComponentType<CastleHeart>();
+			foreach (var heartEntity in castleHearts)
+			{
+				var castleHeart = heartEntity.Read<CastleHeart>();
+				if (castleHeart.CastleTerritoryEntity.Equals(Entity.Null))
+					continue;
+
+				var castleTerritoryIndex = castleHeart.CastleTerritoryEntity.Read<CastleTerritory>().CastleTerritoryIndex;
+				if (territoryIds!=null && territoryIds.Value.Contains(castleTerritoryIndex))
+				{
+					castleHeartList.Add(heartEntity);
+
+					var userOwner = heartEntity.Read<UserOwner>();
+					var userEntity = userOwner.Owner.GetEntityOnServer();
+					userList.Add(userEntity);
+					ctx.Reply($"{userEntity.Read<User>().CharacterName} is excluded from the wipe via territoryId {castleTerritoryIndex}");
+				}
+			}
+			castleHearts.Dispose();
+
+			UserDoingWipe = ctx.Event.SenderUserEntity;
+			castleHeartsToNotWipe = castleHeartList.ToArray();
+			usersToNotWipe = userList.ToArray();
+			ctx.Reply("Use the command .commencewipe to actually perform the wipe if you wish to continue or .cancelwipe to disengage the wipe.");
+			ServerChatUtils.SendSystemMessageToAllClients(Core.EntityManager, $"{ctx.User.CharacterName} has started to initiate a wipe");
+		}
+
+		[Command("commencewipe", description: "Actually performs the wipe", adminOnly: true)]
+		public static void CommenceWipe(ChatCommandContext ctx)
+		{
+			if(ctx.Event.SenderUserEntity != UserDoingWipe)
+			{
+				if(UserDoingWipe == Entity.Null)
+				{
+					ctx.Reply("There is no wipe in progress.");
+					return;
+				}
+				ctx.Reply($"You are not the user who initiated the wipe. It was initiated by {UserDoingWipe.Read<User>().CharacterName}");
+				return;
+			}
+
+			/*var heartConnections = Helper.GetEntitiesByComponentType<CastleHeartConnection>();
+			foreach (var connectionEntity in heartConnections)
+			{
+				if(connectionEntity.Has<CastleHeart>())
+					continue;
+
+				var heartConnection = connectionEntity.Read<CastleHeartConnection>();
+				var heart = heartConnection.CastleHeartEntity.GetEntityOnServer();
+				if (heart.Equals(Entity.Null))
+					continue;
+				if(castleHeartsToNotWipe.Where(x => x.Equals(heart)).Any())
+					continue;
+
+				if (connectionEntity.Has<SpawnChainChild>())
+					connectionEntity.Remove<SpawnChainChild>();
+
+				if (connectionEntity.Has<DropTableBuffer>())
+					connectionEntity.Remove<DropTableBuffer>();
+
+				if (connectionEntity.Has<InventoryBuffer>())
+					Core.EntityManager.GetBuffer<InventoryBuffer>(connectionEntity).Clear();
+
+				DestroyUtility.Destroy(Core.EntityManager, connectionEntity);
+			}
+			heartConnections.Dispose();*/
+		/*
+			var pss = Core.Server.GetExistingSystem<PylonstationSystem>();
+			var serverTime = Core.CastleBuffsTickSystem._ServerTime.GetSingleton();
+			var bufferSystem = Core.Server.GetExistingSystem<EntityCommandBufferSystem>();
+			var castleHearts = Helper.GetEntitiesByComponentType<CastleHeart>();
+			foreach (var heartEntity in castleHearts)
+			{
+				if(castleHeartsToNotWipe.Where(x => x.Equals(heartEntity)).Any())
+					continue;
+
+				var userEntity = heartEntity.Read<UserOwner>().Owner.GetEntityOnServer();
+				var fromCharacter = new FromCharacter()
+				{
+					User = userEntity,
+					Character = userEntity.Read<User>().LocalCharacter.GetEntityOnServer()
+				};
+
+				var pylonstation = heartEntity.Read<Pylonstation>();
+				var buffer = bufferSystem.CreateCommandBuffer();
+				pss.DestroyCastle(heartEntity, ref pylonstation, ref fromCharacter, ref serverTime, ref buffer);
+			}
+			castleHearts.Dispose();
+
+			List<Entity> clansToIgnore = new();
+			var userEntities = Helper.GetEntitiesByComponentType<User>();
+			foreach(var userEntity in userEntities)
+			{
+				if (usersToNotWipe.Where(x => x.Equals(userEntity)).Any())
+				{
+					clansToIgnore.Add(userEntity.Read<User>().ClanEntity.GetEntityOnServer());
+					continue;
+				}
+				Helper.KickPlayer(userEntity);
+				var user = userEntity.Read<User>();
+				user.PlatformId = 0;
+				userEntity.Write(user);
+
+				var charEntity = user.LocalCharacter.GetEntityOnServer();
+				if(charEntity.Equals(Entity.Null))
+					continue;
+
+				Core.Players.RenamePlayer(userEntity, charEntity, "");
+
+				charEntity.Write(new Translation() { Value = new float3(-818f, 10f, -1989f) });
+				charEntity.Write(new LastTranslation() { Value = new float3(-818f, 10f, -1989f) });
+
+				StatChangeUtility.KillEntity(Core.EntityManager, charEntity, ctx.Event.SenderCharacterEntity, 0, true);
+			}
+			userEntities.Dispose();
+
+			var playerDeathContainers = Helper.GetEntitiesByComponentType<PlayerDeathContainer>();
+			foreach (var deathContainer in playerDeathContainers)
+			{
+				Core.EntityManager.GetBuffer<InventoryBuffer>(deathContainer).Clear();
+				DestroyUtility.Destroy(Core.EntityManager, deathContainer);
+			}
+			playerDeathContainers.Dispose();
+
+			var clanTeams = Helper.GetEntitiesByComponentType<ClanTeam>();
+			foreach (var clanEntity in clanTeams)
+			{
+				if (clansToIgnore.Where(x => x.Equals(clanEntity)).Any())
+					continue;
+
+				var clanTeam = clanEntity.Read<ClanTeam>();
+				clanTeam.Name = "";
+				clanTeam.Motto = "";
+				clanEntity.Write(clanTeam);
+			}
+			clanTeams.Dispose();
+
+			var st = Core.EntityManager.CreateEntity(new ComponentType[1] { ComponentType.ReadOnly<SetTimeOfDayEvent>() });
+			st.Write(new SetTimeOfDayEvent()
+			{
+				Day = 10,
+				Hour = 0,
+				Type = SetTimeOfDayEvent.SetTimeType.Add
+			});
+
+
+			UserDoingWipe = Entity.Null;
+			ServerChatUtils.SendSystemMessageToAllClients(Core.EntityManager, $"{ctx.User.CharacterName} has wiped the server");
+			Core.Log.LogInfo("Server has been wiped.");
+		}
+
+		[Command("cancelwipe", description: "Cancels the wipe", adminOnly: true)]
+		public static void CancelWipe(ChatCommandContext ctx)
+		{
+			if (UserDoingWipe == Entity.Null)
 			{
 				ctx.Reply("There is no wipe in progress.");
 				return;
 			}
-			ctx.Reply($"You are not the user who initiated the wipe. It was initiated by {UserDoingWipe.Read<User>().CharacterName}");
-			return;
+
+			UserDoingWipe = Entity.Null;
+			castleHeartsToNotWipe = null;
+			usersToNotWipe = null;
+			ctx.Reply("Wipe has been cancelled.");
+			ServerChatUtils.SendSystemMessageToAllClients(Core.EntityManager, $"{ctx.User.CharacterName} has canceled the wipe");
 		}
-
-		/*var heartConnections = Helper.GetEntitiesByComponentType<CastleHeartConnection>();
-		foreach (var connectionEntity in heartConnections)
-		{
-			if(connectionEntity.Has<CastleHeart>())
-				continue;
-
-			var heartConnection = connectionEntity.Read<CastleHeartConnection>();
-			var heart = heartConnection.CastleHeartEntity.GetEntityOnServer();
-			if (heart.Equals(Entity.Null))
-				continue;
-			if(castleHeartsToNotWipe.Where(x => x.Equals(heart)).Any())
-				continue;
-
-			if (connectionEntity.Has<SpawnChainChild>())
-				connectionEntity.Remove<SpawnChainChild>();
-
-			if (connectionEntity.Has<DropTableBuffer>())
-				connectionEntity.Remove<DropTableBuffer>();
-
-			if (connectionEntity.Has<InventoryBuffer>())
-				Core.EntityManager.GetBuffer<InventoryBuffer>(connectionEntity).Clear();
-
-			DestroyUtility.Destroy(Core.EntityManager, connectionEntity);
-		}
-		heartConnections.Dispose();*/
-	/*
-		var pss = Core.Server.GetExistingSystem<PylonstationSystem>();
-		var serverTime = Core.CastleBuffsTickSystem._ServerTime.GetSingleton();
-		var bufferSystem = Core.Server.GetExistingSystem<EntityCommandBufferSystem>();
-		var castleHearts = Helper.GetEntitiesByComponentType<CastleHeart>();
-		foreach (var heartEntity in castleHearts)
-		{
-			if(castleHeartsToNotWipe.Where(x => x.Equals(heartEntity)).Any())
-				continue;
-
-			var userEntity = heartEntity.Read<UserOwner>().Owner.GetEntityOnServer();
-			var fromCharacter = new FromCharacter()
-			{
-				User = userEntity,
-				Character = userEntity.Read<User>().LocalCharacter.GetEntityOnServer()
-			};
-
-			var pylonstation = heartEntity.Read<Pylonstation>();
-			var buffer = bufferSystem.CreateCommandBuffer();
-			pss.DestroyCastle(heartEntity, ref pylonstation, ref fromCharacter, ref serverTime, ref buffer);
-		}
-		castleHearts.Dispose();
-
-		List<Entity> clansToIgnore = new();
-		var userEntities = Helper.GetEntitiesByComponentType<User>();
-		foreach(var userEntity in userEntities)
-		{
-			if (usersToNotWipe.Where(x => x.Equals(userEntity)).Any())
-			{
-				clansToIgnore.Add(userEntity.Read<User>().ClanEntity.GetEntityOnServer());
-				continue;
-			}
-			Helper.KickPlayer(userEntity);
-			var user = userEntity.Read<User>();
-			user.PlatformId = 0;
-			userEntity.Write(user);
-
-			var charEntity = user.LocalCharacter.GetEntityOnServer();
-			if(charEntity.Equals(Entity.Null))
-				continue;
-
-			Core.Players.RenamePlayer(userEntity, charEntity, "");
-
-			charEntity.Write(new Translation() { Value = new float3(-818f, 10f, -1989f) });
-			charEntity.Write(new LastTranslation() { Value = new float3(-818f, 10f, -1989f) });
-
-			StatChangeUtility.KillEntity(Core.EntityManager, charEntity, ctx.Event.SenderCharacterEntity, 0, true);
-		}
-		userEntities.Dispose();
-
-		var playerDeathContainers = Helper.GetEntitiesByComponentType<PlayerDeathContainer>();
-		foreach (var deathContainer in playerDeathContainers)
-		{
-			Core.EntityManager.GetBuffer<InventoryBuffer>(deathContainer).Clear();
-			DestroyUtility.Destroy(Core.EntityManager, deathContainer);
-		}
-		playerDeathContainers.Dispose();
-
-		var clanTeams = Helper.GetEntitiesByComponentType<ClanTeam>();
-		foreach (var clanEntity in clanTeams)
-		{
-			if (clansToIgnore.Where(x => x.Equals(clanEntity)).Any())
-				continue;
-
-			var clanTeam = clanEntity.Read<ClanTeam>();
-			clanTeam.Name = "";
-			clanTeam.Motto = "";
-			clanEntity.Write(clanTeam);
-		}
-		clanTeams.Dispose();
-
-		var st = Core.EntityManager.CreateEntity(new ComponentType[1] { ComponentType.ReadOnly<SetTimeOfDayEvent>() });
-		st.Write(new SetTimeOfDayEvent()
-		{
-			Day = 10,
-			Hour = 0,
-			Type = SetTimeOfDayEvent.SetTimeType.Add
-		});
-		
-
-		UserDoingWipe = Entity.Null;
-		ServerChatUtils.SendSystemMessageToAllClients(Core.EntityManager, $"{ctx.User.CharacterName} has wiped the server");
-		Core.Log.LogInfo("Server has been wiped.");
+		*/
 	}
-
-	[Command("cancelwipe", description: "Cancels the wipe", adminOnly: true)]
-	public static void CancelWipe(ChatCommandContext ctx)
-	{
-		if (UserDoingWipe == Entity.Null)
-		{
-			ctx.Reply("There is no wipe in progress.");
-			return;
-		}
-
-		UserDoingWipe = Entity.Null;
-		castleHeartsToNotWipe = null;
-		usersToNotWipe = null;
-		ctx.Reply("Wipe has been cancelled.");
-		ServerChatUtils.SendSystemMessageToAllClients(Core.EntityManager, $"{ctx.User.CharacterName} has canceled the wipe");
-	}
-	*/
-}

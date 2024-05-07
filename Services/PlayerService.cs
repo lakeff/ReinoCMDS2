@@ -11,7 +11,7 @@ namespace KindredCommands.Services;
 
 internal class PlayerService
 {
-	readonly Dictionary<FixedString64, PlayerData> namePlayerCache = [];
+	readonly Dictionary<FixedString64Bytes, PlayerData> namePlayerCache = [];
 	readonly Dictionary<ulong, PlayerData> steamPlayerCache = [];
 
 	internal bool TryFindSteam(ulong steamId, out PlayerData playerData)
@@ -19,7 +19,7 @@ internal class PlayerService
 		return steamPlayerCache.TryGetValue(steamId, out playerData);
 	}
 
-	internal bool TryFindName(FixedString64 name, out PlayerData playerData)
+	internal bool TryFindName(FixedString64Bytes name, out PlayerData playerData)
 	{
 		return namePlayerCache.TryGetValue(name, out playerData);
 	}
@@ -57,9 +57,9 @@ internal class PlayerService
 		steamPlayerCache[userData.PlatformId] = playerData;
 	}
 
-	internal bool RenamePlayer(Entity userEntity, Entity charEntity, FixedString64 newName)
+	internal bool RenamePlayer(Entity userEntity, Entity charEntity, FixedString64Bytes newName)
 	{
-		var des = Core.Server.GetExistingSystem<DebugEventsSystem>();
+		var des = Core.Server.GetExistingSystemManaged<DebugEventsSystem>();
 		var networkId = Core.EntityManager.GetComponentData<NetworkId>(userEntity);
 		var userData = Core.EntityManager.GetComponentData<User>(userEntity);
 		var renameEvent = new RenameUserDebugEvent

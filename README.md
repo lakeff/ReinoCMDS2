@@ -134,9 +134,6 @@ Feel free to reach out to me on discord (odjit) if you have any questions or nee
 - `.spectate (Player)`
   - will set the player into spectate mode, where they are invisible and cannot interact with anything. Use again to remove it and teleport them to their prior position.
   - Example: *.spectate Bob*
-- `.kill (Player)`
-  - instantly kills the player named, or the user if no one is named.
-  - Example: *.kill Bob*
 - `.rename (Old Name) (New Name)`
   - Renames a player. Original name will still show on map to clanmates.
   - Example: *.rename Bob Joe*

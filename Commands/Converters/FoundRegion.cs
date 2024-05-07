@@ -46,6 +46,12 @@ public class FoundRegionConverter : CommandArgumentConverter<FoundRegion>
 			case "gloomrot north":
 			case "north":
 				return new FoundRegion(WorldRegionType.Gloomrot_North, "Gloomrot_North");
+			case "mortium":
+			case "ruins":
+			case "ruinsofmortium":
+				return new FoundRegion(WorldRegionType.RuinsOfMortium, "RuinsOfMortium");
+			case "none":
+				return new FoundRegion(WorldRegionType.None, "None");
 		}
 
 		throw ctx.Error("Could not find region");

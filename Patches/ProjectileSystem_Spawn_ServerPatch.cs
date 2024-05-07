@@ -1,5 +1,6 @@
 using HarmonyLib;
 using ProjectM;
+using Stunlock.Core;
 using Unity.Collections;
 using Unity.Entities;
 
@@ -12,8 +13,8 @@ public static class ProjectileSystem_Spawn_ServerPatch
 	{
 		try
 		{
-			EntityManager entityManager = __instance.EntityManager;
-			NativeArray<Entity> entities = __instance.__OnUpdate_LambdaJob0_entityQuery.ToEntityArray(Allocator.Temp);
+			EntityManager entityManager = Core.EntityManager;
+			NativeArray<Entity> entities = __instance.__query_1963200447_0.ToEntityArray(Allocator.Temp);
 
 			foreach (var entity in entities)
 			{

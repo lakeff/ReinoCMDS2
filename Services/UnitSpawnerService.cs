@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using HarmonyLib;
 using ProjectM;
+using Stunlock.Core;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
@@ -19,7 +20,7 @@ internal class UnitSpawnerService
 	{
 		var translation = Core.EntityManager.GetComponentData<Translation>(user);
 		var pos = new float3(position.x, translation.Value.y, position.y);
-		var usus = Core.Server.GetExistingSystem<UnitSpawnerUpdateSystem>();
+		var usus = Core.Server.GetExistingSystemManaged<UnitSpawnerUpdateSystem>();
 		usus.SpawnUnit(empty_entity, unit, pos, count, minRange, maxRange, duration);
 	}
 
@@ -27,7 +28,7 @@ internal class UnitSpawnerService
 	{
 		var translation = Core.EntityManager.GetComponentData<Translation>(user);
 		var pos = new float3(position.x, translation.Value.y, position.y);
-		var usus = Core.Server.GetExistingSystem<UnitSpawnerUpdateSystem>();
+		var usus = Core.Server.GetExistingSystemManaged<UnitSpawnerUpdateSystem>();
 
 		UnitSpawnerReactSystem_Patch.Enabled = true;
 
@@ -64,7 +65,7 @@ internal class UnitSpawnerService
 		{
 			if (!Enabled) return;
 
-			var entities = __instance.__OnUpdate_LambdaJob0_entityQuery.ToEntityArray(Unity.Collections.Allocator.Temp);
+			var entities = __instance.__query_2099432168_0.ToEntityArray(Unity.Collections.Allocator.Temp);
 
 			Core.Log.LogDebug($"Processing {entities.Length} in UnitSpawnerReactionSystem");
 

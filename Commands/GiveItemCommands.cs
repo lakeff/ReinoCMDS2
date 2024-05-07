@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using ProjectM;
+using Stunlock.Core;
 using VampireCommandFramework;
 
 namespace KindredCommands.Commands;
@@ -42,13 +43,23 @@ internal class GiveItemCommands
 				return new GivenItem(searchResults[0].Prefab);
 			}
 
+			var lengthOfFail = 60 + "\n...".Length;
+
 			if (searchResults.Count > 1)
 			{
 				var sb = new StringBuilder();
 				sb.AppendLine("Multiple results be more specific");
 				foreach (var kvp in searchResults)
 				{
-					sb.AppendLine(kvp.Name);
+					if (sb.Length + kvp.Name.Length + lengthOfFail >= Core.MAX_REPLY_LENGTH)
+					{
+						sb.AppendLine("...");
+						throw ctx.Error(sb.ToString());
+					}
+					else
+					{
+						sb.AppendLine(kvp.Name);
+					}
 				}
 				throw ctx.Error(sb.ToString());
 			}
@@ -103,7 +114,15 @@ internal class GiveItemCommands
 					sb.AppendLine("Multiple results be more specific");
 					foreach (var kvp in searchResults)
 					{
-						sb.AppendLine(kvp.Name);
+						if (sb.Length + kvp.Name.Length + lengthOfFail >= Core.MAX_REPLY_LENGTH)
+						{
+							sb.AppendLine("...");
+							throw ctx.Error(sb.ToString());
+						}
+						else
+						{
+							sb.AppendLine(kvp.Name);
+						}
 					}
 					throw ctx.Error(sb.ToString());
 				}
@@ -115,7 +134,15 @@ internal class GiveItemCommands
 				sb.AppendLine("Multiple results be more specific");
 				foreach (var kvp in resultsFromFirstSplit)
 				{
-					sb.AppendLine(kvp.Name);
+					if (sb.Length + kvp.Name.Length + lengthOfFail > Core.MAX_REPLY_LENGTH)
+					{
+						sb.AppendLine("...");
+						throw ctx.Error(sb.ToString());
+					}
+					else
+					{
+						sb.AppendLine(kvp.Name);
+					}
 				}
 				throw ctx.Error(sb.ToString());
 			}
@@ -140,7 +167,7 @@ internal class GiveItemCommands
 	public static void GiveItem(ChatCommandContext ctx, GivenItem item, int quantity = 1)
 	{
 		Helper.AddItemToInventory(ctx.Event.SenderCharacterEntity, item.Value, quantity);
-		var prefabSys = Core.Server.GetExistingSystem<PrefabCollectionSystem>();
+		var prefabSys = Core.Server.GetExistingSystemManaged<PrefabCollectionSystem>();
 		prefabSys.PrefabGuidToNameDictionary.TryGetValue(item.Value, out var name);
 		ctx.Reply($"Gave {quantity} {name}");
 	}

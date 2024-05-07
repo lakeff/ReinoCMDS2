@@ -357,9 +357,10 @@ namespace KindredCommands.Services
 		#region GodMode & Other Buff
 		static ModifyUnitStatBuff_DOTS Cooldown = new()
 		{
-			StatType = UnitStatType.CooldownModifier,
-			Value = 0,
+			StatType = UnitStatType.CooldownRecoveryRate,
+			Value = 100,
 			ModificationType = ModificationType.Set,
+			Modifier = 1,
 			Id = ModificationId.NewId(0)
 		};
 
@@ -368,6 +369,7 @@ namespace KindredCommands.Services
 			StatType = UnitStatType.SunChargeTime,
 			Value = 50000,
 			ModificationType = ModificationType.Add,
+			Modifier = 1,
 			Id = ModificationId.NewId(0)
 		};
 
@@ -376,6 +378,7 @@ namespace KindredCommands.Services
 			StatType = UnitStatType.ImmuneToHazards,
 			Value = 1,
 			ModificationType = ModificationType.Add,
+			Modifier = 1,
 			Id = ModificationId.NewId(0)
 		};
 
@@ -384,6 +387,7 @@ namespace KindredCommands.Services
 			StatType = UnitStatType.SunResistance,
 			Value = 10000,
 			ModificationType = ModificationType.Add,
+			Modifier = 1,
 			Id = ModificationId.NewId(0)
 		};
 
@@ -392,6 +396,7 @@ namespace KindredCommands.Services
 			StatType = UnitStatType.MovementSpeed,
 			Value = 15,
 			ModificationType = ModificationType.Set,
+			Modifier = 1,
 			Id = ModificationId.NewId(4)
 		};
 
@@ -400,6 +405,7 @@ namespace KindredCommands.Services
 			StatType = UnitStatType.PhysicalResistance,
 			Value = 10000,
 			ModificationType = ModificationType.Add,
+			Modifier = 1,
 			Id = ModificationId.NewId(0)
 		};
 
@@ -408,6 +414,7 @@ namespace KindredCommands.Services
 			StatType = UnitStatType.FireResistance,
 			Value = 10000,
 			ModificationType = ModificationType.Add,
+			Modifier = 1,
 			Id = ModificationId.NewId(0)
 		};
 
@@ -416,6 +423,7 @@ namespace KindredCommands.Services
 			StatType = UnitStatType.HolyResistance,
 			Value = 10000,
 			ModificationType = ModificationType.Add,
+			Modifier = 1,
 			Id = ModificationId.NewId(0)
 		};
 
@@ -424,6 +432,7 @@ namespace KindredCommands.Services
 			StatType = UnitStatType.SilverResistance,
 			Value = 10000,
 			ModificationType = ModificationType.Add,
+			Modifier = 1,
 			Id = ModificationId.NewId(0)
 		};
 
@@ -432,6 +441,7 @@ namespace KindredCommands.Services
 			StatType = UnitStatType.GarlicResistance,
 			Value = 10000,
 			ModificationType = ModificationType.Add,
+			Modifier = 1,
 			Id = ModificationId.NewId(0)
 		};
 
@@ -440,6 +450,7 @@ namespace KindredCommands.Services
 			StatType = UnitStatType.SpellResistance,
 			Value = 10000,
 			ModificationType = ModificationType.Add,
+			Modifier = 1,
 			Id = ModificationId.NewId(0)
 		};
 
@@ -448,6 +459,7 @@ namespace KindredCommands.Services
 			StatType = UnitStatType.PhysicalPower,
 			Value = 10000,
 			ModificationType = ModificationType.Add,
+			Modifier = 1,
 			Id = ModificationId.NewId(0)
 		};
 
@@ -456,6 +468,7 @@ namespace KindredCommands.Services
 			StatType = UnitStatType.SiegePower,
 			Value = 10000,
 			ModificationType = ModificationType.Add,
+			Modifier = 1,
 			Id = ModificationId.NewId(0)
 		};
 
@@ -464,6 +477,7 @@ namespace KindredCommands.Services
 			StatType = UnitStatType.ResourcePower,
 			Value = 10000,
 			ModificationType = ModificationType.Add,
+			Modifier = 1,
 			Id = ModificationId.NewId(0)
 		};
 
@@ -472,6 +486,7 @@ namespace KindredCommands.Services
 			StatType = UnitStatType.SpellPower,
 			Value = 10000,
 			ModificationType = ModificationType.Add,
+			Modifier = 1,
 			Id = ModificationId.NewId(0)
 		};
 
@@ -480,6 +495,7 @@ namespace KindredCommands.Services
 			StatType = UnitStatType.PassiveHealthRegen,
 			Value = 100000,
 			ModificationType = ModificationType.Add,
+			Modifier = 1,
 			Id = ModificationId.NewId(0)
 		};
 
@@ -488,6 +504,7 @@ namespace KindredCommands.Services
 			StatType = UnitStatType.HealthRecovery,
 			Value = 100000,
 			ModificationType = ModificationType.Add,
+			Modifier = 1,
 			Id = ModificationId.NewId(0)
 		};
 
@@ -496,6 +513,7 @@ namespace KindredCommands.Services
 			StatType = UnitStatType.MaxHealth,
 			Value = 100000,
 			ModificationType = ModificationType.Set,
+			Modifier = 1,
 			Id = ModificationId.NewId(5)
 		};
 
@@ -504,6 +522,7 @@ namespace KindredCommands.Services
 			StatType = UnitStatType.ResourceYield,
 			Value = 10,
 			ModificationType = ModificationType.Multiply,
+			Modifier = 1,
 			Id = ModificationId.NewId(0)
 		};
 
@@ -512,6 +531,7 @@ namespace KindredCommands.Services
 			StatType = UnitStatType.ReducedResourceDurabilityLoss,
 			Value = -10000,
 			ModificationType = ModificationType.Add,
+			Modifier = 1,
 			Id = ModificationId.NewId(0)
 		};
 
@@ -520,6 +540,7 @@ namespace KindredCommands.Services
 			StatType = UnitStatType.AttackSpeed,
 			Value = 5,
 			ModificationType = ModificationType.Multiply,
+			Modifier = 1,
 			Id = ModificationId.NewId(0)
 		};
 

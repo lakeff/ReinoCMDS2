@@ -19,10 +19,10 @@ internal class GodCommands
 		var charEntity = player?.Value.CharEntity ?? ctx.Event.SenderCharacterEntity;
 
 		Core.BoostedPlayerService.SetAttackSpeedMultiplier(charEntity, 10f);
-		Core.BoostedPlayerService.SetDamageBoost(charEntity, 1000f);
+		Core.BoostedPlayerService.SetDamageBoost(charEntity, 10000f);
 		Core.BoostedPlayerService.SetHealthBoost(charEntity, 100000);
-		Core.BoostedPlayerService.SetProjectileSpeedMultiplier(charEntity, 10f);
-		Core.BoostedPlayerService.SetProjectileRangeMultiplier(charEntity, 10f);
+		//Core.BoostedPlayerService.SetProjectileSpeedMultiplier(charEntity, 10f);
+		//Core.BoostedPlayerService.SetProjectileRangeMultiplier(charEntity, 10f);
 		Core.BoostedPlayerService.SetSpeedBoost(charEntity, DEFAULT_FAST_SPEED);
 		Core.BoostedPlayerService.SetYieldMultiplier(charEntity, 10f);
 		Core.BoostedPlayerService.AddNoAggro(charEntity);
@@ -48,7 +48,7 @@ internal class GodCommands
 		Core.BoostedPlayerService.RemoveBoostedPlayer(charEntity);
 
 		var name = player?.Value.UserEntity.Read<User>().CharacterName ?? ctx.Event.User.CharacterName;
-		ctx.Reply($"God mode removed from {name}");
+		ctx.Reply($"God mode and boosts removed from {name}");
 	}
 
 	static Dictionary<string, Vector3> positionBeforeSpectate = [];
@@ -99,7 +99,7 @@ internal class GodCommands
 		}
 
 		[Command("damage", "d", adminOnly: true)]
-		public static void Damage(ChatCommandContext ctx, float damage = 1000, OnlinePlayer player = null)
+		public static void Damage(ChatCommandContext ctx, float damage = 10000, OnlinePlayer player = null)
 		{
 			var name = player?.Value.UserEntity.Read<User>().CharacterName ?? ctx.Event.User.CharacterName;
 			var charEntity = player?.Value.CharEntity ?? ctx.Event.SenderCharacterEntity;
@@ -120,7 +120,7 @@ internal class GodCommands
 			ctx.Reply($"Health boost on {name} set to {health}");
 		}
 
-		[Command("projectilespeed", "ps", adminOnly: true)]
+		/*[Command("projectilespeed", "ps", adminOnly: true)]
 		public static void ProjectileSpeed(ChatCommandContext ctx, float speed = 10, OnlinePlayer player = null)
 		{
 			var name = player?.Value.UserEntity.Read<User>().CharacterName ?? ctx.Event.User.CharacterName;
@@ -141,9 +141,9 @@ internal class GodCommands
 			Core.BoostedPlayerService.UpdateBoostedPlayer(charEntity);
 			ctx.Reply($"Projectile range on {name} set to {range}");
 		}
-
+		*/
 		[Command("speed", "s", adminOnly: true)]
-		public static void Speed(ChatCommandContext ctx, int speed = DEFAULT_FAST_SPEED, OnlinePlayer player = null)
+		public static void Speed(ChatCommandContext ctx, float speed = DEFAULT_FAST_SPEED, OnlinePlayer player = null)
 		{
 			var name = player?.Value.UserEntity.Read<User>().CharacterName ?? ctx.Event.User.CharacterName;
 			var charEntity = player?.Value.CharEntity ?? ctx.Event.SenderCharacterEntity;

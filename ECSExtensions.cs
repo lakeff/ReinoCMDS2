@@ -1,8 +1,8 @@
 using System;
 using System.Runtime.InteropServices;
-using Bloodstone.API;
 using Il2CppInterop.Runtime;
 using ProjectM;
+using Stunlock.Core;
 using Unity.Entities;
 
 namespace KindredCommands;
@@ -58,7 +58,7 @@ public static class ECSExtensions
 	}
 	public static DynamicBuffer<T> ReadBuffer<T>(this Entity entity) where T : struct
 	{
-		return VWorld.Server.EntityManager.GetBuffer<T>(entity);
+		return Core.Server.EntityManager.GetBuffer<T>(entity);
 	}
 	public static bool Has<T>(this Entity entity)
 	{
@@ -68,7 +68,7 @@ public static class ECSExtensions
 
 	public static string LookupName(this PrefabGUID prefabGuid)
 	{
-		var prefabCollectionSystem = VWorld.Server.GetExistingSystem<PrefabCollectionSystem>();
+		var prefabCollectionSystem = Core.Server.GetExistingSystemManaged<PrefabCollectionSystem>();
 		return (prefabCollectionSystem.PrefabGuidToNameDictionary.ContainsKey(prefabGuid)
 			? prefabCollectionSystem.PrefabGuidToNameDictionary[prefabGuid] + " " + prefabGuid : "GUID Not Found").ToString();
 	}

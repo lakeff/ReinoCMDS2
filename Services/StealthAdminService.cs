@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
-using Bloodstone.API;
 using ProjectM;
 using ProjectM.Network;
 using Unity.Entities;
@@ -15,7 +14,7 @@ public class StealthAdminService
 
 	readonly List<Entity> stealthUsers = [];
 
-	public AdminAuthSystem adminAuthSystem = VWorld.Server.GetExistingSystem<AdminAuthSystem>();
+	public AdminAuthSystem adminAuthSystem = Core.Server.GetExistingSystemManaged<AdminAuthSystem>();
 
 	public StealthAdminService()
 	{

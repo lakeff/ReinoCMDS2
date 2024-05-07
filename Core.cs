@@ -2,7 +2,9 @@ using System.Runtime.CompilerServices;
 using BepInEx.Logging;
 using KindredCommands.Services;
 using ProjectM;
+using ProjectM.Network;
 using ProjectM.Scripting;
+using ProjectM.Terrain;
 using Unity.Entities;
 
 namespace KindredCommands;
@@ -12,9 +14,14 @@ internal static class Core
 	public static World Server { get; } = GetWorld("Server") ?? throw new System.Exception("There is no Server world (yet). Did you install a server mod on the client?");
 
 	public static EntityManager EntityManager { get; } = Server.EntityManager;
-	public static GameDataSystem GameDataSystem { get; } = Server.GetExistingSystem<GameDataSystem>();
-	public static CastleBuffsTickSystem CastleBuffsTickSystem { get; } = Server.GetExistingSystem<CastleBuffsTickSystem>();
-	public static ServerGameManager ServerGameManager { get; internal set; }
+	public static GameDataSystem GameDataSystem { get; } = Server.GetExistingSystemManaged<GameDataSystem>();
+	public static PrefabCollectionSystem PrefabCollectionSystem { get; internal set; }
+	public static ServerScriptMapper ServerScriptMapper { get; internal set; }
+	public static double ServerTime => ServerGameManager.ServerTime;
+	public static ServerGameManager ServerGameManager => ServerScriptMapper.GetServerGameManager();
+
+	public static ServerGameSettingsSystem ServerGameSettingsSystem { get; internal set; }
+	public static UpdateUserWorldRegionSystem UpdateUserWorldRegionSystem { get; internal set; }
 
 	public static ManualLogSource Log { get; } = Plugin.PluginLog;
 	public static AnnouncementsService AnnouncementsService { get; internal set; }
@@ -41,7 +48,10 @@ internal static class Core
 	{
 		if (_hasInitialized) return;
 
-		ServerGameManager = Server.GetExistingSystem<ServerScriptMapper>().GetServerGameManager();
+		PrefabCollectionSystem = Server.GetExistingSystemManaged<PrefabCollectionSystem>();
+		ServerGameSettingsSystem = Server.GetExistingSystemManaged<ServerGameSettingsSystem>();
+		ServerScriptMapper = Server.GetExistingSystemManaged<ServerScriptMapper>();
+		UpdateUserWorldRegionSystem = Server.GetExistingSystemManaged<UpdateUserWorldRegionSystem>();
 
 		Players = new();
 		Prefabs = new();
@@ -55,6 +65,9 @@ internal static class Core
 		Regions = new();
 		StealthAdminService = new();
 		UnitSpawner = new();
+
+		Data.Character.Populate();
+
 		_hasInitialized = true;
 		Log.LogInfo($"{nameof(InitializeAfterLoaded)} completed");
 	}

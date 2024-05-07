@@ -1,6 +1,7 @@
 using HarmonyLib;
 using ProjectM;
 using ProjectM.Shared;
+using Stunlock.Core;
 using Unity.Collections;
 using Unity.Entities;
 
@@ -12,7 +13,7 @@ public static class BuffSystem_Spawn_ServerPatch
 	public static void Prefix(BuffSystem_Spawn_Server __instance)
 	{
 		EntityManager entityManager = __instance.EntityManager;
-		NativeArray<Entity> entities = __instance.__OnUpdate_LambdaJob0_entityQuery.ToEntityArray(Allocator.Temp);
+		NativeArray<Entity> entities = __instance.__query_401358634_0.ToEntityArray(Allocator.Temp);
 
 		foreach (var buffEntity in entities)
 		{

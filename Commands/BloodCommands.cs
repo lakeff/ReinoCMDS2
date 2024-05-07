@@ -1,5 +1,6 @@
 using KindredCommands.Models;
 using ProjectM;
+using Stunlock.Core;
 using Unity.Entities;
 using UnityEngine;
 using VampireCommandFramework;

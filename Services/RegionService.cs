@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using BepInEx.Unity.IL2CPP.Utils.Collections;
@@ -9,7 +10,10 @@ using ProjectM;
 using ProjectM.Network;
 using ProjectM.Physics;
 using ProjectM.Terrain;
+using Unity.Collections;
 using Unity.Entities;
+using Unity.Mathematics;
+using Unity.Physics;
 using Unity.Transforms;
 using UnityEngine;
 
@@ -18,6 +22,7 @@ internal class RegionService
 {
 	static readonly string CONFIG_PATH = Path.Combine(BepInEx.Paths.ConfigPath, MyPluginInfo.PLUGIN_NAME);
 	static readonly string REGIONS_PATH = Path.Combine(CONFIG_PATH, "regions.json");
+	static readonly string MAXLEVELS_PATH = Path.Combine(CONFIG_PATH, "maxLevels.json");
 
 	GameObject regionGameObject;
 	IgnorePhysicsDebugSystem regionMonoBehaviour;
@@ -33,6 +38,15 @@ internal class RegionService
 	public IEnumerable<KeyValuePair<string, int>> GatedRegions => gatedRegions;
 	public IEnumerable<string> AllowedPlayers => allowPlayers;
 
+	struct RegionPolygon
+	{
+		public WorldRegionType Region;
+		public Aabb Aabb;
+		public float2[] Vertices;
+	};
+
+	List<RegionPolygon> regionPolygons = new();
+
 	struct RegionFile
 	{
 		public WorldRegionType[] LockedRegions { get; set; }
@@ -45,9 +59,24 @@ internal class RegionService
 	{
 		regionGameObject = new GameObject("RegionService");
 		regionMonoBehaviour = regionGameObject.AddComponent<IgnorePhysicsDebugSystem>();
-		regionMonoBehaviour.StartCoroutine(CheckPlayerRegions().WrapToIl2Cpp());
 
 		LoadRegions();
+
+		foreach (var worldRegionPolygonEntity in Helper.GetEntitiesByComponentType<WorldRegionPolygon>(true))
+		{
+			var wrp = worldRegionPolygonEntity.Read<WorldRegionPolygon>();
+			var vertices = Core.EntityManager.GetBuffer<WorldRegionPolygonVertex>(worldRegionPolygonEntity);
+
+			regionPolygons.Add(
+				new RegionPolygon
+				{
+					Region = wrp.WorldRegion,
+					Aabb = wrp.PolygonBounds,
+					Vertices = vertices.ToNativeArray(allocator: Allocator.Temp).ToArray().Select(x => x.VertexPos).ToArray()
+				});
+		}
+
+		regionMonoBehaviour.StartCoroutine(CheckPlayerRegions().WrapToIl2Cpp());
 	}
 
 	void LoadRegions()
@@ -163,7 +192,12 @@ internal class RegionService
 				var equipment = charEntity.Read<Equipment>();
 				var maxLevel = Mathf.Max(equipment.ArmorLevel+equipment.SpellLevel+equipment.WeaponLevel,
 										 maxPlayerLevels.TryGetValue(charName, out var cachedLevel) ? cachedLevel : 0);
-				maxPlayerLevels[charName] = maxLevel;
+				
+				if (maxLevel > cachedLevel)
+				{
+					maxPlayerLevels[charName] = maxLevel;
+					SaveRegions();
+				}
 
 				var returnReason = DisallowedFromRegion(userEntity, currentWorldRegion.CurrentRegion);
 				if (returnReason != null)
@@ -201,26 +235,83 @@ internal class RegionService
 
 	void ReturnPlayer(Entity userEntity, string returnReason)
 	{
-		if(lastValidPos.TryGetValue(userEntity, out var lastValid))
+		var returnPos = Vector3.zero;
+		if (lastValidPos.TryGetValue(userEntity, out var lastValid) && DisallowedFromRegion(userEntity, lastValid.Item1) == null)
 		{
-			WorldRegionType region;
-			Vector3 returnPos;
-			(region, returnPos) = lastValid;
-
-			// Don't send them back if the last good is a disallowed region for them
-			if (DisallowedFromRegion(userEntity, region) != null) return;
-
-			if (!lastSentMessage.TryGetValue(userEntity, out var lastSent) ||
-				lastSent + 10 < Time.time)
-			{
-				ServerChatUtils.SendSystemMessageToClient(Core.EntityManager, userEntity.Read<User>(), returnReason);
-				lastSentMessage[userEntity] = Time.time;
-			}
-
-			var charEntity = userEntity.Read<User>().LocalCharacter.GetEntityOnServer();
-			charEntity.Write(new Translation { Value = returnPos });
-			charEntity.Write(new LastTranslation { Value = returnPos });
+			returnPos = lastValid.Item2;
 		}
+		else
+		{
+			// Alright if they aren't in a valid region then need to find the closest waypoint that is in a valid region
+			// Note not checking what is unlocked so they can return to a waypoint they haven't unlocked yet
+			var waypoints = Helper.GetEntitiesByComponentType<ChunkWaypoint>();
+			var waypointArray = waypoints.ToArray();
+			waypoints.Dispose();
+
+			var charPos = userEntity.Read<User>().LocalCharacter.GetEntityOnServer().Read<Translation>().Value;
+			returnPos = waypointArray.Where(x =>
+			{
+				if (!x.Has<UserOwner>())
+					return true;
+				var owner = x.Read<UserOwner>().Owner.GetEntityOnServer();
+				return owner == Entity.Null || owner == userEntity;
+			}).
+			Select(x => x.Read<Translation>().Value).
+			OrderBy(waypointPos =>
+			{
+				var charPos = userEntity.Read<User>().LocalCharacter.GetEntityOnServer().Read<Translation>().Value;
+				return Vector3.Distance(waypointPos, charPos);
+			}).
+			Where(waypointPos =>
+			{
+				var region = GetRegion(waypointPos);
+				return DisallowedFromRegion(userEntity, region) == null;
+			}).
+			FirstOrDefault();
+		}
+
+		if (!lastSentMessage.TryGetValue(userEntity, out var lastSent) ||
+						lastSent + 10 < Time.time)
+		{
+			ServerChatUtils.SendSystemMessageToClient(Core.EntityManager, userEntity.Read<User>(), returnReason);
+			lastSentMessage[userEntity] = Time.time;
+		}
+
+		var charEntity = userEntity.Read<User>().LocalCharacter.GetEntityOnServer();
+		charEntity.Write(new Translation { Value = returnPos });
+		charEntity.Write(new LastTranslation { Value = returnPos });
+	}
+
+	public WorldRegionType GetRegion(float3 pos)
+	{
+		foreach(var worldRegionPolygon in regionPolygons)
+		{
+			if (worldRegionPolygon.Aabb.Contains(pos))
+			{
+				if (IsPointInPolygon(worldRegionPolygon.Vertices, pos.xz))
+				{
+					return worldRegionPolygon.Region;
+				}
+			}
+		}
+		return WorldRegionType.None;
+	}
+
+	static bool IsPointInPolygon(float2[] polygon, Vector2 point)
+	{
+		int intersections = 0;
+		int vertexCount = polygon.Length;
+
+		for (int i = 0, j = vertexCount - 1; i < vertexCount; j = i++)
+		{
+			if ((polygon[i].y > point.y) != (polygon[j].y > point.y) &&
+				(point.x < (polygon[j].x - polygon[i].x) * (point.y - polygon[i].y) / (polygon[j].y - polygon[i].y) + polygon[i].x))
+			{
+				intersections++;
+			}
+		}
+
+		return intersections % 2 != 0;
 	}
 
 

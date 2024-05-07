@@ -4,9 +4,9 @@ using Unity.Entities;
 
 namespace KindredCommands.Models;
 
-public struct PlayerData(FixedString64 characterName = default, ulong steamID = 0, bool isOnline = false, Entity userEntity = default, Entity charEntity = default)
+public struct PlayerData(FixedString64Bytes characterName = default, ulong steamID = 0, bool isOnline = false, Entity userEntity = default, Entity charEntity = default)
 {
-	public FixedString64 CharacterName { get; set; } = characterName;
+	public FixedString64Bytes CharacterName { get; set; } = characterName;
 	public ulong SteamID { get; set; } = steamID;
 	public bool IsOnline { get; set; } = isOnline;
 	public Entity UserEntity { get; set; } = userEntity;

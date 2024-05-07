@@ -2,6 +2,7 @@ using System.Linq;
 using KindredCommands.Data;
 using KindredCommands.Models;
 using ProjectM;
+using Stunlock.Core;
 using UnitKiller;
 using Unity.Entities;
 using Unity.Mathematics;
@@ -65,12 +66,12 @@ internal static class SpawnCommands
 		Core.UnitSpawner.SpawnWithCallback(ctx.Event.SenderUserEntity, unit.Prefab, pos.xz, duration, (Entity e) =>
 		{
 			var blood = Core.EntityManager.GetComponentData<BloodConsumeSource>(e);
-			blood.UnitBloodType = new PrefabGUID((int)type);
+			blood.UnitBloodType._Value = new PrefabGUID((int)type);
 			blood.BloodQuality = quality;
 			blood.CanBeConsumed = consumable;
 
 			var unitLevel = Core.EntityManager.GetComponentData<UnitLevel>(e);
-			unitLevel.Level = level;
+			unitLevel.Level._Value = level;
 
 			Core.EntityManager.SetComponentData(e, unitLevel);
 			Core.EntityManager.SetComponentData(e, blood);
@@ -84,7 +85,7 @@ internal static class SpawnCommands
 	{
 		var mobs = MobUtility.ClosestMobs(ctx, radius, character.Prefab);
 		mobs.ForEach(e => StatChangeUtility.KillEntity(Core.EntityManager, e,
-						ctx.Event.SenderCharacterEntity, Time.time, true));
+						ctx.Event.SenderCharacterEntity, Time.time, StatChangeReason.Default));
 		ctx.Reply($"You've killed {mobs.Count} {character.Name.Bold()} at your position. You murderer!");
 	}
 

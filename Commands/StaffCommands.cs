@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using System.Text;
-using Bloodstone.API;
 using KindredCommands.Commands.Converters;
 using KindredCommands.Models;
 using KindredCommands.Services;
@@ -72,7 +71,7 @@ internal class StaffCommands
 			ctx.Reply("Staff member not found!");
 	}
 
-	public static AdminAuthSystem adminAuthSystem = VWorld.Server.GetExistingSystem<AdminAuthSystem>();
+	public static AdminAuthSystem adminAuthSystem = Core.Server.GetExistingSystemManaged<AdminAuthSystem>();
 	[Command("reloadadmin", description: "Reloads the admin list.", adminOnly: true)]
 	public static void ReloadCommand(ChatCommandContext ctx)
 	{

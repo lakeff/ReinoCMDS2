@@ -37,7 +37,7 @@ class ClanCommands
         userToAddEntity.Write<User>(user);
 
         var members = Core.EntityManager.GetBuffer<ClanMemberStatus>(clanEntity);
-        var userBuffer = Core.EntityManager.GetBuffer<OnlySyncToUserBuffer>(clanEntity);
+        var userBuffer = Core.EntityManager.GetBuffer<SyncToUserBuffer>(clanEntity);
 
         for (var i = 0; i < members.Length; ++i)
         {
@@ -402,7 +402,7 @@ class ClanCommands
 
         var members = Core.EntityManager.GetBuffer<ClanMemberStatus>(clanEntity);
         var memberList = new List<string>();
-        var userBuffer = Core.EntityManager.GetBuffer<OnlySyncToUserBuffer>(clanEntity);
+        var userBuffer = Core.EntityManager.GetBuffer<SyncToUserBuffer>(clanEntity);
 
         for (var i = 0; i < members.Length; ++i)
         {

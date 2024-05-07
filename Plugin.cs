@@ -1,7 +1,6 @@
 using BepInEx;
 using BepInEx.Logging;
 using BepInEx.Unity.IL2CPP;
-using Bloodstone.API;
 using KindredCommands.Models;
 using HarmonyLib;
 using ProjectM;
@@ -10,10 +9,8 @@ using VampireCommandFramework;
 namespace KindredCommands;
 
 [BepInPlugin(MyPluginInfo.PLUGIN_GUID, MyPluginInfo.PLUGIN_NAME, MyPluginInfo.PLUGIN_VERSION)]
-[BepInDependency("gg.deca.Bloodstone")]
 [BepInDependency("gg.deca.VampireCommandFramework")]
-[Bloodstone.API.Reloadable]
-public class Plugin : BasePlugin, IRunOnInitialized
+public class Plugin : BasePlugin
 {
 	internal static Harmony Harmony;
 	internal static ManualLogSource PluginLog;
@@ -59,7 +56,7 @@ public class Plugin : BasePlugin, IRunOnInitialized
 		// Hack, check to make sure that entities loaded enough because this function
 		// will be called when the plugin is first loaded, when this will return 0
 		// but also during reload when there is data to initialize with.
-		var collectionSystem = Core.Server.GetExistingSystem<PrefabCollectionSystem>();
+		var collectionSystem = Core.Server.GetExistingSystemManaged<PrefabCollectionSystem>();
 		return collectionSystem?.SpawnableNameToPrefabGuidDictionary.Count > 0;
 	}
 }

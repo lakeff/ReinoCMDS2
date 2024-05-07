@@ -12,7 +12,7 @@ namespace KindredCommands.Commands
 		public static void ChainTransition(ChatCommandContext ctx, float range = 10)
 		{
 			var charEntity = ctx.Event.SenderCharacterEntity;
-			var time = Core.CastleBuffsTickSystem._ServerTime.GetSingleton().Time;
+			var time = Core.ServerTime;
 			foreach (var chainEntity in Helper.GetAllEntitiesInRadius<AutoChainInstanceData>(charEntity.Read<Translation>().Value.xz, range))
 			{
 				chainEntity.Write(new AutoChainInstanceData() { NextTransitionAttempt = time });

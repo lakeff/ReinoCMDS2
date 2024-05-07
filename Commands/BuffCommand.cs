@@ -3,6 +3,7 @@ using KindredCommands.Commands.Converters;
 using KindredCommands.Services;
 using ProjectM;
 using ProjectM.Network;
+using Stunlock.Core;
 using Unity.Entities;
 using VampireCommandFramework;
 

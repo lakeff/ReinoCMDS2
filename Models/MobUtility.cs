@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
-using Bloodstone.API;
 using KindredCommands;
 using ProjectM;
+using Stunlock.Core;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Transforms;
@@ -35,18 +35,18 @@ internal static class MobUtility
 			var mobs = GetMobs();
 			var results = new List<Entity>();
 			var origin = Core.EntityManager.GetComponentData<LocalToWorld>(e).Position;
-			var prefabCollectionSystem = VWorld.Server.GetExistingSystem<PrefabCollectionSystem>();
+			var prefabCollectionSystem = Core.Server.GetExistingSystemManaged<PrefabCollectionSystem>();
 			foreach (var mob in mobs)
 			{
 				var position = Core.EntityManager.GetComponentData<LocalToWorld>(mob).Position;
-				var distance = UnityEngine.Vector3.Distance(origin, position); // wait really?
+				var distance = UnityEngine.Vector3.Distance(origin, position); 
 				var em = Core.EntityManager;
-				var getGuid = em.GetComponentDataFromEntity<PrefabGUID>();
+				var getGuid = mob.Read<PrefabGUID>();
 				if (!mobGUID.HasValue && distance < radius)
 				{
 					results.Add(mob);
 				}
-				else if (distance < radius && getGuid[mob] == mobGUID)
+				else if (distance < radius && getGuid == mobGUID)
 				{
 					results.Add(mob);
 				}

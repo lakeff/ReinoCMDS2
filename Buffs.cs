@@ -2,14 +2,14 @@ using ProjectM.Network;
 using ProjectM;
 using Unity.Entities;
 using ProjectM.Shared;
-using Bloodstone.API;
+using Stunlock.Core;
 
 namespace KindredCommands;
 internal class Buffs
 {
 	public static bool AddBuff(Entity User, Entity Character, PrefabGUID buffPrefab, int duration = 0, bool immortal = true)
 	{
-		var des = Core.Server.GetExistingSystem<DebugEventsSystem>();
+		var des = Core.Server.GetExistingSystemManaged<DebugEventsSystem>();
 		var buffEvent = new ApplyBuffDebugEvent()
 		{
 			BuffPrefabGUID = buffPrefab
@@ -20,10 +20,10 @@ internal class Buffs
 			User = User,
 			Character = Character
 		};
-		if (!BuffUtility.TryGetBuff(VWorld.Server.EntityManager, Character, buffPrefab, out Entity buffEntity))
+		if (!BuffUtility.TryGetBuff(Core.Server.EntityManager, Character, buffPrefab, out Entity buffEntity))
 		{
 			des.ApplyBuff(fromCharacter, buffEvent);
-			if (BuffUtility.TryGetBuff(VWorld.Server.EntityManager, Character, buffPrefab, out buffEntity))
+			if (BuffUtility.TryGetBuff(Core.Server.EntityManager, Character, buffPrefab, out buffEntity))
 			{
 				if (buffEntity.Has<CreateGameplayEventsOnSpawn>())
 				{

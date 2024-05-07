@@ -1,5 +1,6 @@
 
 using ProjectM;
+using Stunlock.Core;
 using Unity.Entities;
 
 namespace KindredCommands.Services;
@@ -22,7 +23,7 @@ internal class GearService
 	void SetHeadgearBloodbound(bool bloodBound)
 	{
 		var itemMap = Core.GameDataSystem.ItemHashLookupMap;
-		var allHeadgear = Helper.GetEntitiesByComponentTypes<HeadgearToggleData, Prefab>(includePrefab:true);
+		var allHeadgear = Helper.GetEntitiesByComponentTypes<EquipmentToggleData, Prefab>(includePrefab:true);
 		foreach (var headgear in allHeadgear)
 		{
 			var itemData = headgear.Read<ItemData>();

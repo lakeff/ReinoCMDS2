@@ -1,27 +1,28 @@
-using Bloodstone.API;
-using KindredCommands.Data;
+using System.Collections.Generic;
 using Il2CppInterop.Runtime;
+using Il2CppInterop.Runtime.InteropTypes;
 using Il2CppSystem;
+using KindredCommands.Data;
 using ProjectM;
+using ProjectM.Gameplay.Clan;
+using ProjectM.Network;
+using ProjectM.Scripting;
 using ProjectM.Shared;
+using Stunlock.Core;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
 using VampireCommandFramework;
-using System.Collections.Generic;
-using ProjectM.Network;
-using ProjectM.Gameplay.Clan;
-using System.Numerics;
 
 namespace KindredCommands;
 
 // This is an anti-pattern, move stuff away from Helper not into it
 internal static partial class Helper
 {
-	public static AdminAuthSystem adminAuthSystem = VWorld.Server.GetExistingSystem<AdminAuthSystem>();
-	public static ClanSystem_Server clanSystem = VWorld.Server.GetExistingSystem<ClanSystem_Server>();
-	public static EntityCommandBufferSystem entityCommandBufferSystem = VWorld.Server.GetExistingSystem<EntityCommandBufferSystem>();
+	public static AdminAuthSystem adminAuthSystem = Core.Server.GetExistingSystemManaged<AdminAuthSystem>();
+	public static ClanSystem_Server clanSystem = Core.Server.GetExistingSystemManaged<ClanSystem_Server>();
+	public static EntityCommandBufferSystem entityCommandBufferSystem = Core.Server.GetExistingSystemManaged<EntityCommandBufferSystem>();
 
 	public static PrefabGUID GetPrefabGUID(Entity entity)
 	{
@@ -33,7 +34,7 @@ internal static partial class Helper
 		}
 		catch
 		{
-			guid.GuidHash = 0;
+			guid = new PrefabGUID(0);
 		}
 		return guid;
 	}
@@ -53,9 +54,8 @@ internal static partial class Helper
 	{
 		try
 		{
-			var gameData = Core.Server.GetExistingSystem<GameDataSystem>();
-			var itemSettings = AddItemSettings.Create(Core.EntityManager, gameData.ItemHashLookupMap);
-			var inventoryResponse = InventoryUtilitiesServer.TryAddItem(itemSettings, recipient, guid, amount);
+			ServerGameManager serverGameManager = Core.Server.GetExistingSystemManaged<ServerScriptMapper>()._ServerGameManager;
+			var inventoryResponse = serverGameManager.TryAddInventoryItem(recipient, guid, amount);
 
 			return inventoryResponse.NewEntity;
 		}
@@ -189,15 +189,11 @@ internal static partial class Helper
 			ctx?.Reply("Respawn");
 			var pos = Character.Read<LocalToWorld>().Position;
 
-			Nullable_Unboxed<float3> spawnLoc = new()
-			{
-				value = pos,
-				has_value = true
-			};
+			Nullable_Unboxed<float3> spawnLoc = new() { value = pos };
 
 			ctx?.Reply("Respawn2");
-			var sbs = VWorld.Server.GetExistingSystem<ServerBootstrapSystem>();
-			var bufferSystem = VWorld.Server.GetExistingSystem<EntityCommandBufferSystem>();
+			var sbs = Core.Server.GetExistingSystemManaged<ServerBootstrapSystem>();
+			var bufferSystem = Core.Server.GetExistingSystemManaged<EntityCommandBufferSystem>();
 			var buffer = bufferSystem.CreateCommandBuffer();
 			ctx?.Reply("Respawn3");
 			sbs.RespawnCharacter(buffer, User,
@@ -265,4 +261,5 @@ internal static partial class Helper
 			}
 		}
 	}
+	// add the component debugunlock
 }

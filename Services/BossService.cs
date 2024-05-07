@@ -9,6 +9,7 @@ using KindredCommands.Data;
 using ProjectM;
 using ProjectM.Gameplay.Scripting;
 using ProjectM.Shared;
+using Stunlock.Core;
 using Unity.Collections;
 using Unity.Entities;
 
@@ -106,9 +107,9 @@ internal class BossService
 		{
 			foreach (var entity in Helper.GetEntitiesByComponentType<VBloodUnit>(includePrefab: true).ToArray().Where(x => x.Read<PrefabGUID>().Equals(boss.Value)))
 			{
-				if(entity.Has<Script_ApplyBuffUnderHealthThreshhold_DataServer>())
+				if(entity.Has<Script_ApplyBuffUnderHealthThreshold_DataServer>())
 				{
-					entity.Write<Script_ApplyBuffUnderHealthThreshhold_DataServer>(new Script_ApplyBuffUnderHealthThreshhold_DataServer()
+					entity.Write<Script_ApplyBuffUnderHealthThreshold_DataServer>(new Script_ApplyBuffUnderHealthThreshold_DataServer()
 					{
 						NewBuffEntity = Prefabs.Buff_General_VBlood_Downed,
 						HealthFactor = 0.0f,

@@ -2,10 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
+using Il2CppInterop.Runtime;
 using KindredCommands.Commands.Converters;
 using ProjectM;
 using ProjectM.CastleBuilding;
 using ProjectM.Network;
+using ProjectM.Terrain;
 using Unity.Entities;
 using Unity.Transforms;
 using UnityEngine;
@@ -73,47 +76,60 @@ internal class CastleCommands
         // report a list of territories with the least time remaining
         var castleTerritories = Helper.GetEntitiesByComponentType<CastleTerritory>();
 
-        var castleTerritoryList = new List<CastleTerritory>();
+        var castleTerritoryList = new List<(Entity, CastleTerritory, double)>();
         foreach (var castleTerritoryEntity in castleTerritories)
         {
             var castleTerritory = castleTerritoryEntity.Read<CastleTerritory>();
             if (castleTerritory.CastleHeart.Equals(Entity.Null)) continue;
-            castleTerritoryList.Add(castleTerritory);
+            castleTerritoryList.Add((castleTerritoryEntity, castleTerritory, GetFuelTimeRemaining(castleTerritory.CastleHeart)));
         }
-        castleTerritoryList.Sort((a, b) => a.CastleHeart.Read<Pylonstation>().MinutesRemaining.CompareTo(b.CastleHeart.Read<Pylonstation>().MinutesRemaining));
+        castleTerritoryList.Sort((a, b) => a.Item3.CompareTo(b.Item3));
         var sb = new StringBuilder();
-        foreach (var territory in castleTerritoryList)
+        foreach (var (territoryEntity, territory, secondsRemaining) in castleTerritoryList)
         {
-            var minutesRemaining = territory.CastleHeart.Read<Pylonstation>().MinutesRemaining;
-            if (minutesRemaining <= 1) continue;
+            if (secondsRemaining <= 1) continue;
 
-            var time = TimeSpan.FromMinutes(minutesRemaining);
-            sb.AppendLine($"Castle {territory.CastleTerritoryIndex} in {TerritoryRegions(territory)} with {time:%d}d {time:%h}h {time:%m}m remaining.");
-
-            if (sb.ToString().Split('\n').Length >= 7)
+            var time = TimeSpan.FromSeconds(secondsRemaining);
+			var region = territoryEntity.Read<TerritoryWorldRegion>().Region;
+			var newLine = $"Castle {territory.CastleTerritoryIndex} in {RegionName(region)} with {time:%d}d {time:%h}h {time:%m}m remaining.";
+            if (sb.ToString().Length + newLine.Length >= Core.MAX_REPLY_LENGTH)
             {
                 break;
             }
-        }
+
+			sb.AppendLine(newLine);
+		}
+
+		if (sb.Length == 0)
+		{
+			sb.AppendLine("No territories with fuel remaining");
+		}
 
         ctx.Reply(sb.ToString());
+	}
 
+	public static double GetFuelTimeRemaining(Entity castleHeart)
+	{
+		var castleHeartComponent = castleHeart.Read<CastleHeart>();
+
+		var secondsPerFuel = 8 * 60 * Core.ServerGameSettingsSystem.Settings.CastleBloodEssenceDrainModifier;
+		return (castleHeartComponent.FuelEndTime - Core.ServerTime) + secondsPerFuel * castleHeartComponent.FuelQuantity;
 	}
 
 	[Command("openplots", "op", description: "Reports all the territories with open and/or decaying plots.")]
 	public static void OpenPlots(ChatCommandContext ctx)
 	{
-		Dictionary<string, int> openPlots = [];
-		Dictionary<string, int> plotsInDecay = [];
+		Dictionary<WorldRegionType, int> openPlots = [];
+		Dictionary<WorldRegionType, int> plotsInDecay = [];
 		foreach (var castleTerritoryEntity in Helper.GetEntitiesByComponentType<CastleTerritory>())
 		{
 			var castleTerritory = castleTerritoryEntity.Read<CastleTerritory>();
 			if (!castleTerritory.CastleHeart.Equals(Entity.Null))
 			{
-				var pylonstation = castleTerritory.CastleHeart.Read<Pylonstation>();
-				if (pylonstation.MinutesRemaining > 0 || pylonstation.FuelPercentage > 0) continue;
+				var castleHeart = castleTerritory.CastleHeart.Read<CastleHeart>();
+				if ((castleHeart.FuelEndTime - Core.ServerTime) > 0 || castleHeart.FuelQuantity > 0) continue;
 				
-				var region = TerritoryRegions(castleTerritory);
+				var region = castleTerritoryEntity.Read<TerritoryWorldRegion>().Region;
 				if(plotsInDecay.ContainsKey(region))
 				{
 					plotsInDecay[region]++;
@@ -126,7 +142,7 @@ internal class CastleCommands
 			}
 			else
 			{
-				var region = TerritoryRegions(castleTerritory);
+				var region = castleTerritoryEntity.Read<TerritoryWorldRegion>().Region;
 				if(openPlots.ContainsKey(region))
 				{
 					openPlots[region]++;
@@ -143,18 +159,18 @@ internal class CastleCommands
 		{
 			if(plotsInDecay.ContainsKey(plot.Key))
 			{
-				stringList.Add($"{plot.Key} has {plot.Value} open plots and {plotsInDecay[plot.Key]} plots in decay");
+				stringList.Add($"{RegionName(plot.Key)} has {plot.Value} open plots and {plotsInDecay[plot.Key]} plots in decay");
 			}
 			else
 			{
-				stringList.Add($"{plot.Key} has {plot.Value} open plots");
+				stringList.Add($"{RegionName(plot.Key)} has {plot.Value} open plots");
 			}
 		}
 		foreach(var plot in plotsInDecay)
 		{
 			if(!openPlots.ContainsKey(plot.Key))
 			{
-				stringList.Add($"{plot.Key} has {plot.Value} plots in decay");
+				stringList.Add($"{RegionName(plot.Key)} has {plot.Value} plots in decay");
 			}
 		}
 		stringList.Sort();
@@ -176,44 +192,9 @@ internal class CastleCommands
 		ctx.Reply(sb.ToString());
 	}
 
-public static string TerritoryRegions(CastleTerritory castleTerritory)
+	public static string RegionName(WorldRegionType region)
 	{
-		if (castleTerritory.CastleTerritoryIndex == 71 || castleTerritory.CastleTerritoryIndex == 72 || castleTerritory.CastleTerritoryIndex == 73 || castleTerritory.CastleTerritoryIndex == 85 || castleTerritory.CastleTerritoryIndex == 86)
-		{
-			return "Hallowed Mountains";
-		}
-		else if (castleTerritory.CastleTerritoryIndex >= 1 && castleTerritory.CastleTerritoryIndex <= 70)
-		{
-			return "Farbane Woods";
-		}
-		else if (castleTerritory.CastleTerritoryIndex >= 77 && castleTerritory.CastleTerritoryIndex <= 84 || castleTerritory.CastleTerritoryIndex >= 87 && castleTerritory.CastleTerritoryIndex <= 92 || castleTerritory.CastleTerritoryIndex >= 94 && castleTerritory.CastleTerritoryIndex <= 99 || castleTerritory.CastleTerritoryIndex >= 102 && castleTerritory.CastleTerritoryIndex <= 107 || castleTerritory.CastleTerritoryIndex == 116 || castleTerritory.CastleTerritoryIndex == 117)
-		{
-			return "Dunley Farmlands";
-		}
-		else if (castleTerritory.CastleTerritoryIndex >= 74 && castleTerritory.CastleTerritoryIndex <= 76 || castleTerritory.CastleTerritoryIndex == 93 || castleTerritory.CastleTerritoryIndex == 100 || castleTerritory.CastleTerritoryIndex == 101)
-		{
-			return "Silverlight Hills";
-		}
-		else if (castleTerritory.CastleTerritoryIndex >= 111 && castleTerritory.CastleTerritoryIndex <= 115 || castleTerritory.CastleTerritoryIndex >= 118 && castleTerritory.CastleTerritoryIndex <= 122 || castleTerritory.CastleTerritoryIndex == 127 || castleTerritory.CastleTerritoryIndex >= 134 && castleTerritory.CastleTerritoryIndex <= 138)
-		{
-			return "Gloomrot South";
-		}
-		else if (castleTerritory.CastleTerritoryIndex >= 108 && castleTerritory.CastleTerritoryIndex <= 110 || castleTerritory.CastleTerritoryIndex >= 123 && castleTerritory.CastleTerritoryIndex <= 126 || castleTerritory.CastleTerritoryIndex >= 131 && castleTerritory.CastleTerritoryIndex <= 133)
-		{
-			return "Gloomrot North";
-		}
-		else if (castleTerritory.CastleTerritoryIndex >= 128 && castleTerritory.CastleTerritoryIndex <= 130 || castleTerritory.CastleTerritoryIndex == 139)
-		{
-			return "Cursed Forest";
-		}
-		else if (castleTerritory.CastleTerritoryIndex == 0)
-		{
-			return "Developer Island";
-		}
-		else
-		{
-			return "Unknown";
-		}
+		return Regex.Replace(region.ToString().Replace("_", ""), "(?<!^)([A-Z])", " $1");
 	}
 
 	[Command("plotsowned", "po", description: "Reports the number of plots owned by each player", adminOnly: true)]
@@ -223,7 +204,7 @@ public static string TerritoryRegions(CastleTerritory castleTerritory)
         var playerPlots = new Dictionary<Entity, int>();
         foreach (var castleTerritoryEntity in castleTerritories)
         {
-            var castleTerritory = castleTerritoryEntity.Read<CastleTerritory>();
+			var castleTerritory = castleTerritoryEntity.Read<CastleTerritory>();
             if (castleTerritory.CastleHeart.Equals(Entity.Null)) continue;
 
             var userOwner = castleTerritory.CastleHeart.Read<UserOwner>();

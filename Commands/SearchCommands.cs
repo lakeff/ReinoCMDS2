@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using ProjectM;
+using Stunlock.Core;
 using VampireCommandFramework;
 
 namespace KindredCommands.Commands;
@@ -34,7 +35,7 @@ public class SearchCommands
 
 			var sb = new StringBuilder();
 			var totalCount = searchResults.Count;
-			var pageSize = 8;
+			var pageSize = 6;
 			var pageLabel = totalCount > pageSize ? $" (Page {page}/{Math.Ceiling(totalCount / (float)pageSize)})" : "";
 
 			if (totalCount > pageSize)
@@ -49,7 +50,8 @@ public class SearchCommands
 					$"({Prefab.GuidHash}) {Name.Replace(search, $"<b>{search}</b>", StringComparison.OrdinalIgnoreCase)}");
 			}
 
-			ctx.Reply(sb.ToString());
+			var returnResult = sb.ToString();
+			ctx.Reply(returnResult[..Math.Min(returnResult.Length, Core.MAX_REPLY_LENGTH)]);
 		}
 		catch (Exception e)
 		{
@@ -82,7 +84,7 @@ public class SearchCommands
 
 			var sb = new StringBuilder();
 			var totalCount = searchResults.Count;
-			var pageSize = 8;
+			var pageSize = 6;
 			var pageLabel = totalCount > pageSize ? $" (Page {page}/{Math.Ceiling(totalCount / (float)pageSize)})" : "";
 
 			if (totalCount > pageSize)
@@ -97,7 +99,8 @@ public class SearchCommands
 					$"({Prefab.GuidHash}) {Name.Replace(search, $"<b>{search}</b>", StringComparison.OrdinalIgnoreCase)}");
 			}
 
-			ctx.Reply(sb.ToString());
+			var returnResult = sb.ToString();
+			ctx.Reply(returnResult[..Math.Min(returnResult.Length, Core.MAX_REPLY_LENGTH)]);
 		}
 		catch (Exception e)
 		{
