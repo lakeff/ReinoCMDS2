@@ -156,6 +156,21 @@ namespace KindredCommands.Services
 			playerSpeeds[charEntity] = speed;
 		}
 
+		public void RemoveSpeedBoost(Entity charEntity)
+		{
+			playerSpeeds.Remove(charEntity);
+		}
+
+		public bool HasSpeedBoost(Entity charEntity)
+		{
+			return playerSpeeds.ContainsKey(charEntity);
+		}
+
+		public float GetSpeedBoost(Entity charEntity)
+		{
+			return playerSpeeds.TryGetValue(charEntity, out var speed) ? speed : 4;
+		}
+
 		public void SetYieldMultiplier(Entity charEntity, float yield)
 		{
 			playerYield[charEntity] = yield;

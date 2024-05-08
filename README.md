@@ -4,6 +4,8 @@ KindredCommands is a server modification for V Rising that adds chat commands fo
 This is built upon CommunityCommands by deca with some fixes/tweaks and new commands added. Consultations by zfolmt. Credits to all of them for their work and inspiration. 
 Also, thanks to the V Rising modding and server communities for ideas and requests! Commands now log to the server log for accountability and tracking.
 
+Updated for V rising 1.0 as of v1.9.0!
+
 [Territory ID Map](https://i.imgur.com/phmRmP7.jpeg)
 
 Feel free to reach out to me on discord (odjit) if you have any questions or need help with the mod.
@@ -198,8 +200,6 @@ Feel free to reach out to me on discord (odjit) if you have any questions or nee
 - `.region unlock (Region)`
   - will unlock a region, allowing new players to enter it.
   - Example: *.region unlock silverlighthills*
-- `.region list`
-  - will list all regions and their current lock or gated status.
 - `.region gate (Region) (level)`
   - will gate a region, preventing new players below the level threshold from entering it. Players already in the region will not be kicked but cannot reenter if they leave. It will keep track of the highest level a player has reached, providing accomodation for gear removal or "prestiging"
   - Example: *.region gate silverlighthills 60*
@@ -222,8 +222,6 @@ Feel free to reach out to me on discord (odjit) if you have any questions or nee
 - `.boss unlock (boss)`
   - will allow a boss to spawn normally.
   - Example: *.boss unlock solarus*
-- `.boss list`
-  - will list all locked bosses
 - `.boss modify (bossname) (level)`
   - will change the level of the boss to the level specified. Upon respawn, they will be their original level. You can still modify the level of the boss while its in its 'blood walk', and it will spawn with that level. Must be near boss.
   - Example: *.boss modify solarus 100*
@@ -256,5 +254,8 @@ Feel free to reach out to me on discord (odjit) if you have any questions or nee
 - `.openplots`
   - will report how many open or decaying plots there are in each region.
   - Shortcut: *.op*
-
+- `.boss list`
+  - will list all locked bosses
+- `.region list`
+  - will list all regions and their current lock or gated status.
 

@@ -3,7 +3,7 @@
 		<TargetFramework>net6.0</TargetFramework>
 		<AssemblyName>KindredCommands</AssemblyName>
 		<Description>Commands to expand Administration efforts and provide information</Description>
-		<Version>1.8.0</Version>
+		<Version>1.9.0</Version>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 		<LangVersion>latest</LangVersion>
 		<RootNamespace>KindredCommands</RootNamespace>

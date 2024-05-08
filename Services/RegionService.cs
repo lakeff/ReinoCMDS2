@@ -188,7 +188,8 @@ internal class RegionService
 				var charEntity = userEntity.Read<User>().LocalCharacter.GetEntityOnServer();
 				if(!charEntity.Has<Equipment>()) continue;
 
-				var currentWorldRegion = userEntity.Read<CurrentWorldRegion>();
+				var pos = charEntity.Read<Translation>().Value;
+				var currentWorldRegion = GetRegion(pos);
 				var equipment = charEntity.Read<Equipment>();
 				var maxLevel = Mathf.Max(equipment.ArmorLevel+equipment.SpellLevel+equipment.WeaponLevel,
 										 maxPlayerLevels.TryGetValue(charName, out var cachedLevel) ? cachedLevel : 0);
@@ -199,14 +200,14 @@ internal class RegionService
 					SaveRegions();
 				}
 
-				var returnReason = DisallowedFromRegion(userEntity, currentWorldRegion.CurrentRegion);
+				var returnReason = DisallowedFromRegion(userEntity, currentWorldRegion);
 				if (returnReason != null)
 				{
 					ReturnPlayer(userEntity, returnReason);
 				}
 				else
 				{
-					lastValidPos[userEntity] = (currentWorldRegion.CurrentRegion, charEntity.Read<Translation>().Value);
+					lastValidPos[userEntity] = (currentWorldRegion, charEntity.Read<Translation>().Value);
 				}
 				yield return null;
 			}
@@ -220,7 +221,9 @@ internal class RegionService
 		if (allowPlayers.Contains(charName))
 			return null;
 
-		var maxLevel = maxPlayerLevels[charName];
+		if (!maxPlayerLevels.TryGetValue(charName, out var maxLevel))
+			maxLevel = 0;
+
 		if (lockedRegions.Contains(region))
 		{
 			return $"Can't enter region {region.ToString()} as it's locked";
