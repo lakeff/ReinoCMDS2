@@ -567,6 +567,6 @@
     </Reference>
   </ItemGroup>
 	<Target Name="PostBuild" AfterTargets="PostBuildEvent">
-	  <Exec Command="copy &quot;C:\Users\odjit\Code Stuff\Backups\KindredCommands\bin\Debug\net6.0\KindredCommands.dll&quot; &quot;C:\Program Files (x86)\Steam\steamapps\common\VRisingBeta\VRising_Server\BepInEx\plugins&quot; " />
+	  <Exec Command="copy &quot;C:\Users\odjit\Code Stuff\Backups\KindredCommands\bin\Debug\net6.0\KindredCommands.dll&quot; &quot;C:\Program Files (x86)\Steam\steamapps\common\VRisingDedicatedServer\BepInEx\plugins&quot; " />
 	</Target>
 </Project>
