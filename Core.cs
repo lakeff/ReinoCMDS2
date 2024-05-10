@@ -21,7 +21,6 @@ internal static class Core
 	public static ServerGameManager ServerGameManager => ServerScriptMapper.GetServerGameManager();
 
 	public static ServerGameSettingsSystem ServerGameSettingsSystem { get; internal set; }
-	public static UpdateUserWorldRegionSystem UpdateUserWorldRegionSystem { get; internal set; }
 
 	public static ManualLogSource Log { get; } = Plugin.PluginLog;
 	public static AnnouncementsService AnnouncementsService { get; internal set; }
@@ -51,7 +50,6 @@ internal static class Core
 		PrefabCollectionSystem = Server.GetExistingSystemManaged<PrefabCollectionSystem>();
 		ServerGameSettingsSystem = Server.GetExistingSystemManaged<ServerGameSettingsSystem>();
 		ServerScriptMapper = Server.GetExistingSystemManaged<ServerScriptMapper>();
-		UpdateUserWorldRegionSystem = Server.GetExistingSystemManaged<UpdateUserWorldRegionSystem>();
 
 		Players = new();
 		Prefabs = new();
