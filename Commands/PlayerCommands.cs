@@ -130,7 +130,7 @@ public static class PlayerCommands
 		//UnlockMusic(progressionEntity);
 	}
 
-	[Command("unlockpassives", description: "Unlocks all spell school passives for a player.", adminOnly: true)]
+	//[Command("unlockpassives", description: "Unlocks all spell school passives for a player.", adminOnly: true)]
 	public static void UnlockPassives(ChatCommandContext ctx, FoundPlayer player=null)
 	{
 		var userEntity = player?.Value.UserEntity ?? ctx.Event.SenderUserEntity;
@@ -171,7 +171,7 @@ public static class PlayerCommands
 		}
 	}
 
-	[Command("unlockmusic", description: "Unlocks all music tracks for a player.", adminOnly: true)]
+//	[Command("unlockmusic", description: "Unlocks all music tracks for a player.", adminOnly: true)]
 	public static void UnlockMusic(ChatCommandContext ctx, FoundPlayer player=null)
 	{
 		var userEntity = player?.Value.UserEntity ?? ctx.Event.SenderUserEntity;
