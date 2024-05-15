@@ -2,9 +2,7 @@ using System.Runtime.CompilerServices;
 using BepInEx.Logging;
 using KindredCommands.Services;
 using ProjectM;
-using ProjectM.Network;
 using ProjectM.Scripting;
-using ProjectM.Terrain;
 using Unity.Entities;
 
 namespace KindredCommands;
