@@ -85,7 +85,7 @@ internal static class SpawnCommands
 	{
 		var mobs = MobUtility.ClosestMobs(ctx, radius, character.Prefab);
 		mobs.ForEach(e => StatChangeUtility.KillEntity(Core.EntityManager, e,
-						ctx.Event.SenderCharacterEntity, Time.time, StatChangeReason.Default));
+						ctx.Event.SenderCharacterEntity, Time.time, StatChangeReason.Default, true));
 		ctx.Reply($"You've killed {mobs.Count} {character.Name.Bold()} at your position. You murderer!");
 	}
 
