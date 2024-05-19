@@ -16,6 +16,11 @@ internal class UnitSpawnerService
 	internal const int DEFAULT_MINRANGE = 1;
 	internal const int DEFAULT_MAXRANGE = 1;
 
+	public UnitSpawnerService()
+	{
+		InitializeUnitLevels();
+	}
+
 	public static void Spawn(Entity user, PrefabGUID unit, int count, float2 position, float minRange = 1, float maxRange = 2, float duration = -1)
 	{
 		var translation = Core.EntityManager.GetComponentData<Translation>(user);
@@ -52,6 +57,19 @@ internal class UnitSpawnerService
 			}
 		} while (PostActions.ContainsKey(key));
 		return key;
+	}
+
+	void InitializeUnitLevels()
+	{
+		foreach(var levelBuff in Helper.GetEntitiesByComponentTypes<ModifyUnitLevelBuff, Buff>())
+		{
+			var buff = levelBuff.Read<Buff>();
+			var modifyUnitLevelBuff = levelBuff.Read<ModifyUnitLevelBuff>();
+
+			var unitLevel = buff.Target.Read<UnitLevel>();
+			unitLevel.Level._Value = modifyUnitLevelBuff.UnitLevel;
+			buff.Target.Write(unitLevel);
+		}
 	}
 
 	internal Dictionary<long, (float actualDuration, Action<Entity> Actions)> PostActions = [];

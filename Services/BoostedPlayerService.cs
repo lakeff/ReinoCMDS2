@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using BepInEx.Unity.IL2CPP.Utils.Collections;
 using KindredCommands.Data;
 using ProjectM;
+using ProjectM.Gameplay.Scripting;
 using ProjectM.Physics;
+using ProjectM.Scripting;
 using Unity.Entities;
 using UnityEngine;
 
@@ -89,6 +91,17 @@ namespace KindredCommands.Services
 
 			Buffs.AddBuff(userEntity, charEntity, Prefabs.BoostedBuff1, -1, true);
 			Buffs.AddBuff(userEntity, charEntity, Prefabs.BoostedBuff2, -1, true);
+
+			if (BuffUtility.TryGetBuff(Core.EntityManager, charEntity, Prefabs.BoostedBuff1, out var buffEntity))
+			{
+				buffEntity.Remove<SpawnStructure_WeakenState_DataShared>();
+				buffEntity.Remove<ScriptSpawn>();
+			}
+			if (BuffUtility.TryGetBuff(Core.EntityManager, charEntity, Prefabs.BoostedBuff2, out buffEntity))
+			{
+				buffEntity.Remove<SpawnStructure_WeakenState_DataShared>();
+				buffEntity.Remove<ScriptSpawn>();
+			}
 		}
 
 		public void RemoveBoostedPlayer(Entity charEntity)

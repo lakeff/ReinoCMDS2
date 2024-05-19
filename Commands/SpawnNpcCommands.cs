@@ -2,6 +2,8 @@ using System.Linq;
 using KindredCommands.Data;
 using KindredCommands.Models;
 using ProjectM;
+using ProjectM.Gameplay.Scripting;
+using ProjectM.Scripting;
 using Stunlock.Core;
 using UnitKiller;
 using Unity.Entities;
@@ -69,12 +71,22 @@ internal static class SpawnCommands
 			blood.UnitBloodType._Value = new PrefabGUID((int)type);
 			blood.BloodQuality = quality;
 			blood.CanBeConsumed = consumable;
-
-			var unitLevel = Core.EntityManager.GetComponentData<UnitLevel>(e);
-			unitLevel.Level._Value = level;
-
-			Core.EntityManager.SetComponentData(e, unitLevel);
 			Core.EntityManager.SetComponentData(e, blood);
+
+			if (level > 0)
+			{
+				Buffs.AddBuff(ctx.Event.SenderUserEntity, e, Prefabs.BoostedBuff1, -1, true);
+				if (BuffUtility.TryGetBuff(Core.EntityManager, e, Prefabs.BoostedBuff1, out var buffEntity))
+				{
+					buffEntity.Remove<SpawnStructure_WeakenState_DataShared>();
+					buffEntity.Remove<ScriptSpawn>();
+					buffEntity.Add<ModifyUnitLevelBuff>();
+					buffEntity.Write(new ModifyUnitLevelBuff()
+					{
+						UnitLevel = level
+					});
+				}
+			}
 		});
 		ctx.Reply($"Spawning {unit.Name.Bold()} with {quality}% {type} blood at your position. It is Lvl{level} and will live {(duration<0?"until killed":$"{duration} seconds")}.");
 	}
