@@ -1,16 +1,42 @@
 
+using System.Linq;
+using Il2CppInterop.Runtime;
+using KindredCommands.Data;
 using ProjectM;
 using Stunlock.Core;
+using Unity.Collections;
 using Unity.Entities;
 
 namespace KindredCommands.Services;
 
 internal class GearService
 {
+	EntityQuery itemQuery;
+
+	readonly static PrefabGUID[] shardPrefabs = [
+		Prefabs.Item_MagicSource_SoulShard_Dracula,
+		Prefabs.Item_MagicSource_SoulShard_Manticore,
+		Prefabs.Item_MagicSource_SoulShard_Monster,
+		Prefabs.Item_MagicSource_SoulShard_Solarus
+	];
+
 	public GearService()
 	{
-		if(Core.ConfigSettings.HeadgearBloodbound)
-			SetHeadgearBloodbound(true);
+		EntityQueryDesc itemQueryDesc = new()
+		{
+			All = new ComponentType[] {
+				new(Il2CppType.Of<InventoryItem>(), ComponentType.AccessMode.ReadWrite),
+				new(Il2CppType.Of<PrefabGUID>(), ComponentType.AccessMode.ReadWrite),
+				new(Il2CppType.Of<ItemData>(), ComponentType.AccessMode.ReadWrite),
+				new(Il2CppType.Of<EquippableData>(), ComponentType.AccessMode.ReadWrite),
+
+			},
+			Options = EntityQueryOptions.IncludeDisabled | EntityQueryOptions.IncludePrefab
+		};
+		itemQuery = Core.EntityManager.CreateEntityQuery(itemQueryDesc);
+
+		SetHeadgearBloodbound(Core.ConfigSettings.HeadgearBloodbound);
+		SetShardsRestricted(Core.ConfigSettings.SoulshardsFlightRestricted);
 	}
 
 	public bool ToggleHeadgearBloodbound()
@@ -35,5 +61,36 @@ internal class GearService
 
 			itemMap[headgear.Read<PrefabGUID>()] = itemData;
 		}
+	}
+
+	public bool ToggleShardsFlightRestricted()
+	{
+		Core.ConfigSettings.SoulshardsFlightRestricted = !Core.ConfigSettings.SoulshardsFlightRestricted;
+		SetShardsRestricted(Core.ConfigSettings.SoulshardsFlightRestricted);
+		return Core.ConfigSettings.SoulshardsFlightRestricted;
+	}
+
+	void SetShardsRestricted(bool shardsRestricted)
+	{
+		var newCategory = shardsRestricted ? ItemCategory.Soulshard : ItemCategory.Magic;
+		var itemMap = Core.GameDataSystem.ItemHashLookupMap;
+		foreach (var prefabGUID in shardPrefabs)
+		{
+			if (!itemMap.TryGetValue(prefabGUID, out var itemData)) continue;
+			
+			itemData.ItemCategory = newCategory;
+			itemMap[prefabGUID] = itemData;
+		}
+
+		var entities = itemQuery.ToEntityArray(Allocator.Temp);
+		foreach (var entity in entities)
+		{
+			if (!shardPrefabs.Contains(entity.Read<PrefabGUID>())) continue;
+
+			var itemData = entity.Read<ItemData>();
+			itemData.ItemCategory = newCategory;
+			entity.Write(itemData);
+		}
+		entities.Dispose();
 	}
 }

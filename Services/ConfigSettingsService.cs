@@ -31,6 +31,19 @@ internal class ConfigSettingsService
 		}
 	}
 
+	public bool SoulshardsFlightRestricted
+	{
+		get
+		{
+			return config.SoulshardsRestricted;
+		}
+		set
+		{
+			config.SoulshardsRestricted = value;
+			SaveConfig();
+		}
+	}
+
 	public int ItemDropLifetime
 	{
 		get
@@ -74,11 +87,13 @@ internal class ConfigSettingsService
 	{
 		public Config()
 		{
+			SoulshardsRestricted = true;
 			ItemDropLifetimeWhenDisabled = 300;
 		}
 
 		public bool RevealMapToAll { get; set; }
 		public bool HeadgearBloodbound { get; set; }
+		public bool SoulshardsRestricted { get; set; }
 		public int ItemDropLifetime { get; set; }
 		public int ItemDropLifetimeWhenDisabled { get; set; }
 		public int ShardDropLifetimeWhenDisabled { get; set; }
@@ -94,6 +109,7 @@ internal class ConfigSettingsService
 		Core.Log.LogInfo("Current settings");
 		Core.Log.LogInfo($"RevealMapToAll: {RevealMapToAll}");
 		Core.Log.LogInfo($"HeadgearBloodbound: {HeadgearBloodbound}");
+		Core.Log.LogInfo($"SoulshardsRestricted: {SoulshardsFlightRestricted}");
 		Core.Log.LogInfo($"ItemDropLifetime: {ItemDropLifetime}");
 		Core.Log.LogInfo($"ItemDropLifetimeWhenDisabled: {ItemDropLifetimeWhenDisabled}");
 		Core.Log.LogInfo($"ShardDropLifetimeWhenDisabled: {ShardDropLifetimeWhenDisabled}");

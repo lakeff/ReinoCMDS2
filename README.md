@@ -33,18 +33,18 @@ Feel free to reach out to me on discord (odjit) if you have any questions or nee
   - Shortcut: *.wai*
 - `.announce add (Name) (Message) (Time) (OneTime: True/False)`
   - Adds an announcement to the list of announcements. Time is server time. OneTime true will only do it once, false will repeat the announcement every day at the same time. (Default False)
-  - Example: *.announce add “Spooky” “It is the spooky hour!” 12:00AM false*
+  - Example: *.announce add Spooky “It is the spooky hour!” 12:00AM false*
   - Shortcut: *.announce a*
 - `.announce remove (Name)`
   - Removes an announcement from the list of announcements.
-  - Example: *.announce remove “Spooky”*
+  - Example: *.announce remove Spooky*
   - Shortcut: *.announce r*
 - `.announce list`
   - Lists all announcements. Soonest upcoming announcements are at the start of the list.
   - Shortcut: *.announce l*
 - `.announce change (Name) (Message) (Time) (OneTime: True/False)`
   - Changes an announcement in the list of announcements. Time is server time. OneTime true will only do it once, false will repeat the announcement every day at the same time. (Default False)
-  - Example: *.announce change “Spooky” “It is the spookiest hour!” 12:00AM false*
+  - Example: *.announce change Spooky “It is the spookiest hour!” 12:00AM false*
   - Shortcut: *.announce c*
 - `.unbindplayer (Name)`
   - Unbinds a steamID from a character. Useful for "deleting" a character. Old body, name, territory etc will still exist, but the character will be unplayable. Kicks affected player. When they log back, they will be prompted to create a new character.
@@ -62,9 +62,44 @@ Feel free to reach out to me on discord (odjit) if you have any questions or nee
   - will set the in game time to a day and hour. Basically controls what the sun is doing. Careful of effects on hearts and horses.
   - Example: *.settime 1 8*
 - `.gear headgear`
-  - will toggle Headgear being bloodbound or not on the server. (Wether or not it drops on death). Saves out to config file to persist through restarts.
+  - will toggle Headgear being bloodbound or not on the server. (Whether or not it drops on death). Saves out to config file to persist through restarts.
   - Example: *.gear headgear*
   - Shortcut: *.gear hg*
+- `.gear soulshards`
+  - will toggle Soul Shards being batbound or not on the server. (Whether or not you can fly with them). Saves out to config file to persist through restarts.
+  - Shortcut: *.gear ss*
+- `.dropitems lifetime (seconds)`
+  - will set the lifetime of dropped items while players are present to the seconds specified. Default is 300 seconds. This is a server wide setting, and will persist through restarts.Does not apply to shards or Player Containers.
+  - Example: *.dropitems lifetime 600*
+  - Shortcut: *.dropitems lt*
+- `.dropitems removelifetime`
+  - will remove the custom lifetime of dropped items, reverting to the default of 300 seconds. Does not apply to shards or Player Containers.
+  - Shortcut: *.dropitems rlt*
+- `.dropitems lifetimewhendisabled (seconds)`
+- will set the lifetime of dropped items when no one is around to the seconds specified. Default is 300 seconds. This is a server wide setting, and will persist through restarts. Does not apply to shards or Player Containers.
+  - Example: *.dropitems lifetimewhendisabled 600*
+  - Shortcut: *.dropitems ltwd*
+- `.dropitems clear (radius)`
+  - will clear all dropped items in a radius around you. Useful for cleaning up after a boss fight or a large event. Does not apply to shards or Player Containers.
+  - Example: *.dropitems clear 10*
+  - Shortcut: *.dropitems c*
+- `.dropitems clearall`
+  - will clear all dropped items on the map. 
+  - Shortcut: *.dropitems ca*
+- `.dropitems clearshards (radius)`
+  - Will clear all dropped shards in a radius around you. 
+  - Example: *.dropitems clearshards 10*
+  - Shortcut: *.dropitems cs*
+- `.dropitems clearallshards`
+  - Will clear all dropped shards on the map.
+  - Shortcut: *.dropitems cas*
+- `.dropitems shardlifetimewhendisabled (seconds)`
+  - Will set the lifetime of dropped shards when no one is around to the seconds specified. This is a server wide setting, and will persist through restarts
+  - Example: *.dropitems shardlifetimewhendisabled 600*
+  - shortcut: *.dropitems sltwd*
+- `.dropitems removeshardlifetimewhendisabled`
+  - Will remove the custom lifetime of dropped shards, reverting to the default.
+  - Shortcut: *.dropitems rsltwd*
 
 ### Spawning Commands
 - `.bloodpotion (Bloodtype) (Quality) (Amount)`
@@ -130,7 +165,7 @@ Feel free to reach out to me on discord (odjit) if you have any questions or nee
   - will toggle godmode off a player named, or the user if no one is named.	Also removes boosts.																							
   - Example: *.mortal Bob*
 - `.boost (Type) (Amount) (Player)`
-  - will boost a player's stats to the amount specified. Types with amounts are the following: attackspeed, damage, health, projectilespeed, projectilerange, speed, and yield. Types with no ammount and just add the player name: noaggro, noblooddrain, nocooldown, nodurability, immaterial, invincible, shrouded.
+  - will boost a player's stats to the amount specified. Types with amounts are the following: attackspeed, damage, health, projectilespeed, projectilerange, speed, and yield. Types with no ammount and just add the player name: noaggro, noblooddrain, nocooldown, nodurability, immaterial, invincible, shrouded. Remove via .mortal.
   - Example: *.boost damage 100 Bob*
   - Example: *.boost immaterial Bob*
 - `.spectate (Player)`

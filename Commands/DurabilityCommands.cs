@@ -38,6 +38,19 @@ internal static class DurabilityCommands
 			}
 		}
 
+		[Command("soulshards", "ss", description: "Toggles soulshard flight restrictions.", adminOnly: true)]
+		public static void SoulshardsFlightRestrictedCommand(ChatCommandContext ctx)
+		{
+			if (Core.GearService.ToggleShardsFlightRestricted())
+			{
+				ctx.Reply("Soulshards will not allowing flying.");
+			}
+			else
+			{
+				ctx.Reply("Soulshards will allow flying.");
+			}
+		}
+
 /*
 		[Command("showhair", "sh", description: "Toggles hair visibility.")]
 		public static void ShowHairCommand(ChatCommandContext ctx)
