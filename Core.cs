@@ -4,6 +4,7 @@ using KindredCommands.Services;
 using ProjectM;
 using ProjectM.Scripting;
 using Unity.Entities;
+using static ProjectM.DropItemThrowSystem;
 
 namespace KindredCommands;
 
@@ -26,6 +27,7 @@ internal static class Core
 	public static BossService Boss { get; internal set; }
 	public static CastleTerritoryService CastleTerritory { get; private set; }
 	public static ConfigSettingsService ConfigSettings { get; internal set; }
+	public static DropItemService DropItem { get; internal set; }
 	public static GearService GearService { get; internal set; }
 	public static PlayerService Players { get; internal set; }
 	public static PrefabService Prefabs { get; internal set; }
@@ -57,6 +59,7 @@ internal static class Core
 		BoostedPlayerService = new();
 		Boss = new();
 		CastleTerritory = new();
+		DropItem = new();
 		GearService = new();
 		Regions = new();
 		StealthAdminService = new();

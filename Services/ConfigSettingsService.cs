@@ -30,10 +30,44 @@ internal class ConfigSettingsService
 			SaveConfig();
 		}
 	}
+
+	public int ItemDropLifetime
+	{
+		get
+		{
+			return config.ItemDropLifetime;
+		}
+		set
+		{
+			config.ItemDropLifetime = value;
+			SaveConfig();
+		}
+	}
+
+	public int ItemDropLifetimeWhenDisabled
+	{
+		get
+		{
+			return config.ItemDropLifetimeWhenDisabled;
+		}
+		set
+		{
+			config.ItemDropLifetimeWhenDisabled = value;
+			SaveConfig();
+		}
+	}
+
 	struct Config
 	{
+		public Config()
+		{
+			ItemDropLifetimeWhenDisabled = 300;
+		}
+
 		public bool RevealMapToAll { get; set; }
 		public bool HeadgearBloodbound { get; set; }
+		public int ItemDropLifetime { get; set; }
+		public int ItemDropLifetimeWhenDisabled { get; set; }
 	}
 
 	Config config;
