@@ -57,6 +57,19 @@ internal class ConfigSettingsService
 		}
 	}
 
+	public int ShardDropLifetimeWhenDisabled
+	{
+		get
+		{
+			return config.ShardDropLifetimeWhenDisabled;
+		}
+		set
+		{
+			config.ShardDropLifetimeWhenDisabled = value;
+			SaveConfig();
+		}
+	}
+
 	struct Config
 	{
 		public Config()
@@ -68,6 +81,7 @@ internal class ConfigSettingsService
 		public bool HeadgearBloodbound { get; set; }
 		public int ItemDropLifetime { get; set; }
 		public int ItemDropLifetimeWhenDisabled { get; set; }
+		public int ShardDropLifetimeWhenDisabled { get; set; }
 	}
 
 	Config config;
@@ -75,6 +89,14 @@ internal class ConfigSettingsService
 	public ConfigSettingsService()
 	{
 		LoadConfig();
+
+		// Log out current settings
+		Core.Log.LogInfo("Current settings");
+		Core.Log.LogInfo($"RevealMapToAll: {RevealMapToAll}");
+		Core.Log.LogInfo($"HeadgearBloodbound: {HeadgearBloodbound}");
+		Core.Log.LogInfo($"ItemDropLifetime: {ItemDropLifetime}");
+		Core.Log.LogInfo($"ItemDropLifetimeWhenDisabled: {ItemDropLifetimeWhenDisabled}");
+		Core.Log.LogInfo($"ShardDropLifetimeWhenDisabled: {ShardDropLifetimeWhenDisabled}");
 	}
 
 	void LoadConfig()

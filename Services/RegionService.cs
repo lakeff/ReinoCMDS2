@@ -5,10 +5,8 @@ using System.IO;
 using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using BepInEx.Unity.IL2CPP.Utils.Collections;
 using ProjectM;
 using ProjectM.Network;
-using ProjectM.Physics;
 using ProjectM.Terrain;
 using Unity.Collections;
 using Unity.Entities;
@@ -23,9 +21,6 @@ internal class RegionService
 	static readonly string CONFIG_PATH = Path.Combine(BepInEx.Paths.ConfigPath, MyPluginInfo.PLUGIN_NAME);
 	static readonly string REGIONS_PATH = Path.Combine(CONFIG_PATH, "regions.json");
 	static readonly string MAXLEVELS_PATH = Path.Combine(CONFIG_PATH, "maxLevels.json");
-
-	GameObject regionGameObject;
-	IgnorePhysicsDebugSystem regionMonoBehaviour;
 
 	List<WorldRegionType> lockedRegions = [];
 	Dictionary<string, int> gatedRegions = [];
@@ -57,9 +52,6 @@ internal class RegionService
 
 	public RegionService()
 	{
-		regionGameObject = new GameObject("RegionService");
-		regionMonoBehaviour = regionGameObject.AddComponent<IgnorePhysicsDebugSystem>();
-
 		LoadRegions();
 
 		foreach (var worldRegionPolygonEntity in Helper.GetEntitiesByComponentType<WorldRegionPolygon>(true))
@@ -76,7 +68,7 @@ internal class RegionService
 				});
 		}
 
-		regionMonoBehaviour.StartCoroutine(CheckPlayerRegions().WrapToIl2Cpp());
+		Core.StartCoroutine(CheckPlayerRegions());
 	}
 
 	void LoadRegions()

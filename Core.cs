@@ -1,10 +1,13 @@
+using System.Collections;
 using System.Runtime.CompilerServices;
 using BepInEx.Logging;
+using BepInEx.Unity.IL2CPP.Utils.Collections;
 using KindredCommands.Services;
 using ProjectM;
+using ProjectM.Physics;
 using ProjectM.Scripting;
 using Unity.Entities;
-using static ProjectM.DropItemThrowSystem;
+using UnityEngine;
 
 namespace KindredCommands;
 
@@ -34,6 +37,8 @@ internal static class Core
 	public static RegionService Regions { get; internal set; }
 	public static StealthAdminService StealthAdminService { get; internal set; }
 	public static UnitSpawnerService UnitSpawner { get; internal set; }
+
+	static MonoBehaviour monoBehaviour;
 
 	public const int MAX_REPLY_LENGTH = 509;
 
@@ -83,5 +88,27 @@ internal static class Core
 		}
 
 		return null;
+	}
+
+	public static Coroutine StartCoroutine(IEnumerator routine)
+	{
+		if (monoBehaviour == null)
+		{
+			var go = new GameObject("KindredLogistics");
+			monoBehaviour = go.AddComponent<IgnorePhysicsDebugSystem>();
+			Object.DontDestroyOnLoad(go);
+		}
+
+		return monoBehaviour.StartCoroutine(routine.WrapToIl2Cpp());
+	}
+
+	public static void StopCoroutine(Coroutine coroutine)
+	{
+		if (monoBehaviour == null)
+		{
+			return;
+		}
+
+		monoBehaviour.StopCoroutine(coroutine);
 	}
 }

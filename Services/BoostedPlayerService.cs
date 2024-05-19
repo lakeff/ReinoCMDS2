@@ -1,13 +1,10 @@
 using System.Collections;
 using System.Collections.Generic;
-using BepInEx.Unity.IL2CPP.Utils.Collections;
 using KindredCommands.Data;
 using ProjectM;
 using ProjectM.Gameplay.Scripting;
-using ProjectM.Physics;
 using ProjectM.Scripting;
 using Unity.Entities;
-using UnityEngine;
 
 namespace KindredCommands.Services
 {
@@ -29,15 +26,6 @@ namespace KindredCommands.Services
 		readonly HashSet<Entity> immaterialPlayers = [];
 		readonly HashSet<Entity> invinciblePlayers = [];
 		readonly HashSet<Entity> shroudedPlayers = [];
-
-		GameObject boostedPlayerSvcGameObject;
-		IgnorePhysicsDebugSystem boostedPlayerMonoBehaviour;
-
-		public BoostedPlayerService()
-		{
-			boostedPlayerSvcGameObject = new GameObject("BoostedPlayerService");
-			boostedPlayerMonoBehaviour = boostedPlayerSvcGameObject.AddComponent<IgnorePhysicsDebugSystem>();
-		}
 
 		public bool IsBoostedPlayer(Entity charEntity)
 		{
@@ -77,7 +65,7 @@ namespace KindredCommands.Services
 				Buffs.AddBuff(userEntity, charEntity, Prefabs.EquipBuff_ShroudOfTheForest, -1, true);
 			}
 
-			boostedPlayerMonoBehaviour.StartCoroutine(RemoveAndAddCustomBuff(userEntity, charEntity).WrapToIl2Cpp());
+			Core.StartCoroutine(RemoveAndAddCustomBuff(userEntity, charEntity));
 		}
 
 		IEnumerator RemoveAndAddCustomBuff(Entity userEntity, Entity charEntity)

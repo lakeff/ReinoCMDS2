@@ -4,9 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
-using BepInEx.Unity.IL2CPP.Utils.Collections;
 using ProjectM;
-using ProjectM.Physics;
 using UnityEngine;
 
 namespace KindredCommands.Services;
@@ -27,21 +25,15 @@ class AnnouncementsService
 
 	Dictionary<string, Coroutine> announcementCoroutines = [];
 
-	GameObject announcementSvcGameObject;
-	IgnorePhysicsDebugSystem announcementMonoBehaviour;
-
 
 	public AnnouncementsService()
 	{
-		announcementSvcGameObject = new GameObject("AnnouncementService");
-		announcementMonoBehaviour = announcementSvcGameObject.AddComponent<IgnorePhysicsDebugSystem>();
-
 		LoadAnnoucements();
 	}
 
 	void ScheduleAnnouncement(Announcement announcement)
 	{
-		var coroutine = announcementMonoBehaviour.StartCoroutine(MessageCoroutine(announcement).WrapToIl2Cpp());
+		var coroutine = Core.StartCoroutine(MessageCoroutine(announcement));
 		if(coroutine != null)
 			announcementCoroutines[announcement.Name] = coroutine;
 	}
@@ -119,7 +111,7 @@ class AnnouncementsService
 			return true;
 		}
 		
-		announcementMonoBehaviour.StopCoroutine(coroutine);
+		Core.StopCoroutine(coroutine);
 		announcementCoroutines.Remove(name);
 		SaveAnnoucements();
 		return  true;
@@ -141,7 +133,7 @@ class AnnouncementsService
 
 			foreach (var coroutine in announcementCoroutines.Values)
 			{
-				announcementMonoBehaviour.StopCoroutine(coroutine);
+				Core.StopCoroutine(coroutine);
 			}
 			announcementCoroutines.Clear();
 			

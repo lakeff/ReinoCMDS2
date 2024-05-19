@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using Il2CppInterop.Runtime;
 using KindredCommands.Data;
@@ -9,14 +10,19 @@ using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
+using UnityEngine;
 
 namespace KindredCommands.Services;
 internal class DropItemService
 {
+	const int SHARD_DISABLED_LEEWAY = 300;
+
 	EntityQuery dropItemQuery;
 	EntityQuery dropItemWithPrefabQuery;
 	EntityQuery dropShardQuery;
-	EntityQuery shardMapIconQuery;
+	EntityQuery dropShardWithPrefabQuery;
+
+	Coroutine checkDroppedShardsForRemovalCoroutine;
 
 	public DropItemService()
 	{
@@ -52,35 +58,35 @@ internal class DropItemService
 			None = new ComponentType[]
 			{
 				new(Il2CppType.Of<AttachedBuffer>(), ComponentType.AccessMode.ReadOnly),
-				new(Il2CppType.Of<DestroyWhenNoCharacterNearbyAfterDuration>(), ComponentType.AccessMode.ReadWrite),
 			},
 			Options = EntityQueryOptions.IncludeDisabled
 		};
 		dropShardQuery = Core.EntityManager.CreateEntityQuery(dropShardQueryDesc);
 
-		EntityQueryDesc shardMapIconQueryDesc = new()
-		{
-			All = new ComponentType[]
-			{
-				new(Il2CppType.Of<Attach>(), ComponentType.AccessMode.ReadWrite),
-				new(Il2CppType.Of<RelicMapIcon>(), ComponentType.AccessMode.ReadWrite),
-			},
-			None = new ComponentType[]
-			{
-				new(Il2CppType.Of<AttachedBuffer>(), ComponentType.AccessMode.ReadOnly),
-			},
-			Options = EntityQueryOptions.IncludeDisabled
-		};
-		shardMapIconQuery = Core.EntityManager.CreateEntityQuery(shardMapIconQueryDesc);
+		dropShardQueryDesc.Options |= EntityQueryOptions.IncludePrefab;
+		dropShardWithPrefabQuery = Core.EntityManager.CreateEntityQuery(dropShardQueryDesc);
 
 		if (Core.ConfigSettings.ItemDropLifetime > 0)
 		{
-			SetDroppedItemLifetime(Core.ConfigSettings.ItemDropLifetime);
+			SetDroppedItemLifetimeNoSave(Core.ConfigSettings.ItemDropLifetime);
+		}
+		else
+		{
+			RemoveDroppedItemLifetimeNoSave();
 		}
 
 		if(Core.ConfigSettings.ItemDropLifetimeWhenDisabled > 0)
 		{
-			SetDroppedItemLifetimeWhenDisabled(Core.ConfigSettings.ItemDropLifetimeWhenDisabled);
+			SetDroppedItemLifetimeWhenDisabledNoSave(Core.ConfigSettings.ItemDropLifetimeWhenDisabled);
+		}
+
+		if (Core.ConfigSettings.ShardDropLifetimeWhenDisabled > 0)
+		{
+			SetDroppedShardLifetimeWhenDisabledNoSave(Core.ConfigSettings.ShardDropLifetimeWhenDisabled);
+		}
+		else
+		{
+			RemoveDroppedShardLifetimeWhenDisabledNoSave();
 		}
 	}
 
@@ -89,6 +95,8 @@ internal class DropItemService
 		var entities = dropItemQuery.ToEntityArray(Allocator.Temp);
 		foreach (var entity in entities)
 		{
+			var prefabGuid = entity.Read<PrefabGUID>();
+			if (prefabGuid == Prefabs.Resource_Drop_SoulShard) continue;
 			yield return entity;
 		}
 		entities.Dispose();
@@ -99,6 +107,8 @@ internal class DropItemService
 		var entities = dropItemWithPrefabQuery.ToEntityArray(Allocator.Temp);
 		foreach (var entity in entities)
 		{
+			var prefabGuid = entity.Read<PrefabGUID>();
+			if (prefabGuid == Prefabs.Resource_Drop_SoulShard) continue;
 			yield return entity;
 		}
 		entities.Dispose();
@@ -115,12 +125,13 @@ internal class DropItemService
 		}
 		entities.Dispose();
 	}
-
-	IEnumerable<Entity> GetShardMapIcons()
+	IEnumerable<Entity> GetDropShardsWithPrefabs()
 	{
-		var entities = shardMapIconQuery.ToEntityArray(Allocator.Temp);
+		var entities = dropShardWithPrefabQuery.ToEntityArray(Allocator.Temp);
 		foreach (var entity in entities)
 		{
+			var prefabGuid = entity.Read<PrefabGUID>();
+			if (prefabGuid != Prefabs.Resource_Drop_SoulShard) continue;
 			yield return entity;
 		}
 		entities.Dispose();
@@ -159,7 +170,6 @@ internal class DropItemService
 
 	public int ClearDropShards(Func<Entity, bool> shouldClear=null)
 	{
-		var shardsItemsDestroyed = new List<Entity>();
 		var count = 0;
 		foreach (var entity in GetDropShards())
 		{
@@ -169,22 +179,22 @@ internal class DropItemService
 				foreach (var item in inventory)
 				{
 					if (item.ItemEntity.GetEntityOnServer() == Entity.Null) continue;
-					shardsItemsDestroyed.Add(item.ItemEntity.GetEntityOnServer());
+
+					if(Core.EntityManager.TryGetBuffer<AttachedBuffer>(item.ItemEntity.GetEntityOnServer(), out var attachedBuffer))
+					{
+						foreach (var attached in attachedBuffer)
+						{
+							Core.Log.LogInfo($"Destroying attached entity {attached.Entity.Read<PrefabGUID>().LookupName()}");
+							DestroyUtility.Destroy(Core.EntityManager, attached.Entity);
+						}
+					}
+
 					DestroyUtility.Destroy(Core.EntityManager, item.ItemEntity.GetEntityOnServer());
 				}
 			}
 
 			DestroyUtility.Destroy(Core.EntityManager, entity);
 			count++;
-		}
-
-		foreach (var mapIcon in GetShardMapIcons())
-		{
-			var attached = mapIcon.Read<Attach>().Parent;
-			if (shardsItemsDestroyed.Contains(attached))
-			{
-				DestroyUtility.Destroy(Core.EntityManager, mapIcon);
-			}
 		}
 
 		return count;
@@ -205,7 +215,11 @@ internal class DropItemService
 		if (seconds <= 0) return;
 
 		Core.ConfigSettings.ItemDropLifetime = seconds;
+		SetDroppedItemLifetimeNoSave(seconds);
+	}
 
+	void SetDroppedItemLifetimeNoSave(int seconds)
+	{
 		foreach (var entity in GetDropItemsWithPrefabs())
 		{
 			if(!entity.Has<Age>())
@@ -227,7 +241,11 @@ internal class DropItemService
 	public void RemoveDroppedItemLifetime()
 	{
 		Core.ConfigSettings.ItemDropLifetime = 0;
+		RemoveDroppedItemLifetimeNoSave();
+	}
 
+	void RemoveDroppedItemLifetimeNoSave()
+	{
 		foreach (var entity in GetDropItemsWithPrefabs())
 		{
 			if (entity.Has<Age>())
@@ -241,17 +259,94 @@ internal class DropItemService
 	{
 		if (seconds <= 0) return;
 
-		Core.ConfigSettings.ItemDropLifetime = seconds;
-		var maxRemoveAtTime = Core.ServerTime + seconds;
+		Core.ConfigSettings.ItemDropLifetimeWhenDisabled = seconds;
+		SetDroppedItemLifetimeWhenDisabledNoSave(seconds);
+	}
 
+	void SetDroppedItemLifetimeWhenDisabledNoSave(int seconds)
+	{
+		var maxRemoveAtTime = Core.ServerTime + seconds;
 		foreach (var entity in GetDropItemsWithPrefabs())
 		{
 			var dwncnad = entity.Read<DestroyWhenNoCharacterNearbyAfterDuration>();
-			if(dwncnad.RemoveAtTime > maxRemoveAtTime)
+			if (entity.Has<Prefab>())
+				dwncnad.RemoveAtTime = seconds;
+			else if (dwncnad.RemoveAtTime > maxRemoveAtTime)
 				dwncnad.RemoveAtTime = maxRemoveAtTime;
 			dwncnad.MinimumRemoveDurationIfNearby = seconds;
 			entity.Write(dwncnad);
 		}
 	}
 
+	public void SetDroppedShardLifetimeWhenDisabled(int seconds)
+	{
+		if (seconds <= 0) return;
+
+		Core.ConfigSettings.ShardDropLifetimeWhenDisabled = seconds;
+		SetDroppedShardLifetimeWhenDisabledNoSave(seconds);
+	}
+
+	void SetDroppedShardLifetimeWhenDisabledNoSave(int seconds)
+	{
+		seconds += SHARD_DISABLED_LEEWAY;
+		var maxRemoveAtTime = Core.ServerTime + seconds;
+		foreach (var entity in GetDropShardsWithPrefabs())
+		{
+			var dwncnad = new DestroyWhenNoCharacterNearbyAfterDuration()
+			{
+				RemoveAtTime = maxRemoveAtTime
+			};
+			
+			if (entity.Has<DestroyWhenNoCharacterNearbyAfterDuration>())
+				dwncnad = entity.Read<DestroyWhenNoCharacterNearbyAfterDuration>();
+			else
+				entity.Add<DestroyWhenNoCharacterNearbyAfterDuration>();
+
+			if (entity.Has<Prefab>())
+				dwncnad.RemoveAtTime = seconds;
+			else if (dwncnad.RemoveAtTime > maxRemoveAtTime)
+				dwncnad.RemoveAtTime = maxRemoveAtTime;
+			dwncnad.MinimumRemoveDurationIfNearby = seconds;
+			entity.Write(dwncnad);
+		}
+
+		if (checkDroppedShardsForRemovalCoroutine == null)
+			checkDroppedShardsForRemovalCoroutine = Core.StartCoroutine(CheckDroppedShardsForRemoval());
+	}
+
+	public void RemoveDroppedShardLifetimeWhenDisabled()
+	{
+		Core.ConfigSettings.ShardDropLifetimeWhenDisabled = 0;
+		RemoveDroppedShardLifetimeWhenDisabledNoSave();
+	}
+
+	void RemoveDroppedShardLifetimeWhenDisabledNoSave()
+	{
+		foreach (var entity in GetDropShardsWithPrefabs())
+		{
+			if(entity.Has<DestroyWhenNoCharacterNearbyAfterDuration>())
+				entity.Remove<DestroyWhenNoCharacterNearbyAfterDuration>();
+		}
+	}
+
+	IEnumerator CheckDroppedShardsForRemoval()
+	{
+		var waitForOneSecond = new WaitForSeconds(1);
+		yield return waitForOneSecond;
+		while (Core.ConfigSettings.ShardDropLifetimeWhenDisabled > 0)
+		{
+			var serverTime = Core.ServerTime;
+			ClearDropShards(entity =>
+			{
+				if (entity.Has<DestroyWhenNoCharacterNearbyAfterDuration>())
+				{
+					var dwncnad = entity.Read<DestroyWhenNoCharacterNearbyAfterDuration>();
+					return dwncnad.RemoveAtTime - SHARD_DISABLED_LEEWAY <= serverTime;
+				}
+				return false;
+			});
+			yield return waitForOneSecond;
+		}
+		checkDroppedShardsForRemovalCoroutine = null;
+	}
 }
