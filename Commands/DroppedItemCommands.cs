@@ -1,8 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Unity.Transforms;
 using VampireCommandFramework;
 
@@ -12,7 +7,7 @@ namespace KindredCommands.Commands;
 internal class DroppedItemCommands
 {
 	//reduce the time a dropped item stays on the ground
-	[Command("lifetime", "lt", ".dropitems lifetime <seconds>", "Sets the lifetime of dropped items in seconds.", adminOnly: true)]
+	[Command("lifetime", "lt", description: "Sets the lifetime of dropped items in seconds.", adminOnly: true)]
 	public static void SetDroppedItemLifetime(ChatCommandContext ctx, int seconds)
 	{
 		if (seconds < 0)
@@ -23,14 +18,14 @@ internal class DroppedItemCommands
 		ctx.Reply($"Dropped item lifetime set to {seconds} seconds.");
 	}
 
-	[Command("removelifetime", "rlt", ".dropitems removelifetime", "Removes the lifetime of dropped items.", adminOnly: true)]
+	[Command("removelifetime", "rlt", description:"Removes the lifetime of dropped items.", adminOnly: true)]
 	public static void RemoveDroppedItemLifetime(ChatCommandContext ctx)
 	{
 		Core.DropItem.RemoveDroppedItemLifetime();
 		ctx.Reply("Dropped item lifetime removed.");
 	}
 
-	[Command("lifetimewhendisabled", "ltwd", ".dropitems lifetimewhendisabled <seconds=300>", "Sets the lifetime of dropped items when disabled in seconds.", adminOnly: true)]
+	[Command("lifetimewhendisabled", "ltwd", description:"Sets the lifetime of dropped items when disabled in seconds.", adminOnly: true)]
 	public static void SetDroppedItemLifetimeWhenDisabled(ChatCommandContext ctx, int seconds=300)
 	{
 		if (seconds < 0)
@@ -41,7 +36,7 @@ internal class DroppedItemCommands
 		ctx.Reply($"Dropped item lifetime when disabled set to {seconds} seconds.");
 	}
 
-	[Command("shardlifetimewhendisabled", "sltwd", ".dropitems shardlifetimewhendisabled <seconds=3600>", "Sets the lifetime of dropped shards when disabled in seconds.", adminOnly: true)]
+	[Command("shardlifetimewhendisabled", "sltwd", description: "Sets the lifetime of dropped shards when disabled in seconds.", adminOnly: true)]
 	public static void SetDroppedShardLifetimeWhenDisabled(ChatCommandContext ctx, int seconds=3600)
 	{
 		if (seconds < 0)
@@ -52,7 +47,7 @@ internal class DroppedItemCommands
 		ctx.Reply($"Dropped shard lifetime when disabled set to {seconds} seconds.");
 	}
 
-	[Command("removeshardlifetimewhendisabled", "rltwd", ".dropitems removeshardlifetimewhendisabled", "Removes the lifetime of dropped shards when disabled.", adminOnly: true)]
+	[Command("removeshardlifetimewhendisabled", "rltwd", description: "Removes the lifetime of dropped shards when disabled.", adminOnly: true)]
 	public static void RemoveDroppedShardLifetimeWhenDisabled(ChatCommandContext ctx)
 	{
 		Core.DropItem.RemoveDroppedShardLifetimeWhenDisabled();
@@ -60,7 +55,7 @@ internal class DroppedItemCommands
 	}
 
 	//remove dropped items around the player in a radius
-	[Command("clear", "c", ".dropitems clear <radius>", "Clears all dropped items within a radius of the player.", adminOnly: true)]
+	[Command("clear", "c", description: "Clears all dropped items within a radius of the player.", adminOnly: true)]
 	public static void ClearDroppedItems(ChatCommandContext ctx, float radius)
 	{
 		var pos = ctx.Event.SenderCharacterEntity.Read<Translation>().Value;
@@ -68,14 +63,14 @@ internal class DroppedItemCommands
 		ctx.Reply($"Cleared {cleared}x dropped items within a radius of {radius}.");
 	}
 
-	[Command("clearall", "ca", ".dropitems clearall", "Clears all dropped items in the world.", adminOnly: true)]
+	[Command("clearall", "ca", description: "Clears all dropped items in the world.", adminOnly: true)]
 	public static void ClearAllDroppedItems(ChatCommandContext ctx)
 	{
 		var cleared = Core.DropItem.ClearDropItems();
 		ctx.Reply($"Cleared all {cleared} dropped items in the world.");
 	}
 
-	[Command("clearshards", "cs", ".dropitems clearshards <radius>", "Clears all dropped shards within a radius of the player.", adminOnly: true)]
+	[Command("clearshards", "cs", description: "Clears all dropped shards within a radius of the player.", adminOnly: true)]
 	public static void ClearDroppedShards(ChatCommandContext ctx, float radius)
 	{
 		var pos = ctx.Event.SenderCharacterEntity.Read<Translation>().Value;
@@ -83,7 +78,7 @@ internal class DroppedItemCommands
 		ctx.Reply($"Cleared {cleared} dropped shards within a radius of {radius}.");
 	}
 
-	[Command("clearallshards", "cas", ".dropitems clearallshards", "Clears all dropped shards in the world.", adminOnly: true)]
+	[Command("clearallshards", "cas", description: "Clears all dropped shards in the world.", adminOnly: true)]
 	public static void ClearAllDroppedShards(ChatCommandContext ctx)
 	{
 		var cleared = Core.DropItem.ClearDropShards();
