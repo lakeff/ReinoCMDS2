@@ -76,7 +76,7 @@ Feel free to reach out to me on discord (odjit) if you have any questions or nee
   - will remove the custom lifetime of dropped items, reverting to the default of 300 seconds. Does not apply to shards or Player Containers.
   - Shortcut: *.dropitems rlt*
 - `.dropitems lifetimewhendisabled (seconds)`
-- will set the lifetime of dropped items when no one is around to the seconds specified. Default is 300 seconds. This is a server wide setting, and will persist through restarts. Does not apply to shards or Player Containers.
+  - will set the lifetime of dropped items when no one is around to the seconds specified. Default is 300 seconds. This is a server wide setting, and will persist through restarts. Does not apply to shards or Player Containers.
   - Example: *.dropitems lifetimewhendisabled 600*
   - Shortcut: *.dropitems ltwd*
 - `.dropitems clear (radius)`
