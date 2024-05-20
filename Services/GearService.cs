@@ -3,7 +3,6 @@ using System.Linq;
 using Il2CppInterop.Runtime;
 using KindredCommands.Data;
 using ProjectM;
-using ProjectM.Scripting;
 using Stunlock.Core;
 using Unity.Collections;
 using Unity.Entities;
