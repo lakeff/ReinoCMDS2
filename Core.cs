@@ -94,7 +94,7 @@ internal static class Core
 	{
 		if (monoBehaviour == null)
 		{
-			var go = new GameObject("KindredLogistics");
+			var go = new GameObject("KindredCommands");
 			monoBehaviour = go.AddComponent<IgnorePhysicsDebugSystem>();
 			Object.DontDestroyOnLoad(go);
 		}

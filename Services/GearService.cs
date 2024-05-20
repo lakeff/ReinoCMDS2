@@ -3,6 +3,7 @@ using System.Linq;
 using Il2CppInterop.Runtime;
 using KindredCommands.Data;
 using ProjectM;
+using ProjectM.Scripting;
 using Stunlock.Core;
 using Unity.Collections;
 using Unity.Entities;
@@ -36,7 +37,6 @@ internal class GearService
 		itemQuery = Core.EntityManager.CreateEntityQuery(itemQueryDesc);
 
 		SetHeadgearBloodbound(Core.ConfigSettings.HeadgearBloodbound);
-		SetShardsRestricted(Core.ConfigSettings.SoulshardsFlightRestricted);
 	}
 
 	public bool ToggleHeadgearBloodbound()
@@ -66,11 +66,10 @@ internal class GearService
 	public bool ToggleShardsFlightRestricted()
 	{
 		Core.ConfigSettings.SoulshardsFlightRestricted = !Core.ConfigSettings.SoulshardsFlightRestricted;
-		SetShardsRestricted(Core.ConfigSettings.SoulshardsFlightRestricted);
 		return Core.ConfigSettings.SoulshardsFlightRestricted;
 	}
 
-	void SetShardsRestricted(bool shardsRestricted)
+	public void SetShardsRestricted(bool shardsRestricted)
 	{
 		var newCategory = shardsRestricted ? ItemCategory.Soulshard : ItemCategory.Magic;
 		var itemMap = Core.GameDataSystem.ItemHashLookupMap;
