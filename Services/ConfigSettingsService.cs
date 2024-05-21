@@ -83,12 +83,26 @@ internal class ConfigSettingsService
 		}
 	}
 
+	public int ShardDropLimit
+	{
+		get
+		{
+			return config.ShardDropLimit;
+		}
+		set
+		{
+			config.ShardDropLimit = value;
+			SaveConfig();
+		}
+	}
+
 	struct Config
 	{
 		public Config()
 		{
 			SoulshardsRestricted = true;
 			ItemDropLifetimeWhenDisabled = 300;
+			ShardDropLimit = 1;
 		}
 
 		public bool RevealMapToAll { get; set; }
@@ -97,6 +111,7 @@ internal class ConfigSettingsService
 		public int ItemDropLifetime { get; set; }
 		public int ItemDropLifetimeWhenDisabled { get; set; }
 		public int ShardDropLifetimeWhenDisabled { get; set; }
+		public int ShardDropLimit { get; set; }
 	}
 
 	Config config;
@@ -113,6 +128,7 @@ internal class ConfigSettingsService
 		Core.Log.LogInfo($"ItemDropLifetime: {ItemDropLifetime}");
 		Core.Log.LogInfo($"ItemDropLifetimeWhenDisabled: {ItemDropLifetimeWhenDisabled}");
 		Core.Log.LogInfo($"ShardDropLifetimeWhenDisabled: {ShardDropLifetimeWhenDisabled}");
+		Core.Log.LogInfo($"ShardDropLimit: {ShardDropLimit}");
 	}
 
 	void LoadConfig()

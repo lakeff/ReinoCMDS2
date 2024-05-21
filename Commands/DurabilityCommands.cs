@@ -1,5 +1,7 @@
+using System.Text;
 using KindredCommands.Commands.Converters;
 using ProjectM;
+using ProjectM.Shared;
 using VampireCommandFramework;
 
 namespace KindredCommands.Commands;
@@ -38,7 +40,7 @@ internal static class DurabilityCommands
 			}
 		}
 
-		[Command("soulshards", "ss", description: "Toggles soulshard flight restrictions.", adminOnly: true)]
+		[Command("soulshardflight", "ssf", description: "Toggles soulshard flight restrictions.", adminOnly: true)]
 		public static void SoulshardsFlightRestrictedCommand(ChatCommandContext ctx)
 		{
 			if (Core.GearService.ToggleShardsFlightRestricted())
@@ -49,6 +51,35 @@ internal static class DurabilityCommands
 			{
 				ctx.Reply("Soulshards will allow flying.");
 			}
+		}
+
+		[Command("soulshardlimit", "ssl", description: "How many soulshards can be dropped before a boss won't drop a new one if the relic Unique setting is active.", adminOnly: true)]
+		public static void SoulshardLimitCommand(ChatCommandContext ctx, int limit)
+		{
+			if (limit < 0)
+			{
+				throw ctx.Error("Limit must be zero or greater.");
+			}
+			Core.SoulshardService.SetShardDropLimit(limit);
+			ctx.Reply($"Soulshard limit set to {limit}.");
+		}
+
+		[Command("soulshardstatus", "sss", description: "Reports the current status of soulshards.", adminOnly: true)]
+		public static void SoulshardStatusCommand(ChatCommandContext ctx)
+		{
+			var sb = new StringBuilder();
+			var soulshardStatus = Core.SoulshardService.GetSoulshardStatus();
+			sb.AppendLine($"Soulshards flight restricted: {Core.ConfigSettings.SoulshardsFlightRestricted}");
+			sb.AppendLine($"Soulshard drop limit: {Core.SoulshardService.ShardDropLimit}");
+			var theMonster = soulshardStatus[(int)RelicType.TheMonster];
+			var solarus = soulshardStatus[(int)RelicType.Solarus];
+			var wingedHorror = soulshardStatus[(int)RelicType.WingedHorror];
+			var dracula = soulshardStatus[(int)RelicType.Dracula];
+			sb.AppendLine($"Soulshard The Monster: {theMonster.droppedCount}x dropped {theMonster.spawnedCount}x spawned {(theMonster.willDrop ? "and will drop" : "and won't drop")}");
+			sb.AppendLine($"Soulshard Solarus: {solarus.droppedCount}x dropped {solarus.spawnedCount}x spawned {(solarus.willDrop ? "and will drop" : "and won't drop")}");
+			sb.AppendLine($"Soulshard Winged Horror: {wingedHorror.droppedCount}x dropped {wingedHorror.spawnedCount}x spawned {(wingedHorror.willDrop ? "and will drop" : "and won't drop")}");
+			sb.AppendLine($"Soulshard Dracula: {dracula.droppedCount}x dropped {dracula.spawnedCount}x spawned {(dracula.willDrop ? "and will drop" : "and won't drop")}");
+			ctx.Reply(sb.ToString());
 		}
 
 /*

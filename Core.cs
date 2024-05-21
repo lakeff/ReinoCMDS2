@@ -13,11 +13,13 @@ namespace KindredCommands;
 
 internal static class Core
 {
+
 	public static World Server { get; } = GetWorld("Server") ?? throw new System.Exception("There is no Server world (yet). Did you install a server mod on the client?");
 
 	public static EntityManager EntityManager { get; } = Server.EntityManager;
 	public static GameDataSystem GameDataSystem { get; } = Server.GetExistingSystemManaged<GameDataSystem>();
 	public static PrefabCollectionSystem PrefabCollectionSystem { get; internal set; }
+	public static RelicDestroySystem RelicDestroySystem { get; internal set; }
 	public static ServerScriptMapper ServerScriptMapper { get; internal set; }
 	public static double ServerTime => ServerGameManager.ServerTime;
 	public static ServerGameManager ServerGameManager => ServerScriptMapper.GetServerGameManager();
@@ -35,6 +37,7 @@ internal static class Core
 	public static PlayerService Players { get; internal set; }
 	public static PrefabService Prefabs { get; internal set; }
 	public static RegionService Regions { get; internal set; }
+	public static SoulshardService SoulshardService { get; internal set; }
 	public static StealthAdminService StealthAdminService { get; internal set; }
 	public static UnitSpawnerService UnitSpawner { get; internal set; }
 
@@ -53,6 +56,7 @@ internal static class Core
 		if (_hasInitialized) return;
 
 		PrefabCollectionSystem = Server.GetExistingSystemManaged<PrefabCollectionSystem>();
+		RelicDestroySystem = Server.GetExistingSystemManaged<RelicDestroySystem>();
 		ServerGameSettingsSystem = Server.GetExistingSystemManaged<ServerGameSettingsSystem>();
 		ServerScriptMapper = Server.GetExistingSystemManaged<ServerScriptMapper>();
 
@@ -67,6 +71,7 @@ internal static class Core
 		DropItem = new();
 		GearService = new();
 		Regions = new();
+		SoulshardService = new();
 		StealthAdminService = new();
 		UnitSpawner = new();
 
