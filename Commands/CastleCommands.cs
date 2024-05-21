@@ -112,7 +112,7 @@ internal class CastleCommands
 	{
 		var castleHeartComponent = castleHeart.Read<CastleHeart>();
 
-		var secondsPerFuel = 8 * 60 * Core.ServerGameSettingsSystem.Settings.CastleBloodEssenceDrainModifier;
+		var secondsPerFuel = (8 * 60)/ Mathf.Min(Core.ServerGameSettingsSystem.Settings.CastleBloodEssenceDrainModifier, 3);
 		return (castleHeartComponent.FuelEndTime - Core.ServerTime) + secondsPerFuel * castleHeartComponent.FuelQuantity;
 	}
 
