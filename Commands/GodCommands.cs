@@ -235,6 +235,21 @@ internal class GodCommands
 			ctx.Reply($"Speed on <color=white>{name}</color> set to {speed}");
 		}
 
+		[Command("removespeed", "rs", adminOnly: true)]
+		public static void RemoveSpeed(ChatCommandContext ctx, OnlinePlayer player = null)
+		{
+			var name = player?.Value.UserEntity.Read<User>().CharacterName ?? ctx.Event.User.CharacterName;
+			var charEntity = player?.Value.CharEntity ?? ctx.Event.SenderCharacterEntity;
+
+			if (Core.BoostedPlayerService.RemoveSpeedBoost(charEntity))
+			{
+				ctx.Reply($"<color=white>{name}</color> does not have speed boost");
+				return;
+			}
+			Core.BoostedPlayerService.UpdateBoostedPlayer(charEntity);
+			ctx.Reply($"Speed boost removed from <color=white>{name}</color>");
+		}
+
 		[Command("yield", "y", adminOnly: true)]
 		public static void Yield(ChatCommandContext ctx, float yield = 10, OnlinePlayer player = null)
 		{
