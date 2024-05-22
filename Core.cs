@@ -39,6 +39,7 @@ internal static class Core
 	public static RegionService Regions { get; internal set; }
 	public static SoulshardService SoulshardService { get; internal set; }
 	public static StealthAdminService StealthAdminService { get; internal set; }
+	public static TrackPlayerEquipmentService TrackPlayerEquipment { get; internal set; }
 	public static UnitSpawnerService UnitSpawner { get; internal set; }
 
 	static MonoBehaviour monoBehaviour;
@@ -49,7 +50,6 @@ internal static class Core
 	{
 		Core.Log.LogError($"Failure in {caller}\nMessage: {e.Message} Inner:{e.InnerException?.Message}\n\nStack: {e.StackTrace}\nInner Stack: {e.InnerException?.StackTrace}");
 	}
-
 
 	internal static void InitializeAfterLoaded()
 	{
@@ -73,6 +73,7 @@ internal static class Core
 		Regions = new();
 		SoulshardService = new();
 		StealthAdminService = new();
+		TrackPlayerEquipment = new();
 		UnitSpawner = new();
 
 		Data.Character.Populate();

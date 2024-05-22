@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Text;
 using KindredCommands.Commands.Converters;
 using KindredCommands.Data;
 using ProjectM;
@@ -18,24 +19,23 @@ internal class GodCommands
 		var userEntity = player?.Value.UserEntity ?? ctx.Event.SenderUserEntity;
 		var charEntity = player?.Value.CharEntity ?? ctx.Event.SenderCharacterEntity;
 
+		Core.BoostedPlayerService.RemoveBoostedPlayer(charEntity);
 		Core.BoostedPlayerService.SetAttackSpeedMultiplier(charEntity, 10f);
 		Core.BoostedPlayerService.SetDamageBoost(charEntity, 10000f);
 		Core.BoostedPlayerService.SetHealthBoost(charEntity, 100000);
-		//Core.BoostedPlayerService.SetProjectileSpeedMultiplier(charEntity, 10f);
-		//Core.BoostedPlayerService.SetProjectileRangeMultiplier(charEntity, 10f);
-		Core.BoostedPlayerService.SetSpeedBoost(charEntity, DEFAULT_FAST_SPEED);
+		Core.BoostedPlayerService.RemoveSpeedBoost(charEntity);
 		Core.BoostedPlayerService.SetYieldMultiplier(charEntity, 10f);
-		Core.BoostedPlayerService.AddNoAggro(charEntity);
-		Core.BoostedPlayerService.AddNoBlooddrain(charEntity);
-		Core.BoostedPlayerService.AddNoCooldown(charEntity);
-		Core.BoostedPlayerService.AddNoDurability(charEntity);
-		Core.BoostedPlayerService.AddPlayerImmaterial(charEntity);
-		Core.BoostedPlayerService.AddPlayerInvincible(charEntity);
-		Core.BoostedPlayerService.AddPlayerShrouded(charEntity);
+		Core.BoostedPlayerService.ToggleNoAggro(charEntity);
+		Core.BoostedPlayerService.ToggleNoBlooddrain(charEntity);
+		Core.BoostedPlayerService.ToggleNoCooldown(charEntity);
+		Core.BoostedPlayerService.ToggleNoDurability(charEntity);
+		Core.BoostedPlayerService.TogglePlayerImmaterial(charEntity);
+		Core.BoostedPlayerService.TogglePlayerInvincible(charEntity);
+		Core.BoostedPlayerService.TogglePlayerShrouded(charEntity);
 		Core.BoostedPlayerService.UpdateBoostedPlayer(charEntity);
 
 		var name = player?.Value.UserEntity.Read<User>().CharacterName ?? ctx.Event.User.CharacterName;
-		ctx.Reply($"God mode added to {name}");
+		ctx.Reply($"God mode added to <color=white>{name}</color>");
 	}
 
 	[Command("mortal", adminOnly: true)]
@@ -48,7 +48,7 @@ internal class GodCommands
 		Core.BoostedPlayerService.RemoveBoostedPlayer(charEntity);
 
 		var name = player?.Value.UserEntity.Read<User>().CharacterName ?? ctx.Event.User.CharacterName;
-		ctx.Reply($"God mode and boosts removed from {name}");
+		ctx.Reply($"God mode and boosts removed from <color=white>{name}</color>");
 	}
 
 	static Dictionary<string, Vector3> positionBeforeSpectate = [];
@@ -71,14 +71,14 @@ internal class GodCommands
 			}
 			positionBeforeSpectate.Remove(name.ToString());
 			Buffs.RemoveBuff(charEntity, Prefabs.Admin_Observe_Invisible_Buff);
-			ctx.Reply($"Spectate removed from {name}");
+			ctx.Reply($"<color=yellow>Spectate</color> removed from <color=white>{name}</color>");
 		}
 		else
 		{
 
 			Buffs.AddBuff(userEntity, charEntity, Prefabs.Admin_Observe_Invisible_Buff, -1);
 			positionBeforeSpectate.Add(name.ToString(), charEntity.Read<Translation>().Value);
-			ctx.Reply($"Spectate added to {name}");
+			ctx.Reply($"<color=yellow>Spectate</color> added to <color=white>{name}</color>");
 		}
 	}
 
@@ -86,6 +86,65 @@ internal class GodCommands
 	[CommandGroup("boost", "bst")]
 	internal class BoostedCommands
 	{
+		[Command("state", adminOnly: true)]
+		public static void BoostState(ChatCommandContext ctx, OnlinePlayer player = null)
+		{
+			var charEntity = player?.Value.CharEntity ?? ctx.Event.SenderCharacterEntity;
+			var name = player?.Value.UserEntity.Read<User>().CharacterName ?? ctx.Event.User.CharacterName;
+
+			if (Core.BoostedPlayerService.IsBoostedPlayer(charEntity))
+			{
+				var sb = new StringBuilder();
+				sb.AppendLine($"<color=white>{name}</color> is boosted");
+				var attackSpeedSet = Core.BoostedPlayerService.GetAttackSpeedMultiplier(charEntity, out var attackSpeed);
+				var damageSet = Core.BoostedPlayerService.GetDamageBoost(charEntity, out var damage);
+				var healthSet = Core.BoostedPlayerService.GetHealthBoost(charEntity, out var health);
+				var speedSet = Core.BoostedPlayerService.GetSpeedBoost(charEntity, out var speed);
+				var yieldSet = Core.BoostedPlayerService.GetYieldMultiplier(charEntity, out var yield);
+				var noAggro = Core.BoostedPlayerService.HasNoAggro(charEntity);
+				var noBlooddrain = Core.BoostedPlayerService.HasNoBlooddrain(charEntity);
+				var noCooldown = Core.BoostedPlayerService.HasNoCooldown(charEntity);
+				var noDurability = Core.BoostedPlayerService.HasNoDurability(charEntity);
+				var immaterial = Core.BoostedPlayerService.IsPlayerImmaterial(charEntity);
+				var invincible = Core.BoostedPlayerService.IsPlayerInvincible(charEntity);
+				var shrouded = Core.BoostedPlayerService.IsPlayerShrouded(charEntity);
+
+				if(attackSpeedSet)
+					sb.AppendLine($"Attack Speed: <color=white>{attackSpeed}</color>");
+				if(damageSet)
+					sb.AppendLine($"Damage: <color=white>{damage}</color>");
+				if(healthSet)
+					sb.AppendLine($"Health: <color=white>{health}</color>");
+				if(speedSet)
+					sb.AppendLine($"Speed: <color=white>{speed}</color>");
+				if(yieldSet)
+					sb.AppendLine($"Yield: <color=white>{yield}</color>");
+
+				var flags = new List<string>();
+				if(noAggro)
+					flags.Add("<color=white>No Aggro</color>");
+				if(noBlooddrain)
+					flags.Add("<color=white>No Blooddrain</color>");
+				if(noCooldown)
+					flags.Add("<color=white>No Cooldown</color>");
+				if(noDurability)
+					flags.Add("<color=white>No Durability Loss</color>");
+				if(immaterial)
+					flags.Add("<color=white>Immaterial</color>");
+				if(invincible)
+					flags.Add("<color=white>Invincible</color>");
+				if(shrouded)
+					flags.Add("<color=white>Shrouded</color>");
+				if(flags.Count > 0)
+					sb.AppendLine($"Has: {string.Join(", ", flags)}");
+
+				ctx.Reply(sb.ToString());
+			}
+			else
+			{
+				ctx.Reply($"<color=white>{name}</color> is not boosted");
+			}
+		}
 
 		[Command("attackspeed", "as", adminOnly: true)]
 		public static void AttackSpeed(ChatCommandContext ctx, float speed = 10, OnlinePlayer player = null)
@@ -95,7 +154,22 @@ internal class GodCommands
 
 			Core.BoostedPlayerService.SetAttackSpeedMultiplier(charEntity, speed);
 			Core.BoostedPlayerService.UpdateBoostedPlayer(charEntity);
-			ctx.Reply($"Attack speed on {name} set to {speed}");
+			ctx.Reply($"Attack speed boost on <color=white>{name}</color> set to {speed}");
+		}
+
+		[Command("removeattackspeed", "ras", adminOnly: true)]
+		public static void RemoveAttackSpeed(ChatCommandContext ctx, OnlinePlayer player = null)
+		{
+			var name = player?.Value.UserEntity.Read<User>().CharacterName ?? ctx.Event.User.CharacterName;
+			var charEntity = player?.Value.CharEntity ?? ctx.Event.SenderCharacterEntity;
+
+			if(!Core.BoostedPlayerService.RemoveAttackSpeedMultiplier(charEntity))
+			{
+				ctx.Reply($"<color=white>{name}</color> does not have attack speed boost");
+				return;
+			}
+			Core.BoostedPlayerService.UpdateBoostedPlayer(charEntity);
+			ctx.Reply($"Attack speed boost removed from <color=white>{name}</color>");
 		}
 
 		[Command("damage", "d", adminOnly: true)]
@@ -106,7 +180,22 @@ internal class GodCommands
 
 			Core.BoostedPlayerService.SetDamageBoost(charEntity, damage);
 			Core.BoostedPlayerService.UpdateBoostedPlayer(charEntity);
-			ctx.Reply($"Damage boost on {name} set to {damage}");
+			ctx.Reply($"Damage boost on <color=white>{name}</color> set to {damage}");
+		}
+
+		[Command("removedamage", "rd", adminOnly: true)]
+		public static void RemoveDamage(ChatCommandContext ctx, OnlinePlayer player = null)
+		{
+			var name = player?.Value.UserEntity.Read<User>().CharacterName ?? ctx.Event.User.CharacterName;
+			var charEntity = player?.Value.CharEntity ?? ctx.Event.SenderCharacterEntity;
+
+			if (Core.BoostedPlayerService.RemoveDamageBoost(charEntity))
+			{
+				ctx.Reply($"<color=white>{name}</color> does not have damage boost");
+				return;
+			}
+			Core.BoostedPlayerService.UpdateBoostedPlayer(charEntity);
+			ctx.Reply($"Damage boost removed from <color=white>{name}</color>");
 		}
 
 		[Command("health", "h", adminOnly: true)]
@@ -117,31 +206,24 @@ internal class GodCommands
 
 			Core.BoostedPlayerService.SetHealthBoost(charEntity, health);
 			Core.BoostedPlayerService.UpdateBoostedPlayer(charEntity);
-			ctx.Reply($"Health boost on {name} set to {health}");
+			ctx.Reply($"Health boost on <color=white>{name}</color> set to {health}");
 		}
 
-		/*[Command("projectilespeed", "ps", adminOnly: true)]
-		public static void ProjectileSpeed(ChatCommandContext ctx, float speed = 10, OnlinePlayer player = null)
+		[Command("removehealth", "rh", adminOnly: true)]
+		public static void RemoveHealth(ChatCommandContext ctx, OnlinePlayer player = null)
 		{
 			var name = player?.Value.UserEntity.Read<User>().CharacterName ?? ctx.Event.User.CharacterName;
 			var charEntity = player?.Value.CharEntity ?? ctx.Event.SenderCharacterEntity;
 
-			Core.BoostedPlayerService.SetProjectileSpeedMultiplier(charEntity, speed);
+			if (Core.BoostedPlayerService.RemoveHealthBoost(charEntity))
+			{
+				ctx.Reply($"<color=white>{name}</color> does not have health boost");
+				return;
+			}
 			Core.BoostedPlayerService.UpdateBoostedPlayer(charEntity);
-			ctx.Reply($"Projectile speed on {name} set to {speed}");
+			ctx.Reply($"Health boost removed from <color=white>{name}</color>");
 		}
 
-		[Command("projectilerange", "pr", adminOnly: true)]
-		public static void ProjectileRange(ChatCommandContext ctx, float range = 10, OnlinePlayer player = null)
-		{
-			var name = player?.Value.UserEntity.Read<User>().CharacterName ?? ctx.Event.User.CharacterName;
-			var charEntity = player?.Value.CharEntity ?? ctx.Event.SenderCharacterEntity;
-
-			Core.BoostedPlayerService.SetProjectileRangeMultiplier(charEntity, range);
-			Core.BoostedPlayerService.UpdateBoostedPlayer(charEntity);
-			ctx.Reply($"Projectile range on {name} set to {range}");
-		}
-		*/
 		[Command("speed", "s", adminOnly: true)]
 		public static void Speed(ChatCommandContext ctx, float speed = DEFAULT_FAST_SPEED, OnlinePlayer player = null)
 		{
@@ -150,7 +232,7 @@ internal class GodCommands
 
 			Core.BoostedPlayerService.SetSpeedBoost(charEntity, speed);
 			Core.BoostedPlayerService.UpdateBoostedPlayer(charEntity);
-			ctx.Reply($"Speed on {name} set to {speed}");
+			ctx.Reply($"Speed on <color=white>{name}</color> set to {speed}");
 		}
 
 		[Command("yield", "y", adminOnly: true)]
@@ -161,7 +243,22 @@ internal class GodCommands
 
 			Core.BoostedPlayerService.SetYieldMultiplier(charEntity, yield);
 			Core.BoostedPlayerService.UpdateBoostedPlayer(charEntity);
-			ctx.Reply($"Yield on {name} set to {yield}");
+			ctx.Reply($"Yield on <color=white>{name}</color> set to {yield}");
+		}
+
+		[Command("removeyield", "ry", adminOnly: true)]
+		public static void RemoveYield(ChatCommandContext ctx, OnlinePlayer player = null)
+		{
+			var name = player?.Value.UserEntity.Read<User>().CharacterName ?? ctx.Event.User.CharacterName;
+			var charEntity = player?.Value.CharEntity ?? ctx.Event.SenderCharacterEntity;
+
+			if (Core.BoostedPlayerService.RemoveYieldMultiplier(charEntity))
+			{
+				ctx.Reply($"<color=white>{name}</color> does not have yield boost");
+				return;
+			}
+			Core.BoostedPlayerService.UpdateBoostedPlayer(charEntity);
+			ctx.Reply($"Yield boost removed from <color=white>{name}</color>");
 		}
 
 		[Command("fly", "f", adminOnly: true)]
@@ -172,11 +269,11 @@ internal class GodCommands
 
 			if(Core.BoostedPlayerService.ToggleFlying(charEntity))
 			{
-				ctx.Reply($"Flying added to {name}");
+				ctx.Reply($"Flying added to <color=white>{name}</color>");
 			}
 			else
 			{
-				ctx.Reply($"Flying removed from {name}");
+				ctx.Reply($"Flying removed from <color=white>{name}</color>");
 			}
 
 			Core.BoostedPlayerService.UpdateBoostedPlayer(charEntity);
@@ -188,9 +285,15 @@ internal class GodCommands
 			var name = player?.Value.UserEntity.Read<User>().CharacterName ?? ctx.Event.User.CharacterName;
 			var charEntity = player?.Value.CharEntity ?? ctx.Event.SenderCharacterEntity;
 
-			Core.BoostedPlayerService.AddNoAggro(charEntity);
+			if (Core.BoostedPlayerService.ToggleNoAggro(charEntity))
+			{
+				ctx.Reply($"No aggro added to <color=white>{name}</color>");
+			}
+			else
+			{
+				ctx.Reply($"No aggro removed from <color=white>{name}</color>");
+			}
 			Core.BoostedPlayerService.UpdateBoostedPlayer(charEntity);
-			ctx.Reply($"No aggro added to {name}");
 		}
 
 		[Command("noblooddrain", "nb", adminOnly: true)]
@@ -199,9 +302,15 @@ internal class GodCommands
 			var name = player?.Value.UserEntity.Read<User>().CharacterName ?? ctx.Event.User.CharacterName;
 			var charEntity = player?.Value.CharEntity ?? ctx.Event.SenderCharacterEntity;
 
-			Core.BoostedPlayerService.AddNoBlooddrain(charEntity);
+			if (Core.BoostedPlayerService.ToggleNoBlooddrain(charEntity))
+			{
+				ctx.Reply($"No blooddrain added to <color=white>{name}</color>");
+			}
+			else
+			{
+				ctx.Reply($"No blooddrain removed from <color=white>{name}</color>");
+			}
 			Core.BoostedPlayerService.UpdateBoostedPlayer(charEntity);
-			ctx.Reply($"No blooddrain added to {name}");
 		}
 
 		[Command("nocooldown", "nc", adminOnly: true)]
@@ -210,9 +319,15 @@ internal class GodCommands
 			var name = player?.Value.UserEntity.Read<User>().CharacterName ?? ctx.Event.User.CharacterName;
 			var charEntity = player?.Value.CharEntity ?? ctx.Event.SenderCharacterEntity;
 
-			Core.BoostedPlayerService.AddNoCooldown(charEntity);
+			if (Core.BoostedPlayerService.ToggleNoCooldown(charEntity))
+			{
+				ctx.Reply($"No cooldown added to <color=white>{name}</color>");
+			}
+			else
+			{
+				ctx.Reply($"No cooldown removed from <color=white>{name}</color>");
+			}
 			Core.BoostedPlayerService.UpdateBoostedPlayer(charEntity);
-			ctx.Reply($"No cooldown added to {name}");
 		}
 
 		[Command("nodurability", "nd", adminOnly: true)]
@@ -221,9 +336,15 @@ internal class GodCommands
 			var name = player?.Value.UserEntity.Read<User>().CharacterName ?? ctx.Event.User.CharacterName;
 			var charEntity = player?.Value.CharEntity ?? ctx.Event.SenderCharacterEntity;
 
-			Core.BoostedPlayerService.AddNoDurability(charEntity);
+			if (Core.BoostedPlayerService.ToggleNoDurability(charEntity))
+			{
+				ctx.Reply($"No durability loss added to <color=white>{name}</color>");
+			}
+			else
+			{
+				ctx.Reply($"No durability loss removed from <color=white>{name}</color>");
+			}
 			Core.BoostedPlayerService.UpdateBoostedPlayer(charEntity);
-			ctx.Reply($"No durability loss added to {name}");
 		}
 
 		[Command("immaterial", "i", adminOnly: true)]
@@ -232,9 +353,15 @@ internal class GodCommands
 			var name = player?.Value.UserEntity.Read<User>().CharacterName ?? ctx.Event.User.CharacterName;
 			var charEntity = player?.Value.CharEntity ?? ctx.Event.SenderCharacterEntity;
 
-			Core.BoostedPlayerService.AddPlayerImmaterial(charEntity);
+			if(Core.BoostedPlayerService.TogglePlayerImmaterial(charEntity))
+			{
+				ctx.Reply($"Immaterial added to <color=white>{name}</color>");
+			}
+			else
+			{
+				ctx.Reply($"Immaterial removed from <color=white>{name}</color>");
+			}
 			Core.BoostedPlayerService.UpdateBoostedPlayer(charEntity);
-			ctx.Reply($"Immaterial added to {name}");
 		}
 
 		[Command("invincible", "inv", adminOnly: true)]
@@ -243,9 +370,15 @@ internal class GodCommands
 			var name = player?.Value.UserEntity.Read<User>().CharacterName ?? ctx.Event.User.CharacterName;
 			var charEntity = player?.Value.CharEntity ?? ctx.Event.SenderCharacterEntity;
 
-			Core.BoostedPlayerService.AddPlayerInvincible(charEntity);
+			if (Core.BoostedPlayerService.TogglePlayerInvincible(charEntity))
+			{
+				ctx.Reply($"Invincibility added to <color=white>{name}</color>");
+			}
+			else
+			{
+				ctx.Reply($"Invincibility removed from <color=white>{name}</color>");
+			}
 			Core.BoostedPlayerService.UpdateBoostedPlayer(charEntity);
-			ctx.Reply($"Invincibility added to {name}");
 		}
 
 		[Command("shrouded", "sh", adminOnly: true)]
@@ -254,9 +387,15 @@ internal class GodCommands
 			var name = player?.Value.UserEntity.Read<User>().CharacterName ?? ctx.Event.User.CharacterName;
 			var charEntity = player?.Value.CharEntity ?? ctx.Event.SenderCharacterEntity;
 
-			Core.BoostedPlayerService.AddPlayerShrouded(charEntity);
+			if (Core.BoostedPlayerService.TogglePlayerShrouded(charEntity))
+			{
+				ctx.Reply($"Shrouded added to <color=white>{name}</color>");
+			}
+			else
+			{
+				ctx.Reply($"Shrouded removed from <color=white>{name}</color>");
+			}
 			Core.BoostedPlayerService.UpdateBoostedPlayer(charEntity);
-			ctx.Reply($"Shrouded added to {name}");
 		}
 	}
 }

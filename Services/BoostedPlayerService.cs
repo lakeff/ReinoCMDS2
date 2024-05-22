@@ -13,7 +13,7 @@ namespace KindredCommands.Services
 		readonly HashSet<Entity> boostedPlayers = [];
 		readonly Dictionary<Entity, float> playerAttackSpeed = [];
 		readonly Dictionary<Entity, float> playerDamage = [];
-		readonly Dictionary<Entity, int> playerHps = [];
+		readonly Dictionary<Entity, float> playerHps = [];
 		readonly Dictionary<Entity, float> playerProjectileSpeeds = [];
 		readonly Dictionary<Entity, float> playerProjectileRanges = [];
 		readonly Dictionary<Entity, float> playerSpeeds = [];
@@ -26,6 +26,11 @@ namespace KindredCommands.Services
 		readonly HashSet<Entity> immaterialPlayers = [];
 		readonly HashSet<Entity> invinciblePlayers = [];
 		readonly HashSet<Entity> shroudedPlayers = [];
+
+		public BoostedPlayerService()
+		{
+			LoadCurrentPlayerBoosts();
+		}
 
 		public bool IsBoostedPlayer(Entity charEntity)
 		{
@@ -106,7 +111,8 @@ namespace KindredCommands.Services
 			noAggroPlayers.Remove(charEntity);
 			noBlooddrainPlayers.Remove(charEntity);
 			noCooldownPlayers.Remove(charEntity);
-			noDurabilityPlayers.Remove(charEntity);
+			if(noDurabilityPlayers.Remove(charEntity))
+				Core.TrackPlayerEquipment.StopTrackingPlayerForNoDurability(charEntity);
 			immaterialPlayers.Remove(charEntity);
 			invinciblePlayers.Remove(charEntity);
 			shroudedPlayers.Remove(charEntity);
@@ -119,10 +125,30 @@ namespace KindredCommands.Services
 			playerAttackSpeed[charEntity] = attackSpeed;
 		}
 
+		public bool RemoveAttackSpeedMultiplier(Entity charEntity)
+		{
+			return playerAttackSpeed.Remove(charEntity);
+		}
+
+		public bool GetAttackSpeedMultiplier(Entity charEntity, out float attackSpeed)
+		{
+			return playerAttackSpeed.TryGetValue(charEntity, out attackSpeed);
+		}
+
 		public void SetDamageBoost(Entity charEntity, float damage)
 		{
 			boostedPlayers.Add(charEntity);
 			playerDamage[charEntity] = damage;
+		}
+
+		public bool RemoveDamageBoost(Entity charEntity)
+		{
+			return playerDamage.Remove(charEntity);
+		}
+
+		public bool GetDamageBoost(Entity charEntity, out float damage)
+		{
+			return playerDamage.TryGetValue(charEntity, out damage);
 		}
 
 		public void SetHealthBoost(Entity charEntity, int hp)
@@ -131,24 +157,14 @@ namespace KindredCommands.Services
 			playerHps[charEntity] = hp;
 		}
 
-		public void SetProjectileSpeedMultiplier(Entity charEntity, float speed)
+		public bool RemoveHealthBoost(Entity charEntity)
 		{
-			playerProjectileSpeeds[charEntity] = speed;
+			return playerHps.Remove(charEntity);
 		}
 
-		public bool GetProjectileSpeedMultiplier(Entity charEntity, out float speed)
+		public bool GetHealthBoost(Entity charEntity, out float hp)
 		{
-			return playerProjectileSpeeds.TryGetValue(charEntity, out speed);
-		}
-
-		public void SetProjectileRangeMultiplier(Entity charEntity, float range)
-		{
-			playerProjectileRanges[charEntity] = range;
-		}
-
-		public bool GetProjectileRangeMultiplier(Entity charEntity, out float range)
-		{
-			return playerProjectileRanges.TryGetValue(charEntity, out range);
+			return playerHps.TryGetValue(charEntity, out hp);
 		}
 
 		public void SetSpeedBoost(Entity charEntity, float speed)
@@ -157,24 +173,29 @@ namespace KindredCommands.Services
 			playerSpeeds[charEntity] = speed;
 		}
 
-		public void RemoveSpeedBoost(Entity charEntity)
+		public bool RemoveSpeedBoost(Entity charEntity)
 		{
-			playerSpeeds.Remove(charEntity);
+			return playerSpeeds.Remove(charEntity);
 		}
 
-		public bool HasSpeedBoost(Entity charEntity)
+		public bool GetSpeedBoost(Entity charEntity, out float speed)
 		{
-			return playerSpeeds.ContainsKey(charEntity);
-		}
-
-		public float GetSpeedBoost(Entity charEntity)
-		{
-			return playerSpeeds.TryGetValue(charEntity, out var speed) ? speed : 4;
+			return playerSpeeds.TryGetValue(charEntity, out speed);
 		}
 
 		public void SetYieldMultiplier(Entity charEntity, float yield)
 		{
 			playerYield[charEntity] = yield;
+		}
+
+		public bool RemoveYieldMultiplier(Entity charEntity)
+		{
+			return playerYield.Remove(charEntity);
+		}
+
+		public bool GetYieldMultiplier(Entity charEntity, out float yield)
+		{
+			return playerYield.TryGetValue(charEntity, out yield);
 		}
 
 		public bool ToggleFlying(Entity charEntity)
@@ -188,34 +209,103 @@ namespace KindredCommands.Services
 			return true;
 		}
 
-		public void AddNoAggro(Entity charEntity)
+		public bool IsFlying(Entity charEntity)
 		{
+			return flyingPlayers.Contains(charEntity);
+		}
+
+		public bool ToggleNoAggro(Entity charEntity)
+		{
+			if (noAggroPlayers.Contains(charEntity))
+			{
+				noAggroPlayers.Remove(charEntity);
+				return false;
+			}
 			noAggroPlayers.Add(charEntity);
+			return true;
 		}
 
-		public void AddNoBlooddrain(Entity charEntity)
+		public bool HasNoAggro(Entity charEntity)
 		{
+			return noAggroPlayers.Contains(charEntity);
+		}
+
+		public bool ToggleNoBlooddrain(Entity charEntity)
+		{
+			if (noBlooddrainPlayers.Contains(charEntity))
+			{
+				noBlooddrainPlayers.Remove(charEntity);
+				return false;
+			}
 			noBlooddrainPlayers.Add(charEntity);
+			return true;
 		}
 
-		public void AddNoCooldown(Entity charEntity)
+		public bool HasNoBlooddrain(Entity charEntity)
 		{
+			return noBlooddrainPlayers.Contains(charEntity);
+		}
+
+		public bool ToggleNoCooldown(Entity charEntity)
+		{
+			if (noCooldownPlayers.Contains(charEntity))
+			{
+				noCooldownPlayers.Remove(charEntity);
+				return false;
+			}
 			noCooldownPlayers.Add(charEntity);
+			return true;
 		}
 
-		public void AddNoDurability(Entity charEntity)
+		public bool HasNoCooldown(Entity charEntity)
 		{
-			noDurabilityPlayers.Add(charEntity);
+			return noCooldownPlayers.Contains(charEntity);
 		}
 
-		public void AddPlayerImmaterial(Entity charEntity)
+		public bool ToggleNoDurability(Entity charEntity)
 		{
+			if (!noDurabilityPlayers.Contains(charEntity))
+			{
+				noDurabilityPlayers.Add(charEntity);
+				Core.TrackPlayerEquipment.StartTrackingPlayerForNoDurability(charEntity);
+				return true;
+			}
+
+			noDurabilityPlayers.Remove(charEntity);
+			Core.TrackPlayerEquipment.StopTrackingPlayerForNoDurability(charEntity);
+			return false;
+		}
+
+		public bool HasNoDurability(Entity charEntity)
+		{
+			return noDurabilityPlayers.Contains(charEntity);
+		}
+
+		public bool TogglePlayerImmaterial(Entity charEntity)
+		{
+			if (immaterialPlayers.Contains(charEntity))
+			{
+				immaterialPlayers.Remove(charEntity);
+				return false;
+			}
 			immaterialPlayers.Add(charEntity);
+			return true;
 		}
 
-		public void AddPlayerInvincible(Entity charEntity)
+		public bool IsPlayerImmaterial(Entity charEntity)
 		{
+			return immaterialPlayers.Contains(charEntity);
+		}
+
+		public bool TogglePlayerInvincible(Entity charEntity)
+		{
+			if (invinciblePlayers.Contains(charEntity))
+			{
+				invinciblePlayers.Remove(charEntity);
+				return false;
+			}
 			invinciblePlayers.Add(charEntity);
+			return true;
 		}
 
 		public bool IsPlayerInvincible(Entity charEntity)
@@ -223,9 +313,20 @@ namespace KindredCommands.Services
 			return invinciblePlayers.Contains(charEntity);
 		}
 
-		public void AddPlayerShrouded(Entity charEntity)
+		public bool TogglePlayerShrouded(Entity charEntity)
 		{
+			if (shroudedPlayers.Contains(charEntity))
+			{
+				shroudedPlayers.Remove(charEntity);
+				return false;
+			}
 			shroudedPlayers.Add(charEntity);
+			return true;
+		}
+
+		public bool IsPlayerShrouded(Entity charEntity)
+		{
+			return shroudedPlayers.Contains(charEntity);
 		}
 
 		public void UpdateBoostedBuff1(Entity buffEntity)
@@ -367,6 +468,80 @@ namespace KindredCommands.Services
 			{
 				Core.Log.LogWarning($"Removing Shroud of the Forest");
 				Buffs.RemoveBuff(charEntity, Prefabs.EquipBuff_ShroudOfTheForest);
+			}
+		}
+
+		void LoadCurrentPlayerBoosts()
+		{
+			foreach(var charEntity in Helper.GetEntitiesByComponentType<PlayerCharacter>())
+			{
+				LoadPlayerBoosts(charEntity);
+			}
+		}
+
+		void LoadPlayerBoosts(Entity charEntity)
+		{
+			if (BuffUtility.TryGetBuff(Core.Server.EntityManager, charEntity, Prefabs.BoostedBuff1, out var buffEntity))
+			{
+				boostedPlayers.Add(charEntity);
+				foreach(var buff in buffEntity.ReadBuffer<ModifyUnitStatBuff_DOTS>())
+				{
+					switch(buff.StatType)
+					{
+						case UnitStatType.AttackSpeed:
+							playerAttackSpeed[charEntity] = buff.Value;
+							break;
+						case UnitStatType.PhysicalPower:
+							playerDamage[charEntity] = buff.Value;
+							break;
+						case UnitStatType.MaxHealth:
+							playerHps[charEntity] = buff.Value;
+							break;
+						case UnitStatType.MovementSpeed:
+							playerSpeeds[charEntity] = buff.Value;
+							break;
+						case UnitStatType.ResourceYield:
+							playerYield[charEntity] = buff.Value;
+							break;
+						case UnitStatType.CooldownRecoveryRate:
+							noCooldownPlayers.Add(charEntity);
+							break;
+						case UnitStatType.ReducedResourceDurabilityLoss:
+							noDurabilityPlayers.Add(charEntity);
+							break;
+					}
+				}
+			}
+
+			if (BuffUtility.TryGetBuff(Core.Server.EntityManager, charEntity, Prefabs.BoostedBuff2, out buffEntity))
+			{
+				boostedPlayers.Add(charEntity);
+				if (buffEntity.Has<DisableAggroBuff>())
+				{
+					noAggroPlayers.Add(charEntity);
+				}
+
+				if (buffEntity.Has<ModifyBloodDrainBuff>())
+				{
+					noBlooddrainPlayers.Add(charEntity);
+				}
+
+				if (buffEntity.Has<BuffModificationFlagData>())
+				{
+					var buffModificationFlagData = buffEntity.Read<BuffModificationFlagData>();
+					if ((buffModificationFlagData.ModificationTypes & (long)BuffModificationTypes.IsFlying) != 0)
+					{
+						flyingPlayers.Add(charEntity);
+					}
+					if ((buffModificationFlagData.ModificationTypes & (long)BuffModificationTypes.DisableMapCollision) != 0)
+					{
+						immaterialPlayers.Add(charEntity);
+					}
+					if ((buffModificationFlagData.ModificationTypes & (long)BuffModificationTypes.Invulnerable) != 0)
+					{
+						invinciblePlayers.Add(charEntity);
+					}
+				}
 			}
 		}
 
@@ -545,8 +720,8 @@ namespace KindredCommands.Services
 		static ModifyUnitStatBuff_DOTS DurabilityLoss = new()
 		{
 			StatType = UnitStatType.ReducedResourceDurabilityLoss,
-			Value = -10000,
-			ModificationType = ModificationType.Add,
+			Value = -1000000000,
+			ModificationType = ModificationType.Set,
 			Modifier = 1,
 			Id = ModificationId.NewId(0)
 		};
