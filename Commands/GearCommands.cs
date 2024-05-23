@@ -64,21 +64,25 @@ internal static class DurabilityCommands
 			ctx.Reply($"Soulshard limit set to {limit}.");
 		}
 
-		[Command("soulshardstatus", "sss", description: "Reports the current status of soulshards.", adminOnly: true)]
+		[Command("soulshardstatus", "sss", description: "Reports the current status of soulshards.", adminOnly: false)]
 		public static void SoulshardStatusCommand(ChatCommandContext ctx)
 		{
 			var sb = new StringBuilder();
 			var soulshardStatus = Core.SoulshardService.GetSoulshardStatus();
-			sb.AppendLine($"Soulshards flight restricted: {Core.ConfigSettings.SoulshardsFlightRestricted}");
-			sb.AppendLine($"Soulshard drop limit: {Core.SoulshardService.ShardDropLimit}");
+			sb.AppendLine("\nSoulshard Status");
+			sb.AppendLine($"Can Fly: {(Core.ConfigSettings.SoulshardsFlightRestricted ? "<color=red>No</color>" : "<color=green>Yes</color>")}");
+
+			var notPlentiful = Core.ServerGameSettingsSystem._Settings.RelicSpawnType == RelicSpawnType.Unique;
+			sb.AppendLine($"Drop Limit: <color=white>{(notPlentiful ? Core.SoulshardService.ShardDropLimit.ToString() : "Plentiful")}</color>");
+
 			var theMonster = soulshardStatus[(int)RelicType.TheMonster];
 			var solarus = soulshardStatus[(int)RelicType.Solarus];
 			var wingedHorror = soulshardStatus[(int)RelicType.WingedHorror];
 			var dracula = soulshardStatus[(int)RelicType.Dracula];
-			sb.AppendLine($"Soulshard The Monster: {theMonster.droppedCount}x dropped {theMonster.spawnedCount}x spawned {(theMonster.willDrop ? "and will drop" : "and won't drop")}");
-			sb.AppendLine($"Soulshard Solarus: {solarus.droppedCount}x dropped {solarus.spawnedCount}x spawned {(solarus.willDrop ? "and will drop" : "and won't drop")}");
-			sb.AppendLine($"Soulshard Winged Horror: {wingedHorror.droppedCount}x dropped {wingedHorror.spawnedCount}x spawned {(wingedHorror.willDrop ? "and will drop" : "and won't drop")}");
-			sb.AppendLine($"Soulshard Dracula: {dracula.droppedCount}x dropped {dracula.spawnedCount}x spawned {(dracula.willDrop ? "and will drop" : "and won't drop")}");
+			sb.AppendLine($"The Monster: <color=white>{theMonster.droppedCount}</color>x dropped <color=white>{theMonster.spawnedCount}</color>x spawned{(notPlentiful ? (theMonster.willDrop ? " <color=green>Will</color> drop" : " <color=red>Won't</color> drop") : "")}");
+			sb.AppendLine($"Solarus: <color=white>{solarus.droppedCount}</color>x dropped {solarus.spawnedCount}</color>x spawned{(notPlentiful ? (solarus.willDrop ? " <color=green>Will</color> drop" : " <color=red>Won't</color> drop") : "")}");
+			sb.AppendLine($"Winged Horror: <color=white>{wingedHorror.droppedCount}</color>x dropped <color=white>{wingedHorror.spawnedCount}</color>x spawned{(notPlentiful ? (wingedHorror.willDrop ? " <color=green>Will</color> drop" : " <color=red>Won't</color> drop") : "")}");
+			sb.AppendLine($"Dracula: <color=white>{dracula.droppedCount}</color>x dropped <color=white>{dracula.spawnedCount}</color>x spawned{(notPlentiful ? (dracula.willDrop ? " <color=green>Will</color> drop" : " <color=red>Won't</color> drop") : "")}");
 			ctx.Reply(sb.ToString());
 		}
 
