@@ -72,9 +72,6 @@ Feel free to reach out to me on discord (odjit) if you have any questions or nee
   - will set the limit of each type soul shards a server can have. 
   - Example: *.gear soulshardlimit 5*
   - Shortcut: *.gear ssl*
-- `.gear soulshardstatus`
-  - will list the current status of soul shards on the server. (How many of each type that have been dropped, spawned, and whether they can drop or not)
-  - Shortcut: *.gear sss*
 - `.dropitems lifetime (seconds)`
   - will set the lifetime of dropped items while players are present to the seconds specified. Default is 300 seconds. This is a server wide setting, and will persist through restarts.Does not apply to shards or Player Containers.
   - Example: *.dropitems lifetime 600*
@@ -311,4 +308,7 @@ Feel free to reach out to me on discord (odjit) if you have any questions or nee
   - will list all locked bosses
 - `.region list`
   - will list all regions and their current lock or gated status.
+- `.gear soulshardstatus`
+  - will list the current status of soul shards on the server. (How many of each type that have been dropped, spawned, and whether they can drop or not)
+  - Shortcut: *.gear sss*
 
