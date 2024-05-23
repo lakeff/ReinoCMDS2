@@ -348,7 +348,8 @@ namespace KindredCommands.Services
 		{
 			while(BuffUtility.HasBuff(Core.EntityManager, charEntity, buffPrefab))
 				yield return null;
-			Buffs.AddBuff(charEntity.Read<PlayerCharacter>().UserEntity, charEntity, buffPrefab, -1, true);
+			if(IsPlayerShrouded(charEntity))
+				Buffs.AddBuff(charEntity.Read<PlayerCharacter>().UserEntity, charEntity, buffPrefab, -1, true);
 		}
 
 		public bool IsPlayerShrouded(Entity charEntity)
