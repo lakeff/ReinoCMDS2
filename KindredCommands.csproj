@@ -3,7 +3,7 @@
 		<TargetFramework>net6.0</TargetFramework>
 		<AssemblyName>KindredCommands</AssemblyName>
 		<Description>Commands to expand Administration efforts and provide information</Description>
-		<Version>1.10.1</Version>
+		<Version>1.11.0</Version>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 		<LangVersion>latest</LangVersion>
 		<RootNamespace>KindredCommands</RootNamespace>
@@ -16,8 +16,8 @@
 	  <None Remove="NewFile1.txt" />
 	</ItemGroup>
 	<ItemGroup>
-    <PackageReference Include="BepInEx.Unity.IL2CPP" Version="6.0.0-be.690" IncludeAssets="compile" />
-    <PackageReference Include="BepInEx.Core" Version="6.0.0-be.690" IncludeAssets="compile" />
+    <PackageReference Include="BepInEx.Unity.IL2CPP" Version="6.0.0-be.691" IncludeAssets="compile" />
+    <PackageReference Include="BepInEx.Core" Version="6.0.0-be.691" IncludeAssets="compile" />
     <PackageReference Include="BepInEx.PluginInfoProps" Version="2.*" />
     <PackageReference Include="VRising.Unhollowed.Client" Version="1.0.2.*" />
     <PackageReference Include="VRising.VampireCommandFramework" Version="0.9.*" />
