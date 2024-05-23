@@ -10,12 +10,9 @@ namespace KindredCommands.Services
 {
 	internal class BoostedPlayerService
 	{
-		readonly HashSet<Entity> boostedPlayers = [];
 		readonly Dictionary<Entity, float> playerAttackSpeed = [];
 		readonly Dictionary<Entity, float> playerDamage = [];
 		readonly Dictionary<Entity, float> playerHps = [];
-		readonly Dictionary<Entity, float> playerProjectileSpeeds = [];
-		readonly Dictionary<Entity, float> playerProjectileRanges = [];
 		readonly Dictionary<Entity, float> playerSpeeds = [];
 		readonly Dictionary<Entity, float> playerYield = [];
 		readonly HashSet<Entity> flyingPlayers = [];
@@ -34,12 +31,21 @@ namespace KindredCommands.Services
 
 		public bool IsBoostedPlayer(Entity charEntity)
 		{
-			return boostedPlayers.Contains(charEntity);
+			return playerAttackSpeed.ContainsKey(charEntity) || playerDamage.ContainsKey(charEntity) || playerHps.ContainsKey(charEntity) ||
+				playerSpeeds.ContainsKey(charEntity) || playerYield.ContainsKey(charEntity) || flyingPlayers.Contains(charEntity) || 
+				noAggroPlayers.Contains(charEntity) || noBlooddrainPlayers.Contains(charEntity) || noDurabilityPlayers.Contains(charEntity) ||
+				noCooldownPlayers.Contains(charEntity) || immaterialPlayers.Contains(charEntity) || invinciblePlayers.Contains(charEntity) ||
+				shroudedPlayers.Contains(charEntity);
 		}
 
 		public void UpdateBoostedPlayer(Entity charEntity)
 		{
-			boostedPlayers.Add(charEntity);
+			if(!IsBoostedPlayer(charEntity))
+			{
+				ClearExtraBuffs(charEntity);
+				return;
+			}
+
 			var userEntity = charEntity.Read<PlayerCharacter>().UserEntity;
 
 			if (invinciblePlayers.Contains(charEntity))
@@ -64,10 +70,20 @@ namespace KindredCommands.Services
 					immaterialBuffEntity.Write(modifyMovementSpeedBuff);
 				}
 			}
+			else
+			{
+				Buffs.RemoveBuff(charEntity, Prefabs.AB_Blood_BloodRite_Immaterial);
+			}
 
 			if (shroudedPlayers.Contains(charEntity))
 			{
 				Buffs.AddBuff(userEntity, charEntity, Prefabs.EquipBuff_ShroudOfTheForest, -1, true);
+			}
+			else
+			{
+				var equipment = charEntity.Read<Equipment>();
+				if (!equipment.IsEquipped(Prefabs.Item_Cloak_Main_ShroudOfTheForest, out var _))
+					Buffs.RemoveBuff(charEntity, Prefabs.EquipBuff_ShroudOfTheForest);
 			}
 
 			Core.StartCoroutine(RemoveAndAddCustomBuff(userEntity, charEntity));
@@ -99,12 +115,9 @@ namespace KindredCommands.Services
 
 		public void RemoveBoostedPlayer(Entity charEntity)
 		{
-			boostedPlayers.Remove(charEntity);
 			playerAttackSpeed.Remove(charEntity);
 			playerDamage.Remove(charEntity);
 			playerHps.Remove(charEntity);
-			playerProjectileSpeeds.Remove(charEntity);
-			playerProjectileRanges.Remove(charEntity);
 			playerSpeeds.Remove(charEntity);
 			playerYield.Remove(charEntity);
 			flyingPlayers.Remove(charEntity);
@@ -137,7 +150,6 @@ namespace KindredCommands.Services
 
 		public void SetDamageBoost(Entity charEntity, float damage)
 		{
-			boostedPlayers.Add(charEntity);
 			playerDamage[charEntity] = damage;
 		}
 
@@ -153,7 +165,6 @@ namespace KindredCommands.Services
 
 		public void SetHealthBoost(Entity charEntity, int hp)
 		{
-			boostedPlayers.Add(charEntity);
 			playerHps[charEntity] = hp;
 		}
 
@@ -169,7 +180,6 @@ namespace KindredCommands.Services
 
 		public void SetSpeedBoost(Entity charEntity, float speed)
 		{
-			boostedPlayers.Add(charEntity);
 			playerSpeeds[charEntity] = speed;
 		}
 
@@ -466,7 +476,6 @@ namespace KindredCommands.Services
 			var equipment = charEntity.Read<Equipment>();
 			if (!equipment.IsEquipped(Prefabs.Item_Cloak_Main_ShroudOfTheForest, out var _) && BuffUtility.HasBuff(Core.EntityManager, charEntity, Prefabs.EquipBuff_ShroudOfTheForest))
 			{
-				Core.Log.LogWarning($"Removing Shroud of the Forest");
 				Buffs.RemoveBuff(charEntity, Prefabs.EquipBuff_ShroudOfTheForest);
 			}
 		}
@@ -481,9 +490,9 @@ namespace KindredCommands.Services
 
 		void LoadPlayerBoosts(Entity charEntity)
 		{
-			if (BuffUtility.TryGetBuff(Core.Server.EntityManager, charEntity, Prefabs.BoostedBuff1, out var buffEntity))
+			if (BuffUtility.TryGetBuff(Core.Server.EntityManager, charEntity, Prefabs.BoostedBuff1, out var buffEntity) &&
+				buffEntity.Has<ModifyUnitStatBuff_DOTS>())
 			{
-				boostedPlayers.Add(charEntity);
 				foreach(var buff in buffEntity.ReadBuffer<ModifyUnitStatBuff_DOTS>())
 				{
 					switch(buff.StatType)
@@ -515,7 +524,6 @@ namespace KindredCommands.Services
 
 			if (BuffUtility.TryGetBuff(Core.Server.EntityManager, charEntity, Prefabs.BoostedBuff2, out buffEntity))
 			{
-				boostedPlayers.Add(charEntity);
 				if (buffEntity.Has<DisableAggroBuff>())
 				{
 					noAggroPlayers.Add(charEntity);

@@ -6,7 +6,7 @@ Also, thanks to the V Rising modding and server communities for ideas and reques
 
 Updated for V rising 1.0 as of v1.9.0!
 
-[Territory ID Map](https://i.imgur.com/phmRmP7.jpeg)
+[Territory ID Map](https://i.imgur.com/VkXoKwB.jpeg)
 
 Feel free to reach out to me on discord (odjit) if you have any questions or need help with the mod.
 
@@ -65,9 +65,16 @@ Feel free to reach out to me on discord (odjit) if you have any questions or nee
   - will toggle Headgear being bloodbound or not on the server. (Whether or not it drops on death). Saves out to config file to persist through restarts.
   - Example: *.gear headgear*
   - Shortcut: *.gear hg*
-- `.gear soulshards`
+- `.gear soulshardflight`
   - will toggle Soul Shards being batbound or not on the server. (Whether or not you can fly with them). Saves out to config file to persist through restarts.
-  - Shortcut: *.gear ss*
+  - Shortcut: *.gear ssf*
+- `.gear soulshardlimit`
+  - will set the limit of each type soul shards a server can have. 
+  - Example: *.gear soulshardlimit 5*
+  - Shortcut: *.gear ssl*
+- `.gear soulshardstatus`
+  - will list the current status of soul shards on the server. (How many of each type that have been dropped, spawned, and whether they can drop or not)
+  - Shortcut: *.gear sss*
 - `.dropitems lifetime (seconds)`
   - will set the lifetime of dropped items while players are present to the seconds specified. Default is 300 seconds. This is a server wide setting, and will persist through restarts.Does not apply to shards or Player Containers.
   - Example: *.dropitems lifetime 600*
@@ -164,10 +171,21 @@ Feel free to reach out to me on discord (odjit) if you have any questions or nee
 - `.mortal (player)`
   - will toggle godmode off a player named, or the user if no one is named.	Also removes boosts.																							
   - Example: *.mortal Bob*
-- `.boost (Type) (Amount) (Player)`
-  - will boost a player's stats to the amount specified. Types with amounts are the following: attackspeed, damage, health, projectilespeed, projectilerange, speed, and yield. Types with no ammount and just add the player name: noaggro, noblooddrain, nocooldown, nodurability, immaterial, invincible, shrouded. Remove via .mortal.
-  - Example: *.boost damage 100 Bob*
+- `.boost (Type) (Player)`
+  - will boost a player with certain types: noaggro, noblooddrain, nocooldown, nodurability, immaterial, invincible, shrouded, fly. Remove via use of same command again as a toggle or use .mortal to strip all.
   - Example: *.boost immaterial Bob*
+  - Shortcuts: *.boost (na, nb, nc, nd, i, inv, sh, f)*
+- `.boost (Type) (Ammount) (Player)`
+  - will boost a player's stats to the amount specified. Types with amounts are the following: attackspeed, damage, health, speed, and yield. 																							
+  - Example: *.boost damage 100 Bob*
+  - Shortcut: *.boost (as, d, h, s, y)*
+- `.boost remove(Type) (Player)`
+  - will remove a boost from a player. Used for removing boosts that require an amount set.																							
+  - Example: *.boost removedamage Bob*
+  - Shortcut: *.boost (ras, rd, rh, rs, ry)*
+- `.boost state (Player)`
+  - will list all boosts on a player.																							
+  - Example: *.boost state Bob*
 - `.spectate (Player)`
   - will set the player into spectate mode, where they are invisible and cannot interact with anything. Use again to remove it and teleport them to their prior position.
   - Example: *.spectate Bob*

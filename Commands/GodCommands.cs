@@ -23,6 +23,7 @@ internal class GodCommands
 		Core.BoostedPlayerService.SetAttackSpeedMultiplier(charEntity, 10f);
 		Core.BoostedPlayerService.SetDamageBoost(charEntity, 10000f);
 		Core.BoostedPlayerService.SetHealthBoost(charEntity, 100000);
+		Core.BoostedPlayerService.SetSpeedBoost(charEntity, DEFAULT_FAST_SPEED);
 		Core.BoostedPlayerService.RemoveSpeedBoost(charEntity);
 		Core.BoostedPlayerService.SetYieldMultiplier(charEntity, 10f);
 		Core.BoostedPlayerService.ToggleNoAggro(charEntity);
@@ -189,7 +190,7 @@ internal class GodCommands
 			var name = player?.Value.UserEntity.Read<User>().CharacterName ?? ctx.Event.User.CharacterName;
 			var charEntity = player?.Value.CharEntity ?? ctx.Event.SenderCharacterEntity;
 
-			if (Core.BoostedPlayerService.RemoveDamageBoost(charEntity))
+			if (!Core.BoostedPlayerService.RemoveDamageBoost(charEntity))
 			{
 				ctx.Reply($"<color=white>{name}</color> does not have damage boost");
 				return;
@@ -215,7 +216,7 @@ internal class GodCommands
 			var name = player?.Value.UserEntity.Read<User>().CharacterName ?? ctx.Event.User.CharacterName;
 			var charEntity = player?.Value.CharEntity ?? ctx.Event.SenderCharacterEntity;
 
-			if (Core.BoostedPlayerService.RemoveHealthBoost(charEntity))
+			if (!Core.BoostedPlayerService.RemoveHealthBoost(charEntity))
 			{
 				ctx.Reply($"<color=white>{name}</color> does not have health boost");
 				return;
@@ -241,7 +242,7 @@ internal class GodCommands
 			var name = player?.Value.UserEntity.Read<User>().CharacterName ?? ctx.Event.User.CharacterName;
 			var charEntity = player?.Value.CharEntity ?? ctx.Event.SenderCharacterEntity;
 
-			if (Core.BoostedPlayerService.RemoveSpeedBoost(charEntity))
+			if (!Core.BoostedPlayerService.RemoveSpeedBoost(charEntity))
 			{
 				ctx.Reply($"<color=white>{name}</color> does not have speed boost");
 				return;
@@ -267,7 +268,7 @@ internal class GodCommands
 			var name = player?.Value.UserEntity.Read<User>().CharacterName ?? ctx.Event.User.CharacterName;
 			var charEntity = player?.Value.CharEntity ?? ctx.Event.SenderCharacterEntity;
 
-			if (Core.BoostedPlayerService.RemoveYieldMultiplier(charEntity))
+			if (!Core.BoostedPlayerService.RemoveYieldMultiplier(charEntity))
 			{
 				ctx.Reply($"<color=white>{name}</color> does not have yield boost");
 				return;
