@@ -4,7 +4,9 @@ using KindredCommands.Data;
 using ProjectM;
 using ProjectM.Gameplay.Scripting;
 using ProjectM.Scripting;
+using Stunlock.Core;
 using Unity.Entities;
+using UnityEngine;
 
 namespace KindredCommands.Services
 {
@@ -334,6 +336,21 @@ namespace KindredCommands.Services
 			return true;
 		}
 
+		public void HandleShroudRemoval(Entity charEntity)
+		{
+			if (shroudedPlayers.Contains(charEntity))
+			{
+				Core.StartCoroutine(AddBuffOnceRemoved(charEntity, Prefabs.EquipBuff_ShroudOfTheForest));
+			}
+		}
+
+		IEnumerator AddBuffOnceRemoved(Entity charEntity, PrefabGUID buffPrefab)
+		{
+			while(BuffUtility.HasBuff(Core.EntityManager, charEntity, buffPrefab))
+				yield return null;
+			Buffs.AddBuff(charEntity.Read<PlayerCharacter>().UserEntity, charEntity, buffPrefab, -1, true);
+		}
+
 		public bool IsPlayerShrouded(Entity charEntity)
 		{
 			return shroudedPlayers.Contains(charEntity);
@@ -549,6 +566,15 @@ namespace KindredCommands.Services
 					{
 						invinciblePlayers.Add(charEntity);
 					}
+				}
+			}
+
+			if (BuffUtility.TryGetBuff(Core.Server.EntityManager, charEntity, Prefabs.EquipBuff_ShroudOfTheForest, out buffEntity))
+			{
+				var equipment = charEntity.Read<Equipment>();
+				if (!equipment.IsEquipped(Prefabs.Item_Cloak_Main_ShroudOfTheForest, out var _))
+				{
+					TogglePlayerShrouded(charEntity);
 				}
 			}
 		}
