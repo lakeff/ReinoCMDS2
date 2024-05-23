@@ -24,7 +24,6 @@ internal class GodCommands
 		Core.BoostedPlayerService.SetDamageBoost(charEntity, 10000f);
 		Core.BoostedPlayerService.SetHealthBoost(charEntity, 100000);
 		Core.BoostedPlayerService.SetSpeedBoost(charEntity, DEFAULT_FAST_SPEED);
-		Core.BoostedPlayerService.RemoveSpeedBoost(charEntity);
 		Core.BoostedPlayerService.SetYieldMultiplier(charEntity, 10f);
 		Core.BoostedPlayerService.ToggleNoAggro(charEntity);
 		Core.BoostedPlayerService.ToggleNoBlooddrain(charEntity);
