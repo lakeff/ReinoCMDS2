@@ -80,7 +80,7 @@ internal static class DurabilityCommands
 			var wingedHorror = soulshardStatus[(int)RelicType.WingedHorror];
 			var dracula = soulshardStatus[(int)RelicType.Dracula];
 			sb.AppendLine($"The Monster: <color=white>{theMonster.droppedCount}</color>x dropped <color=white>{theMonster.spawnedCount}</color>x spawned{(notPlentiful ? (theMonster.willDrop ? " <color=green>Will</color> drop" : " <color=red>Won't</color> drop") : "")}");
-			sb.AppendLine($"Solarus: <color=white>{solarus.droppedCount}</color>x dropped {solarus.spawnedCount}</color>x spawned{(notPlentiful ? (solarus.willDrop ? " <color=green>Will</color> drop" : " <color=red>Won't</color> drop") : "")}");
+			sb.AppendLine($"Solarus: <color=white>{solarus.droppedCount}</color>x dropped <color=white>{solarus.spawnedCount}</color>x spawned{(notPlentiful ? (solarus.willDrop ? " <color=green>Will</color> drop" : " <color=red>Won't</color> drop") : "")}");
 			sb.AppendLine($"Winged Horror: <color=white>{wingedHorror.droppedCount}</color>x dropped <color=white>{wingedHorror.spawnedCount}</color>x spawned{(notPlentiful ? (wingedHorror.willDrop ? " <color=green>Will</color> drop" : " <color=red>Won't</color> drop") : "")}");
 			sb.AppendLine($"Dracula: <color=white>{dracula.droppedCount}</color>x dropped <color=white>{dracula.spawnedCount}</color>x spawned{(notPlentiful ? (dracula.willDrop ? " <color=green>Will</color> drop" : " <color=red>Won't</color> drop") : "")}");
 			ctx.Reply(sb.ToString());
