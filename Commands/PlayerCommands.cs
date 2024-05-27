@@ -369,7 +369,7 @@ public static class PlayerCommands
 
 		var moveSpeed = closestNPC.Read<Movement>().Speed;
 
-		if (moveSpeed > 4.5)
+		if (moveSpeed > 4.0)
 		{
 			ctx.Reply($"{closestNPC.EntityName()} is moving too fast for you to pace with.");
 			if(Core.BoostedPlayerService.RemoveSpeedBoost(charEntity))
