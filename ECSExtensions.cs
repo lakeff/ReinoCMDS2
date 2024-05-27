@@ -73,6 +73,27 @@ public static class ECSExtensions
 			? prefabCollectionSystem.PrefabGuidToNameDictionary[prefabGuid] + " " + prefabGuid : "GUID Not Found").ToString();
 	}
 
+	public static string PrefabName(this PrefabGUID prefabGuid)
+	{
+		var name = Core.Localization.GetPrefabName(prefabGuid);
+		return string.IsNullOrEmpty(name) ? prefabGuid.LookupName() : name;
+	}
+
+	public static string EntityName(this Entity entity)
+	{
+		var name = string.Empty;
+		if (entity.Has<NameableInteractable>())
+			name = entity.Read<NameableInteractable>().Name.ToString();
+
+		if (string.IsNullOrEmpty(name) && entity.Has<PrefabGUID>())
+			name = entity.Read<PrefabGUID>().PrefabName();
+
+		if (string.IsNullOrEmpty(name))
+			name = entity.ToString();
+
+		return name;
+	}
+
 	public static void Add<T>(this Entity entity)
 	{
 		var ct = new ComponentType(Il2CppType.Of<T>());

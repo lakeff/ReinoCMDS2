@@ -7,6 +7,9 @@ using ProjectM;
 using ProjectM.Network;
 using Unity.Collections;
 using Unity.Entities;
+using Unity.Mathematics;
+using Unity.Transforms;
+using UnityEngine;
 using VampireCommandFramework;
 using static KindredCommands.Commands.PlayerCommands;
 
@@ -280,7 +283,7 @@ public static class PlayerCommands
 		ctx.Reply($"Moved {name} down to floor level {floorLevel}");
 	}
 
-	[Command("level", description: "Set fly height to a specific level", adminOnly: true)]
+	[Command("flylevel", description: "Set fly height to a specific level", adminOnly: true)]
 	public static void Floor(ChatCommandContext ctx, int floor, FoundPlayer player = null)
 	{
 		var charEntity = player?.Value.CharEntity ?? ctx.Event.SenderCharacterEntity;
@@ -315,13 +318,68 @@ public static class PlayerCommands
 		ctx.Reply($"Set fly obstacle height to {height}");
 	}
 
-	/*[Command("walk", "w", description: "Toggle between walking and running")]
-	public static void ToggleWalk(ChatCommandContext ctx)
+
+	static bool initializedMoveSpeedQuery = false;
+	static EntityQuery npcMoveSpeedQuery;
+	[Command("pace", description: "Pace at the closest NPC near you")]
+	public static void TogglePace(ChatCommandContext ctx)
 	{
 		var charEntity = ctx.Event.SenderCharacterEntity;
-		var isWalking = Core.BoostedPlayerService.HasSpeedBoost(charEntity) && Core.BoostedPlayerService.GetSpeedBoost(charEntity) < 4;
 
-		if (isWalking)
+		if (!initializedMoveSpeedQuery)
+		{
+			npcMoveSpeedQuery = Core.EntityManager.CreateEntityQuery(new []{
+				ComponentType.ReadOnly<AiMoveSpeeds>(),
+				ComponentType.ReadOnly<Movement>(),
+				ComponentType.ReadOnly<Translation>()
+			});
+		}
+
+		var charPos = charEntity.Read<Translation>().Value;
+
+		var closestNPC = Entity.Null;
+		var closestDistance = 30f;
+		var npcs = npcMoveSpeedQuery.ToEntityArray(Allocator.TempJob);
+		foreach(var npc in npcs)
+		{
+			var translation = npc.Read<Translation>();
+			var distance = math.distance(translation.Value, charPos);
+			if (distance < closestDistance)
+			{
+				closestDistance = distance;
+				closestNPC = npc;
+			}
+		}
+		npcs.Dispose();
+
+		if(closestNPC.Equals(Entity.Null))
+		{
+			
+			if (Core.BoostedPlayerService.RemoveSpeedBoost(charEntity))
+			{
+				ctx.Reply("No NPCs found nearby but restoring you normal pace.");
+				Core.BoostedPlayerService.UpdateBoostedPlayer(charEntity);
+			}
+			else
+			{
+				ctx.Reply("No NPCs found nearby.");
+			}
+			return;
+		}
+
+		var moveSpeed = closestNPC.Read<Movement>().Speed;
+
+		if (moveSpeed > 4.5)
+		{
+			ctx.Reply($"{closestNPC.EntityName()} is moving too fast for you to pace with.");
+			if(Core.BoostedPlayerService.RemoveSpeedBoost(charEntity))
+				Core.BoostedPlayerService.UpdateBoostedPlayer(charEntity);
+			return;
+		}
+
+		var isPacing = Core.BoostedPlayerService.GetSpeedBoost(charEntity, out var curSpeed) && Mathf.Abs(curSpeed - moveSpeed) < 0.01f;
+
+		if (isPacing)
 		{
 			Core.BoostedPlayerService.RemoveSpeedBoost(charEntity);
 			Core.BoostedPlayerService.UpdateBoostedPlayer(charEntity);
@@ -329,11 +387,11 @@ public static class PlayerCommands
 		}
 		else
 		{
-			Core.BoostedPlayerService.SetSpeedBoost(charEntity, 1);
+			Core.BoostedPlayerService.SetSpeedBoost(charEntity, moveSpeed);
 			Core.BoostedPlayerService.UpdateBoostedPlayer(charEntity);
-			ctx.Reply("You have slowed your pace and are now walking.");
+			ctx.Reply($"You have slowed your pace and are now moving at the current speed of {closestNPC.EntityName()}.");
 		}
-	}*/
+	}
 
 	/* // This was made for a specific server who wanted to wipe players and castles but keep certain ones to clone the map.
 	static Entity UserDoingWipe;

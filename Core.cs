@@ -34,6 +34,7 @@ internal static class Core
 	public static ConfigSettingsService ConfigSettings { get; internal set; }
 	public static DropItemService DropItem { get; internal set; }
 	public static GearService GearService { get; internal set; }
+	public static LocalizationService Localization { get; } = new();
 	public static PlayerService Players { get; internal set; }
 	public static PrefabService Prefabs { get; internal set; }
 	public static RegionService Regions { get; internal set; }

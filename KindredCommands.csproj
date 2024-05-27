@@ -13,7 +13,13 @@
 	</PropertyGroup>
 	<ItemGroup>
 	  <None Remove="Commands\NewFile1.txt" />
+	  <None Remove="Data\English.json" />
+	  <None Remove="Data\PrefabNames.json" />
 	  <None Remove="NewFile1.txt" />
+	</ItemGroup>
+	<ItemGroup>
+	  <EmbeddedResource Include="Data\English.json" />
+	  <EmbeddedResource Include="Data\PrefabNames.json" />
 	</ItemGroup>
 	<ItemGroup>
     <PackageReference Include="BepInEx.Unity.IL2CPP" Version="6.0.0-be.691" IncludeAssets="compile" />
