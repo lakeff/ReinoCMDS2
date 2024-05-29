@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Backtrace.Unity.Model;
 using ProjectM;
 using ProjectM.Network;
 using ProjectM.Terrain;
@@ -171,7 +172,7 @@ internal class RegionService
 		{
 			foreach(var userEntity in Core.Players.GetCachedUsersOnline())
 			{
-				if(!userEntity.Has<User>() || !userEntity.Has<CurrentWorldRegion>()) continue;
+				if(!userEntity.Has<User>()) continue;
 
 				var charName = userEntity.Read<User>().CharacterName.ToString();
 
@@ -196,6 +197,10 @@ internal class RegionService
 				if (returnReason != null)
 				{
 					ReturnPlayer(userEntity, returnReason);
+				}
+				else if(charEntity.Has<Dead>())
+				{
+					lastValidPos.Remove(userEntity);
 				}
 				else
 				{
