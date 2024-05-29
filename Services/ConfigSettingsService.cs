@@ -70,15 +70,15 @@ internal class ConfigSettingsService
 		}
 	}
 
-	public int ShardDropLifetimeWhenDisabled
+	public int ShardDropLifetime
 	{
 		get
 		{
-			return config.ShardDropLifetimeWhenDisabled;
+			return config.ShardDropLifetime;
 		}
 		set
 		{
-			config.ShardDropLifetimeWhenDisabled = value;
+			config.ShardDropLifetime = value;
 			SaveConfig();
 		}
 	}
@@ -149,7 +149,7 @@ internal class ConfigSettingsService
 		public bool SoulshardsRestricted { get; set; }
 		public int ItemDropLifetime { get; set; }
 		public int ItemDropLifetimeWhenDisabled { get; set; }
-		public int ShardDropLifetimeWhenDisabled { get; set; }
+		public int ShardDropLifetime { get; set; }
 		public int? ShardDropLimit { get; set; }
 		public int? ShardDraculaDropLimit { get; set; }
 		public int? ShardWingedHorrorDropLimit { get; set; }
@@ -170,7 +170,7 @@ internal class ConfigSettingsService
 		Core.Log.LogInfo($"SoulshardsRestricted: {SoulshardsFlightRestricted}");
 		Core.Log.LogInfo($"ItemDropLifetime: {ItemDropLifetime}");
 		Core.Log.LogInfo($"ItemDropLifetimeWhenDisabled: {ItemDropLifetimeWhenDisabled}");
-		Core.Log.LogInfo($"ShardDropLifetimeWhenDisabled: {ShardDropLifetimeWhenDisabled}");
+		Core.Log.LogInfo($"ShardDropLifetimeWhenDisabled: {ShardDropLifetime}");
 		Core.Log.LogInfo($"ShardDraculaDropLimit: {ShardDraculaDropLimit}");
 		Core.Log.LogInfo($"ShardManticoreDropLimit: {ShardWingedHorrorDropLimit}");
 		Core.Log.LogInfo($"ShardMonsterDropLimit: {ShardMonsterDropLimit}");

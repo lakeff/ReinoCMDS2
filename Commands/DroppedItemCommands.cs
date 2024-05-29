@@ -36,22 +36,15 @@ internal class DroppedItemCommands
 		ctx.Reply($"Dropped item lifetime when disabled set to {seconds} seconds.");
 	}
 
-	[Command("shardlifetimewhendisabled", "sltwd", description: "Sets the lifetime of dropped shards when disabled in seconds.", adminOnly: true)]
+	[Command("shardlifetime", "slt", description: "Sets the lifetime of dropped shards when disabled in seconds.", adminOnly: true)]
 	public static void SetDroppedShardLifetimeWhenDisabled(ChatCommandContext ctx, int seconds=3600)
 	{
 		if (seconds < 0)
 		{
 			throw ctx.Error("Lifetime must be a positive number.");
 		}
-		Core.DropItem.SetDroppedShardLifetimeWhenDisabled(seconds);
-		ctx.Reply($"Dropped shard lifetime when disabled set to {seconds} seconds.");
-	}
-
-	[Command("removeshardlifetimewhendisabled", "rltwd", description: "Removes the lifetime of dropped shards when disabled.", adminOnly: true)]
-	public static void RemoveDroppedShardLifetimeWhenDisabled(ChatCommandContext ctx)
-	{
-		Core.DropItem.RemoveDroppedShardLifetimeWhenDisabled();
-		ctx.Reply("Dropped shard lifetime when disabled removed.");
+		Core.DropItem.SetDroppedShardLifetime(seconds);
+		ctx.Reply($"Dropped shard lifetime set to {seconds} seconds.");
 	}
 
 	//remove dropped items around the player in a radius

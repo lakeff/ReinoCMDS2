@@ -143,8 +143,8 @@ internal class SoulshardService
 		else
 		{
 			droppedSoulshards.Add(soulshardItemEntity);
-			RefreshWillDrop();
 		}
+		RefreshWillDrop();
 	}
 
 	public void HandleSoulshardDestroy(Entity soulshardItemEntity)

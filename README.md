@@ -97,13 +97,10 @@ Feel free to reach out to me on discord (odjit) if you have any questions or nee
 - `.dropitems clearallshards`
   - Will clear all dropped shards on the map.
   - Shortcut: *.dropitems cas*
-- `.dropitems shardlifetimewhendisabled (seconds)`
-  - Will set the lifetime of dropped shards when no one is around to the seconds specified. This is a server wide setting, and will persist through restarts
-  - Example: *.dropitems shardlifetimewhendisabled 600*
-  - shortcut: *.dropitems sltwd*
-- `.dropitems removeshardlifetimewhendisabled`
-  - Will remove the custom lifetime of dropped shards, reverting to the default.
-  - Shortcut: *.dropitems rsltwd*
+- `.dropitems shardlifetime (seconds)`
+  - Will set the lifetime of dropped shards. Default is 3600 seconds. This is a server wide setting, and will persist through restarts
+  - Example: *.dropitems shardlifetime 600*
+  - shortcut: *.dropitems slt*
 
 ### Spawning Commands
 - `.bloodpotion (Bloodtype) (Quality) (Amount)`
