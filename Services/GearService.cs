@@ -70,7 +70,7 @@ internal class GearService
 
 	public void SetShardsRestricted(bool shardsRestricted)
 	{
-		var newCategory = shardsRestricted ? ItemCategory.Soulshard : ItemCategory.Magic | ItemCategory.BloodBound;
+		var newCategory = shardsRestricted ? ItemCategory.Soulshard | ItemCategory.BloodBound : ItemCategory.Magic;
 		var itemMap = Core.GameDataSystem.ItemHashLookupMap;
 		foreach (var prefabGUID in shardPrefabs)
 		{
