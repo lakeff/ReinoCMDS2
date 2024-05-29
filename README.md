@@ -68,9 +68,9 @@ Feel free to reach out to me on discord (odjit) if you have any questions or nee
 - `.gear soulshardflight`
   - will toggle Soul Shards being batbound or not on the server. (Whether or not you can fly with them). Saves out to config file to persist through restarts.
   - Shortcut: *.gear ssf*
-- `.gear soulshardlimit`
-  - will set the limit of each type soul shards a server can have. 
-  - Example: *.gear soulshardlimit 5*
+- `.gear soulshardlimit (amount) (type)`
+  - will set the limit of each type soul shards a server can have. [Monster, Dracula, Winged, Solarus]
+  - Example: *.gear soulshardlimit 5 Dracula*
   - Shortcut: *.gear ssl*
 - `.dropitems lifetime (seconds)`
   - will set the lifetime of dropped items while players are present to the seconds specified. Default is 300 seconds. This is a server wide setting, and will persist through restarts.Does not apply to shards or Player Containers.
@@ -210,7 +210,7 @@ Feel free to reach out to me on discord (odjit) if you have any questions or nee
   - Example: *.flyup Bob*
 - `.flylevel (Player) (Level)`
   - will set a player's level to the flight level specified. Think of levels like floor heights.																								
-  - Example: *.level Bob 5*
+  - Example: *.flylevel Bob 5*
 - `.flyheight (Player) (Height)`
   - will set a player's fly height to the height specified.																								
   - Example: *.flyheight Bob 10*
