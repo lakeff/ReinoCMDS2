@@ -15,8 +15,6 @@ internal class SoulshardService
 	readonly List<Entity> droppedSoulshards = [];
 	readonly List<Entity> spawnedSoulshards = []; // Tracked with the ScriptSpawn tag
 
-	public int ShardDropLimit => Core.ConfigSettings.ShardDropLimit;
-
 	EntityQuery relicDroppedQuery;
 	EntityQuery soulshardPrefabsQuery;
 
@@ -55,14 +53,23 @@ internal class SoulshardService
 		RefreshWillDrop();
 	}
 
-	private void RefreshWillDrop()
+	int ShardDropLimit(RelicType relicType) => relicType switch
+	{
+		RelicType.TheMonster => Core.ConfigSettings.ShardMonsterDropLimit,
+		RelicType.Solarus => Core.ConfigSettings.ShardSolarusDropLimit,
+		RelicType.WingedHorror => Core.ConfigSettings.ShardWingedHorrorDropLimit,
+		RelicType.Dracula => Core.ConfigSettings.ShardDraculaDropLimit,
+		_ => 1
+	};
+
+	void RefreshWillDrop()
 	{
 		if (Core.ServerGameSettingsSystem._Settings.RelicSpawnType == RelicSpawnType.Plentiful) return;
 		var relicDropped = GetRelicDropped();
 		for (var relicType = RelicType.TheMonster; relicType <= RelicType.Dracula; relicType++)
 		{
 			var droppedCount = droppedSoulshards.Where(e => e.Read<Relic>().RelicType == relicType).Count();
-			var shouldDrop = droppedCount < ShardDropLimit;
+			var shouldDrop = droppedCount < ShardDropLimit(relicType);
 			var isDropped = relicDropped[(int)relicType].Value;
 
 			if (isDropped == shouldDrop)
@@ -70,9 +77,29 @@ internal class SoulshardService
 		}
 	}
 
-	public void SetShardDropLimit(int limit)
+	public void SetShardDropLimit(int limit, RelicType relicType)
 	{
-		Core.ConfigSettings.ShardDropLimit = limit;
+		switch (relicType)
+		{
+			case RelicType.TheMonster:
+				Core.ConfigSettings.ShardMonsterDropLimit = limit;
+				break;
+			case RelicType.Solarus:
+				Core.ConfigSettings.ShardSolarusDropLimit = limit;
+				break;
+			case RelicType.WingedHorror:
+				Core.ConfigSettings.ShardWingedHorrorDropLimit = limit;
+				break;
+			case RelicType.Dracula:
+				Core.ConfigSettings.ShardDraculaDropLimit = limit;
+				break;
+			case RelicType.None:
+				Core.ConfigSettings.ShardMonsterDropLimit = limit;
+				Core.ConfigSettings.ShardSolarusDropLimit = limit;
+				Core.ConfigSettings.ShardWingedHorrorDropLimit = limit;
+				Core.ConfigSettings.ShardDraculaDropLimit = limit;
+				break;
+		}
 		RefreshWillDrop();
 	}
 
@@ -131,7 +158,7 @@ internal class SoulshardService
 		var relicCount = droppedSoulshards.Where(e => e.Read<Relic>().RelicType == relicType).Count();
 
 		// Let the destruction system handle this normally if we are below the limit
-		if (relicCount < ShardDropLimit) return;
+		if (relicCount < ShardDropLimit(relicType)) return;
 
 		soulshardItemEntity.Remove<Relic>();
 	}

@@ -54,14 +54,21 @@ internal static class DurabilityCommands
 		}
 
 		[Command("soulshardlimit", "ssl", description: "How many soulshards can be dropped before a boss won't drop a new one if the relic Unique setting is active.", adminOnly: true)]
-		public static void SoulshardLimitCommand(ChatCommandContext ctx, int limit)
+		public static void SoulshardLimitCommand(ChatCommandContext ctx, int limit, RelicType shardType=RelicType.None)
 		{
 			if (limit < 0)
 			{
 				throw ctx.Error("Limit must be zero or greater.");
 			}
-			Core.SoulshardService.SetShardDropLimit(limit);
-			ctx.Reply($"Soulshard limit set to {limit}.");
+			Core.SoulshardService.SetShardDropLimit(limit, shardType);
+			if (shardType == RelicType.None)
+			{
+				ctx.Reply($"Soulshard limit set to {limit} for all soulshards.");
+			}
+			else
+			{
+				ctx.Reply($"Soulshard limit set to {limit} for {shardType}.");
+			}
 		}
 
 		[Command("soulshardstatus", "sss", description: "Reports the current status of soulshards.", adminOnly: false)]
@@ -71,18 +78,32 @@ internal static class DurabilityCommands
 			var soulshardStatus = Core.SoulshardService.GetSoulshardStatus();
 			sb.AppendLine("\nSoulshard Status");
 			sb.AppendLine($"Can Fly: {(Core.ConfigSettings.SoulshardsFlightRestricted ? "<color=red>No</color>" : "<color=green>Yes</color>")}");
+			
 
 			var notPlentiful = Core.ServerGameSettingsSystem._Settings.RelicSpawnType == RelicSpawnType.Unique;
-			sb.AppendLine($"Drop Limit: <color=white>{(notPlentiful ? Core.SoulshardService.ShardDropLimit.ToString() : "Plentiful")}</color>");
 
 			var theMonster = soulshardStatus[(int)RelicType.TheMonster];
 			var solarus = soulshardStatus[(int)RelicType.Solarus];
 			var wingedHorror = soulshardStatus[(int)RelicType.WingedHorror];
 			var dracula = soulshardStatus[(int)RelicType.Dracula];
-			sb.AppendLine($"The Monster: <color=white>{theMonster.droppedCount}</color>x dropped <color=white>{theMonster.spawnedCount}</color>x spawned{(notPlentiful ? (theMonster.willDrop ? " <color=green>Will</color> drop" : " <color=red>Won't</color> drop") : "")}");
-			sb.AppendLine($"Solarus: <color=white>{solarus.droppedCount}</color>x dropped <color=white>{solarus.spawnedCount}</color>x spawned{(notPlentiful ? (solarus.willDrop ? " <color=green>Will</color> drop" : " <color=red>Won't</color> drop") : "")}");
-			sb.AppendLine($"Winged Horror: <color=white>{wingedHorror.droppedCount}</color>x dropped <color=white>{wingedHorror.spawnedCount}</color>x spawned{(notPlentiful ? (wingedHorror.willDrop ? " <color=green>Will</color> drop" : " <color=red>Won't</color> drop") : "")}");
-			sb.AppendLine($"Dracula: <color=white>{dracula.droppedCount}</color>x dropped <color=white>{dracula.spawnedCount}</color>x spawned{(notPlentiful ? (dracula.willDrop ? " <color=green>Will</color> drop" : " <color=red>Won't</color> drop") : "")}");
+			sb.Append($"The Monster: <color=white>{theMonster.droppedCount}</color>x");
+			if (notPlentiful) sb.Append($" out of <color=white>{Core.ConfigSettings.ShardMonsterDropLimit}</color>x");
+			sb.AppendLine($" dropped <color=white>{theMonster.spawnedCount}</color>x spawned{(notPlentiful ? (theMonster.willDrop ? " <color=green>Will</color> drop" : " <color=red>Won't</color> drop") : "")}");
+
+			sb.Append($"Solarus: <color=white>{solarus.droppedCount}</color>x ");
+			if (notPlentiful) sb.Append($"out of <color=white>{Core.ConfigSettings.ShardSolarusDropLimit}</color>x");
+			sb.AppendLine($" dropped <color=white>{solarus.spawnedCount}</color>x spawned{(notPlentiful ? (solarus.willDrop ? " <color=green>Will</color> drop" : " <color=red>Won't</color> drop") : "")}");
+
+			ctx.Reply(sb.ToString());
+			sb.Clear();
+
+			sb.Append($"Winged Horror: <color=white>{wingedHorror.droppedCount}</color>x");
+			if (notPlentiful) sb.Append($" out of <color=white>{Core.ConfigSettings.ShardWingedHorrorDropLimit}</color>x");
+			sb.AppendLine($" dropped <color=white>{wingedHorror.spawnedCount}</color>x spawned{(notPlentiful ? (wingedHorror.willDrop ? " <color=green>Will</color> drop" : " <color=red>Won't</color> drop") : "")}");
+
+			sb.Append($"Dracula: <color=white>{dracula.droppedCount}</color>x");
+			if (notPlentiful) sb.Append($" out of <color=white>{Core.ConfigSettings.ShardDraculaDropLimit}</color>x");
+			sb.AppendLine($" dropped <color=white>{dracula.spawnedCount}</color>x spawned{(notPlentiful ? (dracula.willDrop ? " <color=green>Will</color> drop" : " <color=red>Won't</color> drop") : "")}");
 			ctx.Reply(sb.ToString());
 		}
 

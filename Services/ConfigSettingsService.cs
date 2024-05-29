@@ -83,15 +83,54 @@ internal class ConfigSettingsService
 		}
 	}
 
-	public int ShardDropLimit
+	public int ShardDraculaDropLimit
 	{
 		get
 		{
-			return config.ShardDropLimit;
+			return config.ShardDraculaDropLimit ?? (config.ShardDropLimit ?? 1);
 		}
 		set
 		{
-			config.ShardDropLimit = value;
+			config.ShardDraculaDropLimit = value;
+			SaveConfig();
+		}
+	}
+
+	public int ShardWingedHorrorDropLimit
+	{
+		get
+		{
+			return config.ShardWingedHorrorDropLimit ?? (config.ShardDropLimit ?? 1);
+		}
+		set
+		{
+			config.ShardWingedHorrorDropLimit = value;
+			SaveConfig();
+		}
+	}
+
+	public int ShardMonsterDropLimit
+	{
+		get
+		{
+			return config.ShardMonsterDropLimit ?? (config.ShardDropLimit ?? 1);
+		}
+		set
+		{
+			config.ShardMonsterDropLimit = value;
+			SaveConfig();
+		}
+	}
+
+	public int ShardSolarusDropLimit
+	{
+		get
+		{
+			return config.ShardSolarusDropLimit ?? (config.ShardDropLimit ?? 1);
+		}
+		set
+		{
+			config.ShardSolarusDropLimit = value;
 			SaveConfig();
 		}
 	}
@@ -111,7 +150,11 @@ internal class ConfigSettingsService
 		public int ItemDropLifetime { get; set; }
 		public int ItemDropLifetimeWhenDisabled { get; set; }
 		public int ShardDropLifetimeWhenDisabled { get; set; }
-		public int ShardDropLimit { get; set; }
+		public int? ShardDropLimit { get; set; }
+		public int? ShardDraculaDropLimit { get; set; }
+		public int? ShardWingedHorrorDropLimit { get; set; }
+		public int? ShardMonsterDropLimit { get; set; }
+		public int? ShardSolarusDropLimit { get; set; }
 	}
 
 	Config config;
@@ -128,7 +171,10 @@ internal class ConfigSettingsService
 		Core.Log.LogInfo($"ItemDropLifetime: {ItemDropLifetime}");
 		Core.Log.LogInfo($"ItemDropLifetimeWhenDisabled: {ItemDropLifetimeWhenDisabled}");
 		Core.Log.LogInfo($"ShardDropLifetimeWhenDisabled: {ShardDropLifetimeWhenDisabled}");
-		Core.Log.LogInfo($"ShardDropLimit: {ShardDropLimit}");
+		Core.Log.LogInfo($"ShardDraculaDropLimit: {ShardDraculaDropLimit}");
+		Core.Log.LogInfo($"ShardManticoreDropLimit: {ShardWingedHorrorDropLimit}");
+		Core.Log.LogInfo($"ShardMonsterDropLimit: {ShardMonsterDropLimit}");
+		Core.Log.LogInfo($"ShardSolarusDropLimit: {ShardSolarusDropLimit}");
 	}
 
 	void LoadConfig()
