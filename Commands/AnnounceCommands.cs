@@ -6,11 +6,11 @@ namespace KindredCommands.Commands;
 
 public class AnnounceCommands
 {
-	[Command("time", description: "Reports the server time.")]
+	[Command("tempo", description: "Mostra a quanto tempo o servidor está online.")]
     public static void GetTimeCommand(ChatCommandContext ctx)
     {
         var serverTime = DateTime.Now;
-        ctx.Reply("Server time is: " + serverTime);
+        ctx.Reply("O servidor está online à: " + serverTime);
     }
 
 
