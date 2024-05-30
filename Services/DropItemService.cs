@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using Il2CppInterop.Runtime;
 using KindredCommands.Data;
@@ -10,19 +9,14 @@ using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
-using UnityEngine;
 
 namespace KindredCommands.Services;
 internal class DropItemService
 {
-	const int SHARD_DISABLED_LEEWAY = 300;
-
 	EntityQuery dropItemQuery;
 	EntityQuery dropItemWithPrefabQuery;
 	EntityQuery dropShardQuery;
 	EntityQuery dropShardWithPrefabQuery;
-
-	Coroutine checkDroppedShardsForRemovalCoroutine;
 
 	public DropItemService()
 	{
@@ -85,6 +79,8 @@ internal class DropItemService
 		{
 			SetDroppedShardLifetimeNoSave(Core.ConfigSettings.ShardDropLifetime);
 		}
+
+		CleanContainerlessItems();
 	}
 
 	IEnumerable<Entity> GetDropItems()
@@ -217,21 +213,34 @@ internal class DropItemService
 
 	void SetDroppedItemLifetimeNoSave(int seconds)
 	{
+		var maxDropAtTime = Core.ServerTime + seconds;
 		foreach (var entity in GetDropItemsWithPrefabs())
 		{
-			if(!entity.Has<Age>())
-				entity.Add<Age>();
+			if (entity.Has<Age>())
+				entity.Remove<Age>();
 
-			if(!entity.Has<LifeTime>())
+			if (entity.Has<LifeTime>())
+				entity.Remove<LifeTime>();
+
+			if (!entity.Has<DestroyAfterDuration>())
+				entity.Add<DestroyAfterDuration>();
+
+			if(entity.Has<Prefab>())
 			{
-				entity.Add<LifeTime>();
+				entity.Write(new DestroyAfterDuration()
+				{
+					Duration = seconds,
+				});
 			}
-
-			entity.Write(new LifeTime()
+			else
 			{
-				Duration = seconds,
-				EndAction = LifeTimeEndAction.Destroy
-			});
+				var dad = entity.Read<DestroyAfterDuration>();
+				entity.Write(new DestroyAfterDuration()
+				{
+					Duration = seconds,
+					EndTime = math.min(dad.EndTime, maxDropAtTime),
+				});
+			}
 		}
 	}
 
@@ -249,6 +258,8 @@ internal class DropItemService
 				entity.Remove<Age>();
 			if (entity.Has<LifeTime>())
 				entity.Remove<LifeTime>();
+			if (entity.Has<DestroyAfterDuration>())
+				entity.Remove<DestroyAfterDuration>();
 		}
 	}
 
@@ -295,5 +306,44 @@ internal class DropItemService
 				dad.EndTime = maxRemoveAtTime;
 			entity.Write(dad);
 		}
+	}
+
+	// Old method of clearing item bags could result in containerless items so this cleans them up
+	void CleanContainerlessItems()
+	{
+		var destroyCount = new Dictionary<PrefabGUID, int>();
+		foreach (var item in Helper.GetEntitiesByComponentType<InventoryItem>())
+		{
+			if (!item.Read<InventoryItem>().ContainerEntity.Equals(Entity.Null)) continue;
+
+			DestroyEntityAndAttached(item, destroyCount);
+		}
+
+
+		foreach (var (guid, count) in destroyCount)
+		{
+			Core.Log.LogInfo($"Destroyed {count}x {guid.LookupName()} that were containerless");
+		}
+	}
+
+	void DestroyEntityAndAttached(Entity entity, Dictionary<PrefabGUID, int> destroyCount)
+	{
+		if (entity.Has<AttachedBuffer>())
+		{
+			var attachedBuffer = Core.EntityManager.GetBuffer<AttachedBuffer>(entity);
+			foreach (var attached in attachedBuffer)
+			{
+				DestroyEntityAndAttached(attached.Entity, destroyCount);
+			}
+		}
+
+		if (entity.Has<PrefabGUID>())
+		{
+			var guid = entity.Read<PrefabGUID>();
+			if (!destroyCount.TryGetValue(guid, out var count))
+				count = 0;
+			destroyCount[guid] = count + 1;
+		}
+		DestroyUtility.Destroy(Core.EntityManager, entity);
 	}
 }
