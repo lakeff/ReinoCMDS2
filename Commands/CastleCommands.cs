@@ -116,7 +116,7 @@ internal class CastleCommands
 		return (castleHeartComponent.FuelEndTime - Core.ServerTime) + secondsPerFuel * castleHeartComponent.FuelQuantity;
 	}
 
-	[Command("openplots", "op", description: "Reports all the territories with open and/or decaying plots.")]
+	[Command("bases", description: "Mostra todos spots livres e spots em decay.")]
 	public static void OpenPlots(ChatCommandContext ctx)
 	{
 		Dictionary<WorldRegionType, int> openPlots = [];
@@ -159,18 +159,18 @@ internal class CastleCommands
 		{
 			if(plotsInDecay.ContainsKey(plot.Key))
 			{
-				stringList.Add($"{RegionName(plot.Key)} has {plot.Value} open plots and {plotsInDecay[plot.Key]} plots in decay");
+				stringList.Add($"{RegionName(plot.Key)} tem {plot.Value} spots livres e {plotsInDecay[plot.Key]} spots em decay");
 			}
 			else
 			{
-				stringList.Add($"{RegionName(plot.Key)} has {plot.Value} open plots");
+				stringList.Add($"{RegionName(plot.Key)} tem {plot.Value} spots livres");
 			}
 		}
 		foreach(var plot in plotsInDecay)
 		{
 			if(!openPlots.ContainsKey(plot.Key))
 			{
-				stringList.Add($"{RegionName(plot.Key)} has {plot.Value} plots in decay");
+				stringList.Add($"{RegionName(plot.Key)} tem {plot.Value} spots em decay");
 			}
 		}
 		stringList.Sort();
@@ -187,7 +187,7 @@ internal class CastleCommands
 		}
 
 		if (stringList.Count == 0)
-			sb.AppendLine("No open or decaying plots");
+			sb.AppendLine("Sem spots livres ou em decay!");
 
 		ctx.Reply(sb.ToString());
 	}
