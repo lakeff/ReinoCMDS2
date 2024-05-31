@@ -13,7 +13,7 @@ namespace KindredCommands.Commands;
 
 internal class StaffCommands
 {
-	[Command("staff", description: "Shows online Staff members.", adminOnly: false)]
+	[Command("admin", description: "Mostra os administradores online.", adminOnly: false)]
 	public static void WhoIsOnline(ChatCommandContext ctx)
 	{
 		var users = PlayerService.GetUsersOnline();
