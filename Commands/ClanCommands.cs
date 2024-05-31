@@ -412,7 +412,7 @@ class ClanCommands
 			memberList.Add($"{user.CharacterName} - {member.ClanRole}");
         }
 
-        ctx.Reply($"Members in Clan '{clanEntity.Read<ClanTeam>().Name}'\n" + string.Join("\n", memberList));
+        ctx.Reply($"Membros no clã '{clanEntity.Read<ClanTeam>().Name}'\n" + string.Join("\n", memberList));
     }
 
 
