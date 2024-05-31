@@ -396,7 +396,7 @@ class ClanCommands
     {
         if (!FindClan(clanName, out var clanEntity))
         {
-            ctx.Reply($"Nenhum clã com o nome '{clanName}'");
+            ctx.Reply($"Nenhum clã com o nome '{clanName}' foi encontrado!");
             return;
         }
 
