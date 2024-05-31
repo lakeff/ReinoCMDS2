@@ -321,7 +321,7 @@ public static class PlayerCommands
 
 	static bool initializedMoveSpeedQuery = false;
 	static EntityQuery npcMoveSpeedQuery;
-	[Command("pace", description: "Pace at the closest NPC near you")]
+	[Command("pace", description: "Pace at the closest NPC near you"), adminOnly: true)]
 	public static void TogglePace(ChatCommandContext ctx)
 	{
 		var charEntity = ctx.Event.SenderCharacterEntity;
