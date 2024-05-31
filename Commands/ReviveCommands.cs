@@ -14,6 +14,6 @@ internal class ReviveCommands
 
 		Helper.ReviveCharacter(character, user);
 
-		ctx.Reply($"Revived {user.Read<User>().CharacterName}");
+		ctx.Reply($"Reviveu o jogador {user.Read<User>().CharacterName}");
 	}
 }
