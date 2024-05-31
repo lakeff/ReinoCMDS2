@@ -355,7 +355,7 @@ class ClanCommands
 	}//*/
 
 
-	[Command("list", "l", description: "List clans on the server")]
+	[Command("lista", description: "Lista os clãs do servidor.")]
     public static void ListClans(ChatCommandContext ctx, int page = 1)
     {
         var clanList = new List<string>();
@@ -391,12 +391,12 @@ class ClanCommands
     }
 
 
-    [Command("members", "m", description: "List members")]
+    [Command("membros", description: "Lista os membros.")]
     public static void ListClanMembers(ChatCommandContext ctx, string clanName)
     {
         if (!FindClan(clanName, out var clanEntity))
         {
-            ctx.Reply($"No clan found matching name '{clanName}'");
+            ctx.Reply($"Nenhum clã com o nome '{clanName}'");
             return;
         }
 
