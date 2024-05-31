@@ -53,7 +53,7 @@ internal class RegionCommands
 			ctx.Reply($"Region {region.Name} is not gated.");
 	}
 
-	[Command("list", "l", description: "Lists all locked and gated regions.", adminOnly: false)]
+	[Command("list", "l", description: "Lists all locked and gated regions.", adminOnly: true)]
 	public static void ListRegionsCommand(ChatCommandContext ctx)
 	{
 		var lockedRegions = Core.Regions.LockedRegions.Select(x => x.ToString());
